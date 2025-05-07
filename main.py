@@ -307,6 +307,8 @@ class MainWidget(QWidget):
         # Create a new function box based on the selected function name
         if functionName == functions.BRIGHTNESS_NAME:
             newBox = functions.BrightnessBox()
+        elif functionName == functions.SATURATION_NAME:
+            newBox = functions.SaturationBox()
         elif functionName == functions.CONTRAST_NAME:
             newBox = functions.ContrastBox()
         elif functionName == functions.FULL_SCALE_CONTRAST_NAME:
@@ -315,8 +317,10 @@ class MainWidget(QWidget):
             newBox = functions.LogBox()
         elif functionName == functions.GAMMA_NAME:
             newBox = functions.GammaBox()
-        elif functionName == functions.BLACK_AND_WHITE_NAME:
-            newBox = functions.BlackAndWhiteBox()
+        elif functionName == functions.RGB2GRAY_NAME:
+            newBox = functions.RGB2GrayBox()
+        elif functionName == functions.THRESHOLDING_NAME:
+            newBox = functions.ThresholdingBox()
         elif functionName == functions.COMPLEMENT_NAME:
             newBox = functions.ComplementBox()
         elif functionName == functions.CROP_NAME:
@@ -337,10 +341,10 @@ class MainWidget(QWidget):
             newBox = functions.BitSliceBox()
         elif functionName == functions.ADD_NOISE_NAME:
             newBox = functions.NoiseBox()
-        elif functionName == functions.RGB2GRAY_NAME:
-            newBox = functions.RGB2GrayBox()
         elif functionName == functions.ARITHMETIC_NAME:
             newBox = functions.ArithmeticBox()
+        elif functionName == functions.LOGIC_NAME:
+            newBox = functions.LogicBox()
         elif functionName == functions.LAPLACE_NAME:
             newBox = functions.LaplaceBox()
         elif functionName == functions.SOBEL_NAME:
@@ -394,16 +398,16 @@ class MainWidget(QWidget):
         
         try:
             # convert image to HSVA format
-            img = cv2.cvtColor(self.inputImg[:, :, :3], cv2.COLOR_BGR2HSV)  # convert the image to HSV format
-            img_HSVA = cv2.merge((img, self.inputImg[:,:,3]))  # merge the alpha channel with the HSV image
+            img_HSV = cv2.cvtColor(self.inputImg[:, :, :3], cv2.COLOR_BGR2HSV)  # convert the image to HSV format
+            imgHSVA = cv2.merge((img_HSV, self.inputImg[:,:,3]))  # merge the alpha channel with the HSV image
             
             for pipe in self.pipeline:
                 # check if the function box is activated
                 if pipe.switch.isChecked():
-                    img_HSVA = pipe.process(img_HSVA)             # call the process function of the function box
+                    imgHSVA = pipe.process(imgHSVA)             # call the process function of the function box
             
-            self.outputImg = cv2.cvtColor(img_HSVA[:, :, :3], cv2.COLOR_HSV2BGR)    # convert image to BGR format
-            self.outputImg = cv2.merge((self.outputImg, img_HSVA[:, :, 3]))  # merge the alpha channel with the BGR image
+            image_BGR = cv2.cvtColor(imgHSVA[:, :, :3], cv2.COLOR_HSV2BGR)    # convert image to BGR format
+            self.outputImg = cv2.merge((image_BGR, imgHSVA[:, :, 3]))  # merge the alpha channel with the BGR image
 
             # update the output image
             if self.histView:
