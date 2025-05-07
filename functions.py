@@ -1186,8 +1186,8 @@ class ArithmeticBox(DraggableFunctionBox):
         # insert a combo list to select the arithmetic operation
         self.combo = self.InsertComboList(["Add", "Subtract", "Multiply", "Divide"])
         
-        # insert a signle input box for the alpha value
-        self.alpha = self.InsertSingleInput("Alpha:", defaultValue=1.0)
+        # insert a slider for alpha value
+        self.alpha = self.InsertSlider(heading="Alpha:", minValue=1, maxValue=1000, defaultValue=100)
 
         # insert a button to select the second image
         self.button = self.InsertButton("Select Image")
@@ -1198,29 +1198,36 @@ class ArithmeticBox(DraggableFunctionBox):
         """
         if self.secondImage is None:
             return imageHSVA
-
-        # get the alpha value from input box
-        alpha = float(self.alpha[0].text()) if self.alpha[0].text() and 0.0 < float(self.alpha[0].text()) <= 10.0 else 1.0
-
-        self.secondImage = self.secondImage * alpha  # multiply the second image with alpha value
+        
+        alpha = self.alpha[0].value()/100           # get the alpha value from input box
+        secondImage = (self.secondImage * alpha).astype(np.float32)  # multiply the second image with alpha value
+        secondImage = cv2.resize(secondImage, (imageHSVA.shape[1], imageHSVA.shape[0]))  # resize the second image to match the size of the first image
+        imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR).astype(np.float32)  
 
         # perform the selected arithmetic operation
-        if self.combo == "Add":
-            imageHSVA = cv2.add(imageHSVA, self.secondImage)
-        elif self.combo == "Subtract":
-            imageHSVA = cv2.subtract(imageHSVA, self.secondImage)
-        elif self.combo == "Multiply":
-            imageHSVA = cv2.multiply(imageHSVA, self.secondImage)
-        elif self.combo == "Divide":
-            imageHSVA = cv2.divide(imageHSVA, self.secondImage)
+        if self.combo.currentText() == "Add":
+            imageBGR = cv2.add(imageBGR, secondImage)
+        elif self.combo.currentText() == "Subtract":
+            imageBGR = cv2.subtract(imageBGR, secondImage)
+        elif self.combo.currentText() == "Multiply":
+            imageBGR = cv2.multiply(imageBGR, secondImage)
+        elif self.combo.currentText() == "Divide":
+            imageBGR = cv2.divide(imageBGR, secondImage + 1e-10)
 
-        return self.secondImage
+        imageBGR = np.clip(imageBGR, 0, 255).astype(np.uint8)       # clip the values to the range [0, 255]
+        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)        # convert back to HSV color space
+        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))       # set back the alpha channel of the image
+
+        return imageHSVA
     
     def on_change(self):
         """
         This function is called when the user changes the settings.
         It emits a signal to indicate that the settings have been changed.
-        """       
+        """    
+        # Update the label with the current value
+        self.alpha[1].setText(f"Alpha: {self.alpha[0].value()/100}")
+
         super().on_change()
 
     
@@ -1236,8 +1243,15 @@ class ArithmeticBox(DraggableFunctionBox):
 
         if filePath:
             self.secondImage = cv2.imread(filePath, cv2.IMREAD_UNCHANGED)          # Read the image using OpenCV
-            self.secondImage = cv2.cvtColor(self.secondImage, cv2.COLOR_BGR2HSV)  # Convert the image to HSV color space
-            self.secondImage = cv2.split(self.secondImage)[2]  # Extract the V channel from the HSV image
+
+            if len(self.secondImage.shape) == 2:  # if image is  (h,w)
+                self.secondImage = cv2.cvtColor(self.secondImage, cv2.COLOR_GRAY2BGR)
+            elif self.secondImage.shape[2] == 1:  # if image is (h,w,1)
+                self.secondImage = cv2.cvtColor(self.secondImage, cv2.COLOR_GRAY2BGR)
+            elif self.secondImage.shape[2] == 3:  # ig image is (BGR) (h,w,3)
+                pass
+            elif self.secondImage.shape[2] == 4:  # if image is (BGRA) (h,w,4)
+                self.secondImage = self.secondImage[:, :, :3]  # remove the alpha channel
 
             self.on_change()        # emit the signal to indicate that the settings have been changed
 
