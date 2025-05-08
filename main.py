@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtWidgets import QApplication
 
-from gui.main_widget import MainWidget 
+from ui.main_widget import MainWidget 
 
 if __name__ == "__main__":
     app = QApplication([])    

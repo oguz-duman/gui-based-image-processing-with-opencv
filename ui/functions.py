@@ -6,6 +6,8 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxL
                                QCheckBox, QComboBox, QLineEdit, QRadioButton, QButtonGroup, QFileDialog)
 from PySide6.QtGui import QFont, QDrag
 
+from processing.processor import Processor
+
 
 # function names
 BRIGHTNESS_NAME = "Brightness"
@@ -148,6 +150,8 @@ class FunctionBox(QWidget):
 
     def __init__(self, title="Function", parent=None):
         super().__init__(parent)
+
+        self.processor = Processor()  # create an instance of the Processor class
 
         # set the title of the function box
         self.title = title
@@ -467,7 +471,7 @@ class BrightnessBox(DraggableFunctionBox):
         self.brightness = self.InsertSlider(heading="Brightness", minValue=-50, maxValue=50)  
 
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Adjusts the brightness of the given image based on the slider value.
 
@@ -477,13 +481,10 @@ class BrightnessBox(DraggableFunctionBox):
         Returns:
             The brightness-adjusted image.
         """  
-        # Get the current value of the slider
-        value = self.brightness[0].value()     
+        # call the brightness function from Processors module
+        imageBGRA = self.processor.brightness(imageBGRA, self.brightness[0].value())  
 
-        # brighten the V channel of the HSVA image
-        imageHSVA[:, :, 2] = cv2.add(imageHSVA[:, :, 2], value)
-
-        return imageHSVA
+        return imageBGRA
 
     
     def on_change(self):
@@ -510,19 +511,13 @@ class SaturationBox(DraggableFunctionBox):
         self.saturation = self.InsertSlider(heading="Saturation", minValue=-50, maxValue=50)
 
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         """  
-        # Get the current value of the slider
-        value = self.saturation[0].value()     
+        value = self.saturation[0].value()                          # Get the current value of the slider
+        imageBGRA = self.processor.saturation(imageBGRA, value)     # call the saturation function from Processors module
 
-        imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR)  # convert to BGR to check if image is grayscale 
-
-        # saturate the S channel of the HSVA image if image is not grayscale
-        if not (np.array_equal(imageBGR[:, :, 0], imageBGR[:, :, 1]) and np.array_equal(imageBGR[:, :, 1], imageBGR[:, :, 2])):
-            imageHSVA[:, :, 1] = cv2.add(imageHSVA[:, :, 1], value)
-
-        return imageHSVA
+        return imageBGRA
 
     
     def on_change(self):
@@ -563,7 +558,7 @@ class ContrastBox(DraggableFunctionBox):
         for x in self.alpha + self.beta:
             x.hide()   
                     
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Adjusts the contrast of the given image based on the input and output range values.
         """
@@ -572,24 +567,19 @@ class ContrastBox(DraggableFunctionBox):
             in_min, in_max = GetWidgetValue(self.inMinMax[:2], maxs=[255,255], defaults=[0, 255])
             out_min, out_max = GetWidgetValue(self.outMinMax[:2], maxs=[255,255], defaults=[0, 255])
 
-            # calculate the alpha and beta values
-            alpha = (out_max - out_min) / (in_max - in_min)
-            beta = out_min - (alpha * in_min)
+            # call the contrast function from Processors module
+            imageBGRA = self.processor.contrastByRange(imageBGRA, [in_min, in_max], [out_min, out_max])  
 
-            # apply the contrast adjustment to the v channel of the HSVA image
-            imageHSVA[:, :, 2] = cv2.convertScaleAbs(imageHSVA[:, :, 2], -1, alpha, beta) 
-
-            return imageHSVA  
+            return imageBGRA  
 
         elif self.combo.currentText() == "by T(s)":
             # get the alpha and beta values from sliders
             alpha = self.alpha[0].value()/10
             beta = self.beta[0].value()
-            
-            # apply the contrast adjustment to the v channel of the HSVA image
-            imageHSVA[:, :, 2] = cv2.convertScaleAbs(imageHSVA[:, :, 2], -1, alpha, beta) 
 
-            return imageHSVA
+            imageBGRA = self.processor.contrastByTS(imageBGRA, alpha, beta)  # call the contrast function from Processors module
+            
+            return imageBGRA
 
     
     def on_change(self):
@@ -627,15 +617,15 @@ class FullScaleContrastBox(DraggableFunctionBox):
         super().__init__(FULL_SCALE_CONTRAST_NAME, parent)
   
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Performs full scale contrast stretching on the given image.
         This method adjusts the contrast of the image to span the full range of pixel values.
         """
-        # perform full scale contrast stretching
-        imageHSVA[:, :, 2] = cv2.normalize(imageHSVA[:, :, 2], None, 0, 255, cv2.NORM_MINMAX)
+
+        imageBGRA = self.processor.fullScaleContrast(imageBGRA)  # call the contrast function from Processors module
         
-        return imageHSVA
+        return imageBGRA
 
 
 
@@ -647,20 +637,14 @@ class LogBox(DraggableFunctionBox):
         super().__init__(LOG_NAME, parent)
   
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Performs log transformation on the given image.
         This method applies a logarithmic transformation to the image to enhance the contrast of dark regions.
         """
-        vChannel = imageHSVA[:, :, 2]                 # get the V channel of the HSVA image
+        imageBGRA = self.processor.logTransform(imageBGRA)  # call the log function from Processors module
 
-        vChannel = vChannel.astype(np.float32)    # convert the v channel to float32 for log transformation
-        vChannel = np.log(1 + vChannel)           # apply log transformation
-        vChannel = cv2.normalize(vChannel, None, 0, 255, cv2.NORM_MINMAX)
-        
-        imageHSVA[:, :, 2] = vChannel                 # update the V channel of the HSVA image
-
-        return imageHSVA.astype(np.uint8)    
+        return imageBGRA
 
 
 
@@ -678,7 +662,7 @@ class GammaBox(DraggableFunctionBox):
         self.gamma = self.InsertSlider(heading="Gamma:", minValue=1, maxValue=100, defaultValue=10)
 
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Performs gamma transformation on the given image.
         This method applies a gamma transformation to the image to adjust the brightness and contrast.
@@ -686,14 +670,9 @@ class GammaBox(DraggableFunctionBox):
         # get the threshold value from slider
         gamma = self.gamma[0].value()/10
         
-        vChannel = imageHSVA[:, :, 2]                       # get the V channel of the HSVA image
+        imageBGRA = self.processor.gammaTransform(imageBGRA, gamma)  # call the gamma function from Processors module
 
-        vChannel = vChannel.astype(np.float32) / 255    # convert the v channel to float32 for gamma transformation
-        vChannel = cv2.pow(vChannel, gamma)             # apply gamma transformation
-        
-        imageHSVA[:, :, 2] = vChannel * 255                 # update the V channel of the HSVA image
-
-        return np.uint8(imageHSVA)     
+        return np.uint8(imageBGRA)     
 
     
     def on_change(self):
@@ -717,17 +696,14 @@ class RGB2GrayBox(DraggableFunctionBox):
         super().__init__(RGB2GRAY_NAME, parent)
   
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Converts the given image from RGB to grayscale.
         This method transforms the image from RGB color space to grayscale.
         """
-        imageGray = imageHSVA[:, :, 2]                              # get only the v channel of the HSVA image
-        imageBGR = cv2.cvtColor(imageGray, cv2.COLOR_GRAY2BGR)      # make the binary image 3 channel
-        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)        # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))       # set back the alpha channel of the image
+        imageBGRA = self.processor.rgb2gray(imageBGRA)              # call the rgb2gray function from Processors module
 
-        return imageHSVA
+        return imageBGRA
 
 
 
@@ -744,20 +720,16 @@ class ThresholdingBox(DraggableFunctionBox):
         self.threshold = self.InsertSlider(heading="Threshold:", minValue=0, maxValue=255, defaultValue=128)
 
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Converts the given image to black and white based on the threshold value.
         """
         # get the threshold value from slider
         threshold = self.threshold[0].value()                                       
 
-        imageGray = imageHSVA[:,:, 2]                # get only the v channel of the HSVA image
-        imageBinary = cv2.threshold(imageGray, threshold, 255, cv2.THRESH_BINARY)[1]  # convert v channel to binary
-        imageBGR = cv2.cvtColor(imageBinary, cv2.COLOR_GRAY2BGR)                      # make the binary image 3 channel
-        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)                          # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))                         # set back the alpha channel of the image 
+        imageBGRA = self.processor.threshold(imageBGRA, threshold)          # call the threshold function from Processors module
         
-        return imageHSVA
+        return imageBGRA
 
 
     def on_change(self):
@@ -781,16 +753,13 @@ class ComplementBox(DraggableFunctionBox):
         super().__init__(COMPLEMENT_NAME, parent)
   
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Performs complememnt of the given image.
         """
-        imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR)        # convert the HSVA image to BGR color space
-        imageComplement = cv2.bitwise_not(imageBGR)                            # perform complememnt of the image
-        imageHSV = cv2.cvtColor(imageComplement, cv2.COLOR_BGR2HSV)            # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))                  # set back the alpha channel of the image
+        imageBGRA = self.processor.complement(imageBGRA)  # call the complement function from Processors module
 
-        return imageHSVA
+        return imageBGRA
 
 
 
@@ -804,28 +773,24 @@ class CropBox(DraggableFunctionBox):
 
 
     def build_ui(self):
-           
         # Create input boxes for crop ranges
         self.leftRight  = self.InsertMinMax("Left-Right:", 0, 0)      
         self.topBottom = self.InsertMinMax("Top-Bottom:", 0, 0)
                         
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Crops the given image based on the input range values.
         """
-        h,w = imageHSVA.shape[:2]            # get the height and width of the image
+        h,w = imageBGRA.shape[:2]            # get the height and width of the image
 
         # get the crop values from the input boxes
         leftCut, rightCut = GetWidgetValue(self.leftRight[:2], maxs=[w,w], defaults=[0, 0])
         topCut, bottomCut = GetWidgetValue(self.topBottom[:2], maxs=[h,h], defaults=[0, 0])
         
-        # if the crop values are invalid, return the original image
-        if leftCut+rightCut >= w or topCut+bottomCut >= h:
-            return imageHSVA
-        else:
-            return imageHSVA[topCut:-1-bottomCut, leftCut:-1-rightCut]  
-    
+        imageBGRA = self.processor.crop(imageBGRA, leftCut, rightCut, topCut, bottomCut)  # call the crop function from Processors module
+
+        return imageBGRA    
 
     def on_change(self):
         """
@@ -848,16 +813,14 @@ class FlipBox(DraggableFunctionBox):
         # Create a radio button group to select the flip direction
         self.buttonGroup = self.InsertRadioButtons(["Horizontal", "Vertical", "Both"])
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Flips the given image based on the slider value.
         """    
         flipCodes = [1, 0, -1]                          # horizontal, vertical, both
-        selectedId = self.buttonGroup.checkedId()       # get the selected radio button id
+        imageBGRA = self.processor.flip(imageBGRA, flipCodes[self.buttonGroup.checkedId()])  
 
-        # flip the image based on the selected id and return the result        
-        return cv2.flip(imageHSVA, flipCodes[selectedId])  
-
+        return imageBGRA
     
     def on_change(self):
         """
@@ -879,18 +842,16 @@ class RotateBox(DraggableFunctionBox):
         self.angle = self.InsertSlider(heading="Angle: ", minValue=-180, maxValue=180)  
 
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Rotates the given image based on the slider value.
         This method rotates the image around its center by the specified angle.
         """        
         value = self.angle[0].value()         # Get the current value of the slider
-        (h, w) = imageHSVA.shape[:2]            # get the height and width of the image
-        center = (w // 2, h // 2)           # rotate the center of the image
-        M = cv2.getRotationMatrix2D(center, value, 1.0)  # get the rotation matrix
-        
-        # rotate the image using the rotation matrix and return the result
-        return cv2.warpAffine(imageHSVA, M, (w, h))
+
+        imageBGRA = self.processor.rotate(imageBGRA, value)  # call the rotate function from Processors module
+
+        return imageBGRA
 
     
     def on_change(self):
@@ -921,12 +882,13 @@ class ResizeBox(DraggableFunctionBox):
         self.init = False
                         
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Resizes the given image based on the input size values.
         This method resizes the image to the specified width and height.
         """
-        (w, h) = imageHSVA.shape[:2]            # get the height and width of the image
+        (w, h) = imageBGRA.shape[:2]            # get the height and width of the image
+
         # set the default values for the input boxes
         if not self.init:
             self.newWidthHeight[0].setText(str(w))
@@ -936,8 +898,9 @@ class ResizeBox(DraggableFunctionBox):
         # get input and output range values from the text boxes
         reWidth, reHeight = GetWidgetValue(self.newWidthHeight[:2], mins=[0, 0], defaults=[w, h])
 
-        # resize the image to the specified size and return the result
-        return cv2.resize(imageHSVA, (reWidth, reHeight))
+        imageBGRA = self.processor.resize(imageBGRA, reWidth, reHeight)  # call the resize function from Processors module
+
+        return imageBGRA
 
     
     def on_change(self):
@@ -969,7 +932,7 @@ class PaddingBox(DraggableFunctionBox):
         self.topBottom = self.InsertMinMax("Top-Bottom:", 0, 0)
                         
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Applies padding to the given image based on the selected padding type and values.
         This method adds padding to the image using the specified padding type and values.
@@ -986,19 +949,9 @@ class PaddingBox(DraggableFunctionBox):
         lPad, rPad = GetWidgetValue(self.leftRight[:2], defaults=[0, 0])
         tPad, bPad = GetWidgetValue(self.topBottom[:2], defaults=[0, 0])
 
-        imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR)  # convert the HSVA image to BGR color space
+        imageBGRA = self.processor.padding(imageBGRA, paddingType, lPad, rPad, tPad, bPad, constant)  # call the padding function from Processors module
 
-        if selectedId == 0:
-            imageBGR = cv2.copyMakeBorder(imageBGR, tPad, bPad, lPad, rPad, paddingType, value=(constant, constant, constant))  # constant padding
-            imageA = cv2.copyMakeBorder(imageHSVA[:, :, 3], tPad, bPad, lPad, rPad, paddingType, value=constant)  
-        else:
-            imageBGR = cv2.copyMakeBorder(imageBGR, tPad, bPad, lPad, rPad, paddingType)   # reflect or replicate padding
-            imageA = cv2.copyMakeBorder(imageHSVA[:, :, 3], tPad, bPad, lPad, rPad, paddingType)   
-
-        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)    # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageA))   # set back the alpha channel of the image
-
-        return imageHSVA
+        return imageBGRA
     
     def on_change(self):
         """
@@ -1025,14 +978,14 @@ class HistEqualizationBox(DraggableFunctionBox):
         super().__init__(HISTEQ_NAME, parent)
   
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Performs histogram equalization on the given image.
         This method enhances the contrast of the image by redistributing the pixel intensity values.
         """
-        imageHSVA[:, :, 2] = cv2.equalizeHist(imageHSVA[:, :, 2])       # equalize the V channel of the HSVA image
+        imageBGRA = self.processor.histogramEqualization(imageBGRA)  # call the histogram equalization function from Processors module
         
-        return imageHSVA
+        return imageBGRA
     
     def on_change(self):
         """
@@ -1056,7 +1009,7 @@ class HistCLAHEBox(DraggableFunctionBox):
         self.clipLimit = self.InsertSlider(heading="Clip Limit:", minValue=1, maxValue=100, defaultValue=2)  
         self.tileGridSize = self.InsertSingleInput("Tile Grid Size:", defaultValue=8)
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Performs CLAHE on the given image.
         This method enhances the contrast of the image using the specified clip limit and tile grid size.
@@ -1066,12 +1019,10 @@ class HistCLAHEBox(DraggableFunctionBox):
         tileGridSize = GetWidgetValue(self.tileGridSize[:1], mins=[4], maxs=[64], defaults=[8])
         tileGridSize = tileGridSize if tileGridSize % 2 == 0 else tileGridSize + 1          # allow only even numbers for tile grid size
 
-        # create a CLAHE object with specified clip limit and tile grid size
-        clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=(tileGridSize, tileGridSize))
+        # call the CLAHE function from Processors module
+        imageBGRA = self.processor.clahe(imageBGRA, clipLimit, tileGridSize)
 
-        imageHSVA[:, :, 2] = clahe.apply(imageHSVA[:, :, 2])        # apply CLAHE to the V channel of the HSVA image
-
-        return imageHSVA
+        return imageBGRA
     
     def on_change(self):
         """
@@ -1096,20 +1047,17 @@ class MaskBox(DraggableFunctionBox):
         self.intensityMin = self.InsertIntensityInput("min HSV:", 0, 0, 0)
         self.intensityMax = self.InsertIntensityInput("max HSV:", 0, 0, 0)
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         """
         # get the mask range values from the input boxes
         rMin, gMin, bMin = GetWidgetValue(self.intensityMin[:3], mins=[0, 0, 0], maxs=[255,255, 255], defaults=[0, 0, 0])
         rMax, gMax, bMax = GetWidgetValue(self.intensityMax[:3], mins=[0, 0, 0], maxs=[255,255, 255], defaults=[0, 0, 0])
 
-        mask = cv2.inRange(imageHSVA[:, :, :3], np.array([rMin, gMin, bMin]), np.array([rMax, gMax, bMax]))   # create a mask based on the range values
+        # call the mask function from Processors module
+        imageBGRA = self.processor.masking(imageBGRA, np.asarray([rMin, gMin, bMin]), np.asarray([rMax, gMax, bMax]))
 
-        imageBGR = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)            # convert the mask to BGR color space
-        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)                 # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))                # set back the alpha channel of the image
-
-        return imageHSVA
+        return imageBGRA
     
     def on_change(self):
         """
@@ -1133,18 +1081,15 @@ class BitSliceBox(DraggableFunctionBox):
         self.combo = self.InsertComboList(["0", "1", "2", "3", "4", "5", "6", "7"])
                         
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Extracts the selected bit plane from the given image.
         This method isolates the specified bit plane from the image and returns it as a binary image.
         """
-        imageGray = cv2.bitwise_and(imageHSVA[:, :, 2], 1 << self.combo.currentIndex())         # get the selected bit plane
-        imageBinary = np.where(imageGray > 0, 255, 0).astype(np.uint8)    # convert the bit plane to binary image  
-        imageBGR = cv2.cvtColor(imageBinary, cv2.COLOR_GRAY2BGR)          # make the binary image 3 channel
-        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)              # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))             # set back the alpha channel of the image
+        # call the bit slice function from Processors module
+        imageBGRA = self.processor.bitSlice(imageBGRA, int(self.combo.currentText()))
 
-        return imageHSVA
+        return imageBGRA
 
     
     def on_change(self):
@@ -1179,7 +1124,7 @@ class NoiseBox(DraggableFunctionBox):
         for x in self.saltPepProb:
             x.hide()    
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Adds noise to the given image based on the selected noise type and parameters.
         This method applies the specified noise to the image and returns the noisy image.
@@ -1188,58 +1133,25 @@ class NoiseBox(DraggableFunctionBox):
             # get mean and std values from the text boxes
             mean = self.mean[0].value() 
             std = self.std[0].value()
-            
-            imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR)  # convert the HSVA image to BGR color space
-            
-            # If the image is grayscale, make the noise channels identical
-            if np.array_equal(imageBGR[:, :, 0], imageBGR[:, :, 1]) and np.array_equal(imageBGR[:, :, 1], imageBGR[:, :, 2]):
-                noise = np.random.normal(mean, std, imageBGR[:, :, 0].shape).astype(np.float32) 
-                noise = cv2.merge((noise, noise, noise))
-            else:
-                noise = np.random.normal(mean, std, imageBGR.shape).astype(np.float32) 
 
-            imageBGR = imageBGR.astype(np.float32) + noise              # add noise to the V channel of the HSVA image
-            imageBGR = np.clip(imageBGR, 0, 255).astype(np.uint8)       # clip the values to the range [0, 255]
-            imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)        # convert back to HSV color space
-            imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))       # set back the alpha channel of the image
+            imageBGRA = self.processor.gaussianNoise(imageBGRA, mean, std)  # call the gaussian noise function from Processors module
             
-            return imageHSVA
+            return imageBGRA
         
         elif self.combo.currentText() == "Salt & Pepper":
             # get salt and pepper probability values from the text boxes
             saltPepProb = self.saltPepProb[0].value() / 1000
 
-            numSalt = int(imageHSVA.size * saltPepProb)       # number of salt pixels to add
-            numPep = int(imageHSVA.size * saltPepProb)         # number of pepper pixels to add
-
-            saltCoords = [np.random.randint(0, i-1, numSalt) for i in imageHSVA.shape]
-            pepCoords = [np.random.randint(0, i-1, numPep) for i in imageHSVA.shape]
+            # call the salt and pepper noise function from Processors module
+            imageBGRA = self.processor.saltPepperNoise(imageBGRA, saltPepProb)
             
-            imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR)  # convert the HSVA image to BGR color space
-
-            imageBGR[saltCoords[0], saltCoords[1]] = [255, 255, 255]    # add salt noise
-            imageBGR[pepCoords[0], pepCoords[1]] = [0,0,0]              # add pepper noise
-
-            imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)        # convert back to HSV color space
-            imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))       # set back the alpha channel of the image
-
-            return imageHSVA.astype(np.uint8)       
+            return imageBGRA    
         
         elif self.combo.currentText() == "Poisson": 
-            imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR)  # convert the HSVA image to BGR color space
+            # call the poisson noise function from Processors module
+            imageBGRA = self.processor.poissonNoise(imageBGRA)
             
-            # If the image is grayscale, make the noise channels identical
-            if np.array_equal(imageBGR[:, :, 0], imageBGR[:, :, 1]) and np.array_equal(imageBGR[:, :, 1], imageBGR[:, :, 2]):
-                grayNoise = np.random.poisson(imageBGR[:, :, 0].astype(np.float32))
-                imageBGR = cv2.merge((grayNoise, grayNoise, grayNoise))
-            else:
-                imageBGR = np.random.poisson(imageBGR.astype(np.float32))
-
-            imageBGR = np.clip(imageBGR, 0, 255).astype(np.uint8)       
-            imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)
-            imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))
-            
-            return imageHSVA.astype(np.uint8)
+            return imageBGRA
     
     def on_change(self):
         """
@@ -1297,32 +1209,17 @@ class ArithmeticBox(DraggableFunctionBox):
         self.button = self.InsertButton("Select Image")
         self.button.clicked.connect(self.select_image)  # connect the button to the select_image function
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         """
         if self.secondImage is None:
-            return imageHSVA
+            return imageBGRA
         
         alpha = self.alpha[0].value()/100           # get the alpha value from input box
-        secondImage = (self.secondImage * alpha).astype(np.float32)  # multiply the second image with alpha value
-        secondImage = cv2.resize(secondImage, (imageHSVA.shape[1], imageHSVA.shape[0]))  # resize the second image to match the size of the first image
-        imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR).astype(np.float32)  
+        operation = self.combo.currentText()                # get the selected operation from combo box
+        imageBGRA = self.processor.arithmetic(imageBGRA, self.secondImage, alpha, operation)  # call the arithmetic function from Processors module
 
-        # perform the selected arithmetic operation
-        if self.combo.currentText() == "Add":
-            imageBGR = cv2.add(imageBGR, secondImage)
-        elif self.combo.currentText() == "Subtract":
-            imageBGR = cv2.subtract(imageBGR, secondImage)
-        elif self.combo.currentText() == "Multiply":
-            imageBGR = cv2.multiply(imageBGR, secondImage)
-        elif self.combo.currentText() == "Divide":
-            imageBGR = cv2.divide(imageBGR, secondImage + 1e-10)
-
-        imageBGR = np.clip(imageBGR, 0, 255).astype(np.uint8)       # clip the values to the range [0, 255]
-        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)        # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))       # set back the alpha channel of the image
-
-        return imageHSVA
+        return imageBGRA
     
     def on_change(self):
         """
@@ -1378,28 +1275,14 @@ class LogicBox(DraggableFunctionBox):
         self.button = self.InsertButton("Select Image")
         self.button.clicked.connect(self.select_image)  # connect the button to the select_image function
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         """
-        if self.secondImage is None:
-            return imageHSVA
-        
-        # resize the second image to match the size of the first image
-        secondImage = cv2.resize(self.secondImage, (imageHSVA.shape[1], imageHSVA.shape[0]))  
-        imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR)  
+        if self.secondImage is not None:
+            operation = self.combo.currentText()                # get the selected operation from combo box
+            imageBGRA = self.processor.logic(imageBGRA, self.secondImage, operation)  # call the logic function from Processors module
 
-        # perform the selected arithmetic operation
-        if self.combo.currentText() == "And":
-            imageBGR = cv2.bitwise_and(imageBGR, secondImage)
-        elif self.combo.currentText() == "Or":
-            imageBGR = cv2.bitwise_or(imageBGR, secondImage)
-        elif self.combo.currentText() == "Xor":
-            imageBGR = cv2.bitwise_xor(imageBGR, secondImage)
-
-        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)        # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))       # set back the alpha channel of the image
-
-        return imageHSVA.astype(np.uint8)       
+        return imageBGRA 
     
     def on_change(self):
         """
@@ -1445,40 +1328,21 @@ class LaplaceBox(DraggableFunctionBox):
   
     def build_ui(self):
         # insert switch for extended laplace choice
-        self.norm = self.InsertSwitch("Normalize")
+        self.extended = self.InsertSwitch("Extended Laplace")
         
-        # insert switch for extended laplace choice
-        self.onOff = self.InsertSwitch("Extended Laplace")
+        # insert switch for normalize choice
+        self.norm = self.InsertSwitch("Normalize")
 
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Performs laplace transformation on the given image.
         This method applies a laplace filter to the image to enhance the edges and details.
         """
-        vChannel = imageHSVA[:, :, 2]        # get the V channel of the HSVA image
+        # call the laplace function from Processors module
+        imageBGRA = self.processor.laplacian(imageBGRA, self.extended.isChecked(), self.norm.isChecked())  
 
-        # normalize the v channel to 0-1 range
-        vChannel = vChannel.astype(np.float32) / 255.0
-
-        # create the laplace kernel
-        if self.onOff.isChecked():
-            w = np.array([[1, 1, 1], [1, -8, 1], [1, 1, 1]], dtype=np.float32)
-        else:
-            w = np.array([[0, 1, 0], [0, -4, 0], [0, 1, 0]], dtype=np.float32)
-
-        # get the laplace filter
-        laplace = cv2.filter2D(vChannel, -1, w, borderType=cv2.BORDER_REPLICATE)
-        
-        # normalize the filtered image if the normalize switch is checked
-        if self.norm.isChecked():
-            laplace = cv2.normalize(laplace, None, 0, 1, cv2.NORM_MINMAX)
-        
-        laplace = (np.clip(laplace, 0, 1) * 255).astype(np.uint8)
-        imageBGR = cv2.merge((laplace, laplace, laplace))  
-        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)        # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))       # set back the alpha channel of the image
-        return imageHSVA
+        return imageBGRA
 
     
     def on_change(self):
@@ -1502,31 +1366,13 @@ class SobelBox(DraggableFunctionBox):
         self.norm = self.InsertSwitch("Normalize")
         
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         """
-        vChannel = imageHSVA[:, :, 2]        # get the V channel of the HSVA image
-        vChannel = vChannel.astype(np.float32) / 255.0        # normalize the v channel to 0-1 range
+        # call the sobel function from Processors module
+        imageBGRA = self.processor.sobel(imageBGRA, self.norm.isChecked())  
 
-        # create the sobel kernels
-        w_x = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
-        w_y = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
-
-        # get the sobel filters
-        laplace_x = cv2.filter2D(vChannel, -1, w_x, borderType=cv2.BORDER_REPLICATE)
-        laplace_y = cv2.filter2D(vChannel, -1, w_y, borderType=cv2.BORDER_REPLICATE)
-        laplace = np.sqrt(laplace_x ** 2 + laplace_y ** 2)
-
-        # normalize the filtered image if the normalize switch is checked
-        if self.norm.isChecked():
-            laplace = cv2.normalize(laplace, None, 0, 1, cv2.NORM_MINMAX)
-        
-        laplace = (np.clip(laplace, 0, 1) * 255).astype(np.uint8)
-        imageBGR = cv2.merge((laplace, laplace, laplace))
-        imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)        # convert back to HSV color space
-        imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))       # set back the alpha channel of the image
-
-        return imageHSVA
+        return imageBGRA
 
     
     def on_change(self):
@@ -1571,7 +1417,7 @@ class SpatialFilterBox(DraggableFunctionBox):
             x.hide()  
 
 
-    def process(self, imageHSVA):
+    def process(self, imageBGRA):
         """
         Applies the selected spatial filter to the given image based on the specified parameters.
         This method processes the image using the selected filter type and parameters.
@@ -1583,71 +1429,31 @@ class SpatialFilterBox(DraggableFunctionBox):
         alpha = self.alpha[0].value()/100       # get the alpha value from input box
         extended = self.extended.isChecked()    # get the extended laplace choice from switch
 
-        vChannel = imageHSVA[:, :, 2]           # get the V channel of the HSVA image
-
         if self.combo.currentText() == "Median":
-            vChannel = cv2.medianBlur(vChannel, w)  # apply median filter
+            imageBGRA = self.processor.orderStatistics(imageBGRA, w, "median")  
 
         elif self.combo.currentText() == "Max":
-            vChannel = cv2.dilate(vChannel, np.ones((w, w), np.uint8), borderType=cv2.BORDER_REPLICATE)   # apply max filter
+            imageBGRA = self.processor.orderStatistics(imageBGRA, w, "max")  
 
         elif self.combo.currentText() == "Min":
-            vChannel = cv2.erode(vChannel, np.ones((w, w), np.uint8),borderType=cv2.BORDER_REPLICATE)     # apply min filter
+            imageBGRA = self.processor.orderStatistics(imageBGRA, w, "min")  
 
         elif self.combo.currentText() == "Mean":
-            vChannel = cv2.blur(vChannel, (w, w), borderType=cv2.BORDER_REPLICATE)    # apply mean filter
+            imageBGRA = self.processor.boxFilter(imageBGRA, w)
 
         elif self.combo.currentText() == "Gaussian":
-            vChannel = cv2.GaussianBlur(vChannel, (w, w), sigma, borderType=cv2.BORDER_REPLICATE)  # apply gaussian filter
+            imageBGRA = self.processor.gaussianBlur(imageBGRA, w, sigma)  
         
         elif self.combo.currentText() == "Laplace Sharpening":
-            vChannel = vChannel.astype(np.float32) / 255    # normalize the image to 0-1 range
+            imageBGRA = self.processor.laplacianSharpening(imageBGRA, alpha, extended)
             
-            # create the laplace kernel
-            if extended:
-                w = np.array([[1, 1, 1], [1, -8, 1], [1, 1, 1]], dtype=np.float32)
-            else:
-                w = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]], dtype=np.float32)
-            
-            laplace = cv2.filter2D(vChannel, cv2.CV_32F, w, borderType=cv2.BORDER_REPLICATE)   # get the laplace filter
-            vChannel = vChannel - laplace * alpha       # sharpen the image using the laplace filter
-
-            vChannel = np.clip(vChannel, 0, 1)          # clip the image to 0-1 range
-            vChannel = (vChannel * 255).astype(np.uint8)        # convert back to uint8
-
         elif self.combo.currentText() == "Sobel Sharpening":
-            vChannel = vChannel.astype(np.float32) / 255.0    # normalize the image to 0-1 range
-
-            # apply sobel kernel on x axis
-            w_x = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
-            laplace_x = cv2.filter2D(vChannel, cv2.CV_32F, w_x, borderType=cv2.BORDER_REPLICATE)  # get the sobel filter on x axis
-            vChannel = vChannel + laplace_x * alpha   # sharpen the image using the sobel filter
-
-            # apply sobel kernel on y axis
-            w_y = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
-            laplace_y = cv2.filter2D(vChannel, cv2.CV_32F, w_y, borderType=cv2.BORDER_REPLICATE)  # get the sobel filter on y axis
-            vChannel = vChannel + laplace_y * alpha   # sharpen the image using the sobel filter
-
-            vChannel = np.clip(vChannel, 0, 1) * 255    # clip the image to 0-1 range
-            vChannel = vChannel.astype(np.uint8)        # convert back to uint8
+            imageBGRA = self.processor.sobelSharpening(imageBGRA, alpha)
 
         elif self.combo.currentText() == "Unsharp Masking":
-            vChannel = vChannel.astype(np.float32) / 255.0    # normalize the image to 0-1 range
-            Blurred = cv2.GaussianBlur(vChannel, (w, w), sigma, borderType=cv2.BORDER_REPLICATE)     # get the blurred image
-            Sharp = vChannel - Blurred       # get the sharpened filter
-            vChannel = vChannel + Sharp * alpha
+            imageBGRA = self.processor.unsharpMasking(imageBGRA, w, sigma, alpha)
 
-            vChannel = np.clip(vChannel, 0, 1) * 255    # clip the image to 0-1 range
-            vChannel = vChannel.astype(np.uint8)        # convert back to uint8
-
-        if np.array_equal(imageHSVA[:, :, 0], imageHSVA[:, :, 1]) and np.array_equal(imageHSVA[:, :, 1], imageHSVA[:, :, 2]):
-            imageBGR = cv2.merge((vChannel, vChannel, vChannel))  # make the image 3 channel
-            imageHSV = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2HSV)        # convert back to HSV color space
-            imageHSVA = cv2.merge((imageHSV, imageHSVA[:, :, 3]))       # set back the alpha channel of the image
-        else:
-            imageHSVA[:, :, 2] = vChannel        # set the V channel of the HSVA image to the processed image
-
-        return imageHSVA
+        return imageBGRA
 
     
     def on_change(self):

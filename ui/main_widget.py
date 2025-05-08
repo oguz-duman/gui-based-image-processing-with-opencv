@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 # Import custom function boxes
-import functions
+import ui.functions as functions
 
 
 # -------------------------- main class definitions -------------------
@@ -48,8 +48,8 @@ class MainWidget(QWidget):
         """
         Initialize the variables used in the widget.
         """
-        self.inputImg = None  # input image variable
-        self.outputImg = None  # output image variable
+        self.inputBGRA = None  # input image variable
+        self.outputBGRA = None  # output image variable
         self.curHistLayer = -1  # current histogram layer variable
         self.curColorLayer = -1  # current color layer variable
         self.histView = False  # histogram view variable
@@ -395,21 +395,17 @@ class MainWidget(QWidget):
         """
         This function is called to process the image through the function boxes.
         """        
-        if self.inputImg is None:
+        if self.inputBGRA is None:
             return                                      # if no image is loaded, return
         
         try:
-            # convert image to HSVA format
-            img_HSV = cv2.cvtColor(self.inputImg[:, :, :3], cv2.COLOR_BGR2HSV)  # convert the image to HSV format
-            imgHSVA = cv2.merge((img_HSV, self.inputImg[:,:,3]))  # merge the alpha channel with the HSV image
-            
+            image = self.inputBGRA.copy()                # make a copy of the input image for processing
             for pipe in self.pipeline:
                 # check if the function box is activated
                 if pipe.switch.isChecked():
-                    imgHSVA = pipe.process(imgHSVA)             # call the process function of the function box
+                    image = pipe.process(image)             # call the process function of the function box
             
-            image_BGR = cv2.cvtColor(imgHSVA[:, :, :3], cv2.COLOR_HSV2BGR)    # convert image to BGR format
-            self.outputImg = cv2.merge((image_BGR, imgHSVA[:, :, 3]))  # merge the alpha channel with the BGR image
+            self.outputBGRA = image.copy()                # make a copy of the processed image for output
 
             # update the output image
             if self.histView:
@@ -417,7 +413,7 @@ class MainWidget(QWidget):
             elif self.curColorLayer != -1:
                 self.DisplayColorLayer()
             else:
-                self.ImagePixmap(self.outputImg, self.rightLabel)
+                self.ImagePixmap(self.outputBGRA, self.rightLabel)
         
         except Exception as e:
             QMessageBox.information(self, "Error", traceback.format_exc())
@@ -443,14 +439,14 @@ class MainWidget(QWidget):
             self.zoomIn.hide()  # deactivate zoom buttons
             self.zoomOut.hide()
 
-            self.inputImg = cv2.imread(filePath, cv2.IMREAD_UNCHANGED)      # read the image
-            self.inputImg = self.any2RGBA(self.inputImg)                    # convert the image to RGBA format
+            self.inputBGRA = cv2.imread(filePath, cv2.IMREAD_UNCHANGED)      # read the image
+            self.inputBGRA = self.any2RGBA(self.inputBGRA)                    # convert the image to RGBA format
             
-            self.outputImg = self.inputImg          # make a copy of the input image for output
+            self.outputBGRA = self.inputBGRA          # make a copy of the input image for output
 
             # display the image
-            self.ImagePixmap(self.inputImg, self.leftLabel)  
-            self.ImagePixmap(self.inputImg, self.rightLabel)  
+            self.ImagePixmap(self.inputBGRA, self.leftLabel)  
+            self.ImagePixmap(self.inputBGRA, self.rightLabel)  
 
             # process the image through the pipeline
             self.ProcessPipeline()  
@@ -497,8 +493,8 @@ class MainWidget(QWidget):
                 self.zoomIn.hide()      # deactivate zoom buttons
                 self.zoomOut.hide()
                 self.zoomAmount = 0
-                self.ImagePixmap(self.inputImg, self.leftLabel)  
-                self.ImagePixmap(self.outputImg, self.rightLabel)
+                self.ImagePixmap(self.inputBGRA, self.leftLabel)  
+                self.ImagePixmap(self.outputBGRA, self.rightLabel)
             
             # else, display the histogram of the current layer
             else:
@@ -520,8 +516,8 @@ class MainWidget(QWidget):
         self.curColorLayer = -1  
 
         bgra2rgba = [2, 1, 0, 3]  # OpenCV reads images in BGR format
-        ascImgIn = np.ascontiguousarray(self.inputImg[:,:,bgra2rgba[self.curHistLayer]])
-        ascImgOut = np.ascontiguousarray(self.outputImg[:,:,bgra2rgba[self.curHistLayer]])
+        ascImgIn = np.ascontiguousarray(self.inputBGRA[:,:,bgra2rgba[self.curHistLayer]])
+        ascImgOut = np.ascontiguousarray(self.outputBGRA[:,:,bgra2rgba[self.curHistLayer]])
         self.HistogramPixmap(ascImgIn, self.leftLabel, zoom)
         self.HistogramPixmap(ascImgOut, self.rightLabel)        # no needed zoom parameter in the second call
 
@@ -532,8 +528,8 @@ class MainWidget(QWidget):
             # if the last color layer is reached, switch back to original view 
             if self.curColorLayer+1 >= 4:
                     self.curColorLayer = -1
-                    self.ImagePixmap(self.inputImg, self.leftLabel)  
-                    self.ImagePixmap(self.outputImg, self.rightLabel)
+                    self.ImagePixmap(self.inputBGRA, self.leftLabel)  
+                    self.ImagePixmap(self.outputBGRA, self.rightLabel)
                     # change the text of leftTitle and rightTitle to empty string
                     self.leftTitle.setText("")
                     self.rightTitle.setText("")
@@ -558,8 +554,8 @@ class MainWidget(QWidget):
         self.zoomOut.hide()
 
         bgra2rgba = [2, 1, 0, 3]  # OpenCV reads images in BGRA format
-        ascImgIn = np.ascontiguousarray(self.inputImg[:,:,bgra2rgba[self.curColorLayer]])
-        ascImgOut = np.ascontiguousarray(self.outputImg[:,:,bgra2rgba[self.curColorLayer]])
+        ascImgIn = np.ascontiguousarray(self.inputBGRA[:,:,bgra2rgba[self.curColorLayer]])
+        ascImgOut = np.ascontiguousarray(self.outputBGRA[:,:,bgra2rgba[self.curColorLayer]])
         self.ImagePixmap(ascImgIn, self.leftLabel, title=True)
         self.ImagePixmap(ascImgOut, self.rightLabel, title=True)
 
@@ -593,7 +589,7 @@ class MainWidget(QWidget):
         if filePath:
             try:
                 # Save the image using OpenCV
-                cv2.imwrite(filePath, self.outputImg)
+                cv2.imwrite(filePath, self.outputBGRA)
             except:
                 QMessageBox.information(self, "Error", f"Failed to save the image. Please try again.")
 
@@ -675,13 +671,3 @@ class MainWidget(QWidget):
         pixmap = pixmap.scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
         label.setPixmap(pixmap)
 
-
-
-if __name__ == "__main__":
-    app = QApplication([])    
-
-    widget = MainWidget()     
-    widget.resize(800, 600) 
-    widget.show()       
-
-    sys.exit(app.exec())        
