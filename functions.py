@@ -40,6 +40,29 @@ function_names = [BRIGHTNESS_NAME, SATURATION_NAME, CONTRAST_NAME, FULL_SCALE_CO
                   SPATIAL_NAME]
 
 
+def GetWidgetValue(widgets, mins=None, maxs=None, defaults=None):
+    """
+    """
+    if mins is None:
+        mins = [0] * len(widgets)
+        
+    if maxs is None:
+        maxs = [float('inf')] * len(widgets)
+
+    if defaults is None:
+        defaults = [0] * len(widgets)
+    
+    try:
+        values = []
+        for widget, min, max, default in zip(widgets, mins, maxs, defaults):
+            values.append(int(widget.text()) if min <= int(widget.text()) <= max else default)
+        
+        return values[0] if len(values) == 1 else values
+
+    except:
+        return defaults[0] if len(defaults) == 1 else defaults 
+
+
 class AddNewBox(QWidget):
     """
     A box that allows the user to add a new function.
@@ -546,10 +569,8 @@ class ContrastBox(DraggableFunctionBox):
         """
         if self.combo.currentText() == "by Input-Output Range":
             # get input and output range values from the text boxes
-            in_min = int(self.inMinMax[0].text()) if self.inMinMax[0].text() else 0
-            in_max = int(self.inMinMax[1].text()) if self.inMinMax[1].text() else 255
-            out_min = int(self.outMinMax[0].text()) if self.outMinMax[0].text() else 0
-            out_max = int(self.outMinMax[1].text()) if self.outMinMax[1].text() else 255
+            in_min, in_max = GetWidgetValue(self.inMinMax[:2], maxs=[255,255], defaults=[0, 255])
+            out_min, out_max = GetWidgetValue(self.outMinMax[:2], maxs=[255,255], defaults=[0, 255])
 
             # calculate the alpha and beta values
             alpha = (out_max - out_min) / (in_max - in_min)
@@ -781,6 +802,7 @@ class CropBox(DraggableFunctionBox):
     def __init__(self, parent=None):
         super().__init__(CROP_NAME, parent)
 
+
     def build_ui(self):
            
         # Create input boxes for crop ranges
@@ -792,14 +814,19 @@ class CropBox(DraggableFunctionBox):
         """
         Crops the given image based on the input range values.
         """
-        leftCut = int(self.leftRight[0].text()) if self.leftRight[0].text() else 0
-        rightCut = int(self.leftRight[1].text()) if self.leftRight[1].text() else 0
-        topCut = int(self.topBottom[0].text()) if self.topBottom[0].text() else 0
-        bottomCut = int(self.topBottom[1].text()) if self.topBottom[1].text() else 0
+        h,w = imageHSVA.shape[:2]            # get the height and width of the image
 
-        return imageHSVA[topCut:-1-bottomCut, leftCut:-1-rightCut]  
-
+        # get the crop values from the input boxes
+        leftCut, rightCut = GetWidgetValue(self.leftRight[:2], maxs=[w,w], defaults=[0, 0])
+        topCut, bottomCut = GetWidgetValue(self.topBottom[:2], maxs=[h,h], defaults=[0, 0])
+        
+        # if the crop values are invalid, return the original image
+        if leftCut+rightCut >= w or topCut+bottomCut >= h:
+            return imageHSVA
+        else:
+            return imageHSVA[topCut:-1-bottomCut, leftCut:-1-rightCut]  
     
+
     def on_change(self):
         """
         This function is called when the user changes the settings.
@@ -907,8 +934,7 @@ class ResizeBox(DraggableFunctionBox):
             self.init = True
 
         # get input and output range values from the text boxes
-        reWidth = int(self.newWidthHeight[0].text()) if self.newWidthHeight[0].text() and int(self.newWidthHeight[0].text()) > 0 else w
-        reHeight = int(self.newWidthHeight[1].text()) if self.newWidthHeight[1].text() and int(self.newWidthHeight[1].text()) > 0 else h
+        reWidth, reHeight = GetWidgetValue(self.newWidthHeight[:2], mins=[0, 0], defaults=[w, h])
 
         # resize the image to the specified size and return the result
         return cv2.resize(imageHSVA, (reWidth, reHeight))
@@ -954,13 +980,11 @@ class PaddingBox(DraggableFunctionBox):
         paddingType = padCodes[selectedId]
 
         # get the constant value from input box
-        constant = int(self.constant[0].text()) if self.constant[0].text() and 0 <= int(self.constant[0].text()) <= 255 else 0
+        constant = GetWidgetValue(self.constant[:1], mins=[0], maxs=[255], defaults=[0])
 
         # get the padding values from the input boxes
-        lPad = int(self.leftRight[0].text()) if self.leftRight[0].text() else 0
-        rPad = int(self.leftRight[1].text()) if self.leftRight[1].text() else 0
-        tPad = int(self.topBottom[0].text()) if self.topBottom[0].text() else 0
-        bPad = int(self.topBottom[1].text()) if self.topBottom[1].text() else 0
+        lPad, rPad = GetWidgetValue(self.leftRight[:2], defaults=[0, 0])
+        tPad, bPad = GetWidgetValue(self.topBottom[:2], defaults=[0, 0])
 
         imageBGR = cv2.cvtColor(imageHSVA[:, :, :3], cv2.COLOR_HSV2BGR)  # convert the HSVA image to BGR color space
 
@@ -1039,8 +1063,8 @@ class HistCLAHEBox(DraggableFunctionBox):
         """
         # get the clip limit and tile grid size values
         clipLimit = self.clipLimit[0].value()/10
-        tileGridSize = int(self.tileGridSize[0].text()) if self.tileGridSize[0].text() and 4 <= int(self.tileGridSize[0].text()) <= 64 else 8
-        tileGridSize = tileGridSize if tileGridSize % 2 == 0 else 8        # allow only even numbers for tile grid size
+        tileGridSize = GetWidgetValue(self.tileGridSize[:1], mins=[4], maxs=[64], defaults=[8])
+        tileGridSize = tileGridSize if tileGridSize % 2 == 0 else tileGridSize + 1          # allow only even numbers for tile grid size
 
         # create a CLAHE object with specified clip limit and tile grid size
         clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=(tileGridSize, tileGridSize))
@@ -1076,12 +1100,8 @@ class MaskBox(DraggableFunctionBox):
         """
         """
         # get the mask range values from the input boxes
-        rMin = int(self.intensityMin[0].text()) if self.intensityMin[0].text() else 0
-        gMin = int(self.intensityMin[0].text()) if self.intensityMin[0].text() else 0
-        bMin = int(self.intensityMin[0].text()) if self.intensityMin[0].text() else 0
-        rMax = int(self.intensityMax[1].text()) if self.intensityMax[1].text() else 0
-        gMax = int(self.intensityMax[1].text()) if self.intensityMax[1].text() else 0
-        bMax = int(self.intensityMax[1].text()) if self.intensityMax[1].text() else 0
+        rMin, gMin, bMin = GetWidgetValue(self.intensityMin[:3], mins=[0, 0, 0], maxs=[255,255, 255], defaults=[0, 0, 0])
+        rMax, gMax, bMax = GetWidgetValue(self.intensityMax[:3], mins=[0, 0, 0], maxs=[255,255, 255], defaults=[0, 0, 0])
 
         mask = cv2.inRange(imageHSVA[:, :, :3], np.array([rMin, gMin, bMin]), np.array([rMax, gMax, bMax]))   # create a mask based on the range values
 
@@ -1540,23 +1560,24 @@ class SpatialFilterBox(DraggableFunctionBox):
         for x in self.sigma:
             x.hide()
 
+        # insert a switch for extended laplace choice
+        self.extended = self.InsertSwitch("Extended Laplace")
+        self.extended.hide()  # hide the switch by default
+
         # insert a slider for alpha value
         self.alpha = self.InsertSlider(heading="Alpha:", minValue=1, maxValue=1000, defaultValue=100)
         # hide the alpha input box by default
         for x in self.alpha:
             x.hide()  
 
-        # insert a switch for extended laplace choice
-        self.extended = self.InsertSwitch("Extended Laplace")
-        self.extended.hide()  # hide the switch by default
 
     def process(self, imageHSVA):
         """
         Applies the selected spatial filter to the given image based on the specified parameters.
         This method processes the image using the selected filter type and parameters.
         """
-        # get the kernel size from input box
-        w = int(self.kernel[0].text()) if self.kernel[0].text() and int(self.kernel[0].text()) > 0 and int(self.kernel[0].text()) % 2 == 1 else 3
+        w = GetWidgetValue(self.kernel[:1], mins=[0], defaults=[3])         # get the kernel size from input box
+        w = w if w % 2 == 1 else w + 1                                      # make sure the kernel size is odd
         
         sigma = self.sigma[0].value()           # get the sigma value from input box
         alpha = self.alpha[0].value()/100       # get the alpha value from input box
