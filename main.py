@@ -337,6 +337,8 @@ class MainWidget(QWidget):
             newBox = functions.HistEqualizationBox()
         elif functionName == functions.HISTCLAHE_NAME:
             newBox = functions.HistCLAHEBox()
+        elif functionName == functions.MASK_NAME:
+            newBox = functions.MaskBox()
         elif functionName == functions.BITSLICE_NAME:
             newBox = functions.BitSliceBox()
         elif functionName == functions.ADD_NOISE_NAME:
