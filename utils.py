@@ -1,5 +1,7 @@
 
-def GetWidgetValue(widgets, mins=None, maxs=None, defaults=None):
+
+# utilsden al components.py a taşı
+def GetWidgetValue(widgets, mins=None, maxs=None, defaults=None, decimal=1):
     """
     """
     if mins is None:

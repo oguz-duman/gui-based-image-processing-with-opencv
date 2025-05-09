@@ -92,7 +92,7 @@ class FunctionBox(QWidget):
     This class provides a template for creating specific function boxes by subclassing it.
     """
     # Signals to communicate with the main application
-    updateTrigger = Signal(str)
+    updateTrigger = Signal()
     removeTrigger = Signal(str)
    
 
@@ -101,8 +101,8 @@ class FunctionBox(QWidget):
 
         self.contentLayout = QVBoxLayout()
         self.processor = Processor()        # create an instance of the Processor class
-        self.ui_components = UiComponents(parent=self.contentLayout, onchance_func=self.on_change)        # create an instance of the self.ui_components class
-
+        # create an instance of the self.ui_components class
+        self.ui_components = UiComponents(parent_widget=self.contentLayout, onchange_trigger=self.updateTrigger)        
         self.initiate_ui(title)             # call the initiate_ui method to set up the UI
 
 
@@ -158,7 +158,7 @@ class FunctionBox(QWidget):
         self.switch = QCheckBox("On/Off")
         self.switch.setChecked(True)
         self.switch.setFont(self.font)
-        self.switch.stateChanged.connect(self.on_change)
+        self.switch.stateChanged.connect(lambda: self.updateTrigger.emit())
         self.switch.setFixedHeight(30)
         switchLayout.addWidget(self.switch, alignment=Qt.AlignTop)
 
@@ -177,15 +177,6 @@ class FunctionBox(QWidget):
         It should be overridden in subclasses to implement specific functionality.
         """
         pass
-
-
-    def on_change(self):
-        """
-        This function is called when the user changes any settings in the function box.
-        It should be overridden in subclasses to implement specific functionality.
-        """
-        self.updateTrigger.emit(self.title)
-
 
 
 
@@ -209,10 +200,8 @@ class DraggableFunctionBox(FunctionBox):
 
 
 
-
 class BrightnessBox(DraggableFunctionBox):
     """
-    A box that allows the user to adjust the brightness of image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.BRIGHTNESS_NAME, parent)
@@ -223,30 +212,11 @@ class BrightnessBox(DraggableFunctionBox):
 
     def execute(self, imageBGRA):
         """
-        Adjusts the brightness of the given image based on the slider value.
-
-        Args:
-            image: The input image to be adjusted (e.g., a NumPy array or PIL Image).
-
-        Returns:
-            The brightness-adjusted image.
         """  
         # call the brightness function from Processors module
         imageBGRA = self.processor.brightness(imageBGRA, self.brightness[0].value())  
 
         return imageBGRA
-
-    
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        It also updates the label with the current value of the slider.
-        """
-        # Update the label with the current value
-        self.brightness[1].setText(f"Brightness: {self.brightness[0].value()}")
-        
-        super().on_change()
 
 
 
@@ -268,18 +238,6 @@ class SaturationBox(DraggableFunctionBox):
 
         return imageBGRA
 
-    
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        It also updates the label with the current value of the slider.
-        """
-        # Update the label with the current value
-        self.saturation[1].setText(f"Saturation: {self.saturation[0].value()}")
-        
-        super().on_change()
-
 
 
 class ContrastBox(DraggableFunctionBox):
@@ -298,12 +256,13 @@ class ContrastBox(DraggableFunctionBox):
         self.outMinMax = self.ui_components.dual_input("Output Range:")
 
         # Create sliders for alpha and beta values
-        self.alpha = self.ui_components.slider(heading="Alpha:", minValue=1, maxValue=30, defaultValue=10)
+        self.alpha = self.ui_components.slider(heading="Alpha:", minValue=1, maxValue=30, defaultValue=10, decimal=10)
         self.beta = self.ui_components.slider(heading="Beta:", minValue=-50, maxValue=50)  
-        
-        # hide the input range boxes by default
-        for x in self.alpha + self.beta:
-            x.hide()   
+
+        # connect the combo box to the on_change function
+        self.ui_components.set_combo_adapt_widgets(self.combo, [[self.inMinMax, self.outMinMax], [self.alpha, self.beta]])
+
+
                     
     def execute(self, imageBGRA):
         """
@@ -327,33 +286,7 @@ class ContrastBox(DraggableFunctionBox):
             imageBGRA = self.processor.contrastByTS(imageBGRA, alpha, beta)  # call the contrast function from Processors module
             
             return imageBGRA
-
-    
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        """   
-        # Update labels with current values
-        self.alpha[1].setText(f"Alpha: {self.alpha[0].value()/10}")
-        self.beta[1].setText(f"Beta: {self.beta[0].value()}")
-
-        if self.combo.currentText() == "by Input-Output Range":
-            # hide the alpha and beta input boxes and show the input range boxes
-            for x in self.alpha + self.beta:
-                x.hide()   
-            for x in self.inMinMax + self.outMinMax:
-                x.show()
-
-        elif self.combo.currentText() == "by T(s)":
-            # show the alpha and beta input boxes and hide the input range boxes
-            for x in self.alpha + self.beta:
-                x.show()   
-            for x in self.inMinMax + self.outMinMax:
-                x.hide()
-                
-        super().on_change()
-
+              
 
 
 class FullScaleContrastBox(DraggableFunctionBox):
@@ -419,17 +352,6 @@ class GammaBox(DraggableFunctionBox):
 
         return np.uint8(imageBGRA)     
 
-    
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        """       
-        # Update the label with the current value
-        self.gamma[1].setText(f"Gamma: {self.gamma[0].value()/10}")
-
-        super().on_change()
-
 
 
 class RGB2GrayBox(DraggableFunctionBox):
@@ -473,18 +395,6 @@ class ThresholdingBox(DraggableFunctionBox):
         imageBGRA = self.processor.threshold(imageBGRA, threshold)          # call the threshold function from Processors module
         
         return imageBGRA
-
-
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        """    
-        # Update the label with the current value
-        self.threshold[1].setText(f"Threshold: {self.threshold[0].value()}")
-
-        super().on_change()
-
 
 
 class ComplementBox(DraggableFunctionBox):
@@ -544,14 +454,14 @@ class FlipBox(DraggableFunctionBox):
         super().__init__(constants.FLIP_NAME, parent)
 
         # Create a radio button group to select the flip direction
-        self.buttonGroup = self.ui_components.radio_buttons(["Horizontal", "Vertical", "Both"])
+        self.buttonGroup = self.ui_components.radio_buttons(["Horizontal", "Vertical", "Both"])[0]
 
     def execute(self, imageBGRA):
         """
         Flips the given image based on the slider value.
         """    
         flipCodes = [1, 0, -1]                          # horizontal, vertical, both
-        imageBGRA = self.processor.flip(imageBGRA, flipCodes[self.buttonGroup.checkedId()])  
+        imageBGRA = self.processor.flip(imageBGRA, flipCodes[self.buttonGroup.checkedId()])
 
         return imageBGRA
     
@@ -579,18 +489,6 @@ class RotateBox(DraggableFunctionBox):
         return imageBGRA
 
     
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        It also updates the label with the current value of the slider.
-        """
-        # Update the label with the current value
-        self.angle[1].setText(f"Angle: {self.angle[0].value()}")
-        
-        super().on_change()
-
-
 
 class ResizeBox(DraggableFunctionBox):
     """
@@ -645,6 +543,10 @@ class PaddingBox(DraggableFunctionBox):
         # Create input boxes for padding amounts
         self.leftRight = self.ui_components.dual_input("Left-Right:", 0, 0)      
         self.topBottom = self.ui_components.dual_input("Top-Bottom:", 0, 0)
+
+        # connect the combo box to the on_change function
+        self.ui_components.set_combo_adapt_widgets(self.combo, [[self.constant, self.leftRight, self.topBottom], 
+                                                                [self.leftRight, self.topBottom], [self.leftRight, self.topBottom]])
                         
 
     def execute(self, imageBGRA):
@@ -667,20 +569,6 @@ class PaddingBox(DraggableFunctionBox):
         imageBGRA = self.processor.padding(imageBGRA, paddingType, lPad, rPad, tPad, bPad, constant)  # call the padding function from Processors module
 
         return imageBGRA
-    
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        """    
-        if self.combo.currentIndex() == 0:
-            for x in self.constant:
-                x.show()
-        else:
-            for x in self.constant:
-                x.hide()
-
-        super().on_change()
 
 
 
@@ -731,16 +619,6 @@ class HistCLAHEBox(DraggableFunctionBox):
 
         return imageBGRA
     
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        """   
-        # Update the label with the current value
-        self.clipLimit[1].setText(f"Clip Limit: {self.clipLimit[0].value()/10}")
-
-        super().on_change()
-
 
 
 class MaskBox(DraggableFunctionBox):
@@ -809,9 +687,9 @@ class NoiseBox(DraggableFunctionBox):
         # insert signle input boxes for salt and pepper values
         self.saltPepProb = self.ui_components.slider(heading="Probability:", minValue=0, maxValue=200, defaultValue=20)
 
-        # hide the salt and pepper input boxes by default
-        for x in self.saltPepProb:
-            x.hide()    
+        # connect the combo box to the on_change function
+        self.ui_components.set_combo_adapt_widgets(self.combo, [[self.mean, self.std], [self.saltPepProb], []])
+   
 
     def execute(self, imageBGRA):
         """
@@ -841,41 +719,7 @@ class NoiseBox(DraggableFunctionBox):
             imageBGRA = self.processor.poissonNoise(imageBGRA)
             
             return imageBGRA
-    
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        """   
-        # Update labels with current values
-        self.mean[1].setText(f"Mean: {self.mean[0].value()}")
-        self.std[1].setText(f"Std: {self.std[0].value()}")  
-
-        self.saltPepProb[1].setText(f"Probability: {self.saltPepProb[0].value() / 1000}")
-
-        if self.combo.currentText() == "Gaussian":
-            # hide the salt and pepper input boxes and show the mean and std input boxes
-            for x in self.mean + self.std:
-                x.show()     
-            for x in self.saltPepProb:
-                x.hide()
-
-        elif self.combo.currentText() == "Salt & Pepper":
-            # hide the mean and std input boxes and show the salt and pepper input boxes
-            for x in self.saltPepProb:
-                x.show()
-            for x in self.mean + self.std:
-                x.hide()
-
-        elif self.combo.currentText() == "Poisson": 
-            # hide all the input boxes
-            for x in self.saltPepProb:
-                x.hide()
-            for x in self.mean + self.std:
-                x.hide()
-
-        super().on_change()
-
+   
 
 
 class ArithmeticBox(DraggableFunctionBox):
@@ -893,7 +737,7 @@ class ArithmeticBox(DraggableFunctionBox):
         self.alpha = self.ui_components.slider(heading="Alpha:", minValue=1, maxValue=1000, defaultValue=100)
 
         # insert a button to select the second image
-        self.button = self.ui_components.button("Select Image")
+        self.button = self.ui_components.button("Select Image")[0]
         self.button.clicked.connect(self.select_image)  # connect the button to the select_image function
 
     def execute(self, imageBGRA):
@@ -908,16 +752,6 @@ class ArithmeticBox(DraggableFunctionBox):
 
         return imageBGRA
     
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        """    
-        # Update the label with the current value
-        self.alpha[1].setText(f"Alpha: {self.alpha[0].value()/100}")
-
-        super().on_change()
-
     
     def select_image(self):
 
@@ -957,7 +791,7 @@ class LogicBox(DraggableFunctionBox):
         self.combo = self.ui_components.combo_list(["And", "Or", "Xor"])
         
         # insert a button to select the second image
-        self.button = self.ui_components.button("Select Image")
+        self.button = self.ui_components.button("Select Image")[0]
         self.button.clicked.connect(self.select_image)  # connect the button to the select_image function
 
     def execute(self, imageBGRA):
@@ -968,7 +802,6 @@ class LogicBox(DraggableFunctionBox):
             imageBGRA = self.processor.logic(imageBGRA, self.secondImage, operation)  # call the logic function from Processors module
 
         return imageBGRA 
-
 
     
     def select_image(self):
@@ -1005,10 +838,10 @@ class LaplaceBox(DraggableFunctionBox):
         super().__init__(constants.LAPLACE_NAME, parent)
 
         # insert switch for extended laplace choice
-        self.extended = self.ui_components.switch("Extended Laplace")
+        self.extended = self.ui_components.switch("Extended Laplace")[0]
         
         # insert switch for normalize choice
-        self.norm = self.ui_components.switch("Normalize")
+        self.norm = self.ui_components.switch("Normalize")[0]
 
 
     def execute(self, imageBGRA):
@@ -1030,7 +863,7 @@ class SobelBox(DraggableFunctionBox):
         super().__init__(constants.LAPLACE_NAME, parent)
 
         # insert switch for extended laplace choice
-        self.norm = self.ui_components.switch("Normalize")
+        self.norm = self.ui_components.switch("Normalize")[0]
         
 
     def execute(self, imageBGRA):
@@ -1059,19 +892,18 @@ class SpatialFilterBox(DraggableFunctionBox):
 
         # create a slider for sigma value
         self.sigma = self.ui_components.slider(heading="Std:", minValue=0, maxValue=50, defaultValue=1)  
-        # hide the sigma slider by default
-        for x in self.sigma:
-            x.hide()
 
         # insert a switch for extended laplace choice
-        self.extended = self.ui_components.switch("Extended Laplace")
-        self.extended.hide()  # hide the switch by default
+        self.extended = self.ui_components.switch("Extended Laplace")[0]
 
         # insert a slider for alpha value
         self.alpha = self.ui_components.slider(heading="Alpha:", minValue=1, maxValue=1000, defaultValue=100)
-        # hide the alpha input box by default
-        for x in self.alpha:
-            x.hide()  
+
+        # connect the combo box to the on_change function
+        self.ui_components.set_combo_adapt_widgets(self.combo, [[self.kernel], [self.kernel], [self.kernel], [self.kernel],
+                                                                 [self.kernel, self.sigma], [self.extended, self.alpha],
+                                                                   [self.alpha], [self.kernel, self.sigma, self.alpha]])
+
 
 
     def execute(self, imageBGRA):
@@ -1111,51 +943,6 @@ class SpatialFilterBox(DraggableFunctionBox):
             imageBGRA = self.processor.unsharpMasking(imageBGRA, w, sigma, alpha)
 
         return imageBGRA
-
     
-    def on_change(self):
-        """
-        This function is called when the user changes the settings.
-        It emits a signal to indicate that the settings have been changed.
-        """    
-        # Update the label with the current value
-        self.sigma[1].setText(f"Std: {self.sigma[0].value()}")
-        self.alpha[1].setText(f"Alpha: {self.alpha[0].value()/100}")
 
-        if self.combo.currentText() == "Mean" or self.combo.currentText() == "Median" or self.combo.currentText() == "Max" or self.combo.currentText() == "Min":
-            for x in self.kernel:
-                x.show()
-            for x in self.sigma + self.alpha:
-                x.hide()   
-            self.extended.hide()
-        elif self.combo.currentText() == "Gaussian":
-            for x in self.kernel:
-                x.show()
-            for x in self.sigma:
-                x.show()     
-            for x in self.alpha:
-                x.hide() 
-            self.extended.hide()
-        elif self.combo.currentText() == "Laplace Sharpening":
-            for x in self.kernel + self.sigma:
-                x.hide()     
-            for x in self.alpha:
-                x.show() 
-            self.extended.show()
-        elif self.combo.currentText() == "Sobel Sharpening":
-            for x in self.kernel + self.sigma:
-                x.hide()     
-            for x in self.alpha:
-                x.show()
-            self.extended.hide()
-        elif self.combo.currentText() == "Unsharp Masking":
-            for x in self.kernel:
-                x.show()
-            for x in self.sigma:
-                x.show()     
-            for x in self.alpha:
-                x.show()
-            self.extended.hide()
-
-        super().on_change()
 

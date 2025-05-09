@@ -10,12 +10,31 @@ class UiComponents():
     """
     """
 
-    def __init__(self, parent, onchance_func):
+    def __init__(self, parent_widget, onchange_trigger):
         
         self.font = QFont()              
         self.font.setPointSize(10) 
-        self.parent = parent
-        self.on_change = onchance_func
+        self.parent = parent_widget
+        self.trigger = onchange_trigger
+
+    def on_change(self, new_value=None, label=None):
+        """
+        This function is called when the value of any input box changes.
+        It triggers the onchange event.
+        """
+        if label is not None:
+            label.setText(f"{label.text().split(':')[0]}: {new_value}")
+
+        self.trigger.emit()
+
+    def combo_on_change(self, new_index, adapt_widgets=[]):
+        """
+        """
+        if adapt_widgets:
+            for i, group in enumerate(adapt_widgets):
+                for widgets in group:
+                    for widget in widgets:
+                        widget.setVisible(i == new_index)
 
     def mono_input(self, heading, defaultValue=0):
         """
@@ -114,7 +133,7 @@ class UiComponents():
         return [value1, value2, value3, label]
     
 
-    def slider(self, heading, minValue, maxValue, defaultValue=0):
+    def slider(self, heading, minValue, maxValue, defaultValue=0, decimal=1):
         """
         This function is called to insert a slider into the function box.
         """
@@ -128,7 +147,8 @@ class UiComponents():
         slider.setMinimum(minValue)
         slider.setMaximum(maxValue)
         slider.setValue(defaultValue)
-        slider.valueChanged.connect(self.on_change)
+        slider.valueChanged[int].connect(lambda new_value: self.on_change(new_value/10, label))
+        self.on_change(slider.value()/10, label)  # call the function to set the initial value of the label
         self.parent.addWidget(slider)
 
         return [slider, label]
@@ -144,21 +164,21 @@ class UiComponents():
         self.parent.addLayout(layout)
 
         # create a button group to hold the radio buttons
-        buttonGroup = QButtonGroup(self)  
-        buttonGroup.buttonClicked.connect(self.on_change)      
+        radio_buttons = QButtonGroup(self)  
+        radio_buttons.buttonClicked.connect(self.on_change)      
 
         # create radio buttons
         for i, heading in enumerate(headings):
             radio = QRadioButton(heading)
-            buttonGroup.addButton(radio, i)            
+            radio_buttons.addButton(radio, i)            
             radio.setFont(self.font)
             layout.addWidget(radio, alignment=Qt.AlignLeft)
         
         # click the first button by default
-        if buttonGroup.buttons():
-            buttonGroup.buttons()[0].setChecked(True)
+        if radio_buttons.buttons():
+            radio_buttons.buttons()[0].setChecked(True)
 
-        return buttonGroup
+        return [radio_buttons]
 
 
     def combo_list(self, headings=[]):
@@ -172,20 +192,27 @@ class UiComponents():
         self.parent.addWidget(combo)                     # add the combo box to the content layout
 
         return combo
+    
+
+    def set_combo_adapt_widgets(self, combo, adapt_widgets):
+        """
+        """
+        combo.currentIndexChanged[int].connect(lambda new_index: self.combo_on_change(new_index, adapt_widgets))    
+        self.combo_on_change(combo.currentIndex(), adapt_widgets)  # call the function to set the initial state of the widgets   
 
 
     def switch(self, heading):
         """
         This function is called to insert a switch into the function box.
         """
-        onOff = QCheckBox(heading)
-        onOff.setChecked(False)
-        onOff.setFont(self.font)
-        onOff.stateChanged.connect(self.on_change)
-        onOff.setFixedHeight(30)
-        self.parent.addWidget(onOff)
+        switch = QCheckBox(heading)
+        switch.setChecked(False)
+        switch.setFont(self.font)
+        switch.stateChanged.connect(self.on_change)
+        switch.setFixedHeight(30)
+        self.parent.addWidget(switch)
 
-        return onOff
+        return [switch]
 
 
     def button(self, heading):
@@ -197,5 +224,5 @@ class UiComponents():
         button.setFixedHeight(30)
         self.parent.addWidget(button)
 
-        return button
+        return [button]
 
