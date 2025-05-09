@@ -1,5 +1,4 @@
 import cv2
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from io import BytesIO
@@ -8,18 +7,19 @@ import traceback
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QPixmap, QFont, QImage
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QPushButton, QLabel,
+    QWidget, QPushButton, QLabel,
     QVBoxLayout, QHBoxLayout, QScrollArea,
     QFileDialog, QMessageBox
 )
 
 # Import custom function boxes
-import ui.functions as functions
+from ui import toolboxes
+import constants
 
 
 # -------------------------- main class definitions -------------------
 
-class MainWidget(QWidget):
+class MainWindow(QWidget):
 
     def __init__(self):
         super().__init__()  
@@ -209,7 +209,7 @@ class MainWidget(QWidget):
         self.contentLayout.setAlignment(Qt.AlignLeft)
                 
         # insert 'new function' box
-        self.addNewBox = functions.AddNewBox()
+        self.addNewBox = toolboxes.AddNewBox()
         self.contentLayout.addWidget(self.addNewBox)
         self.addNewBox.trigger.connect(self.AddNewFunc)  # connect signal to the slot
 
@@ -246,7 +246,7 @@ class MainWidget(QWidget):
         index = self.findInsertIndex(pos)
 
         # Check if the source is a valid FunctionBox
-        if source and isinstance(source, functions.FunctionBox):
+        if source and isinstance(source, toolboxes.FunctionBox):
             # Move the function box to the new index in the pipeline
             self.moveFunctionBox(source, index)
             # Accept the proposed action for the drop event
@@ -305,54 +305,54 @@ class MainWidget(QWidget):
         It creates a new function box and adds it to the content layout.
         """
         # Create a new function box based on the selected function name
-        if functionName == functions.BRIGHTNESS_NAME:
-            newBox = functions.BrightnessBox()
-        elif functionName == functions.SATURATION_NAME:
-            newBox = functions.SaturationBox()
-        elif functionName == functions.CONTRAST_NAME:
-            newBox = functions.ContrastBox()
-        elif functionName == functions.FULL_SCALE_CONTRAST_NAME:
-            newBox = functions.FullScaleContrastBox()
-        elif functionName == functions.LOG_NAME:
-            newBox = functions.LogBox()
-        elif functionName == functions.GAMMA_NAME:
-            newBox = functions.GammaBox()
-        elif functionName == functions.RGB2GRAY_NAME:
-            newBox = functions.RGB2GrayBox()
-        elif functionName == functions.THRESHOLDING_NAME:
-            newBox = functions.ThresholdingBox()
-        elif functionName == functions.COMPLEMENT_NAME:
-            newBox = functions.ComplementBox()
-        elif functionName == functions.CROP_NAME:
-            newBox = functions.CropBox()    
-        elif functionName == functions.FLIP_NAME:
-            newBox = functions.FlipBox()
-        elif functionName == functions.ROTATE_NAME:
-            newBox = functions.RotateBox()
-        elif functionName == functions.RESIZE_NAME:
-            newBox = functions.ResizeBox()
-        elif functionName == functions.PADDING_NAME:
-            newBox = functions.PaddingBox()
-        elif functionName == functions.HISTEQ_NAME:
-            newBox = functions.HistEqualizationBox()
-        elif functionName == functions.HISTCLAHE_NAME:
-            newBox = functions.HistCLAHEBox()
-        elif functionName == functions.MASK_NAME:
-            newBox = functions.MaskBox()
-        elif functionName == functions.BITSLICE_NAME:
-            newBox = functions.BitSliceBox()
-        elif functionName == functions.ADD_NOISE_NAME:
-            newBox = functions.NoiseBox()
-        elif functionName == functions.ARITHMETIC_NAME:
-            newBox = functions.ArithmeticBox()
-        elif functionName == functions.LOGIC_NAME:
-            newBox = functions.LogicBox()
-        elif functionName == functions.LAPLACE_NAME:
-            newBox = functions.LaplaceBox()
-        elif functionName == functions.SOBEL_NAME:
-            newBox = functions.SobelBox()
-        elif functionName == functions.SPATIAL_NAME:
-            newBox = functions.SpatialFilterBox()
+        if functionName == constants.BRIGHTNESS_NAME:
+            newBox = toolboxes.BrightnessBox()
+        elif functionName == constants.SATURATION_NAME:
+            newBox = toolboxes.SaturationBox()
+        elif functionName == constants.CONTRAST_NAME:
+            newBox = toolboxes.ContrastBox()
+        elif functionName == constants.FULL_SCALE_CONTRAST_NAME:
+            newBox = toolboxes.FullScaleContrastBox()
+        elif functionName == constants.LOG_NAME:
+            newBox = toolboxes.LogBox()
+        elif functionName == constants.GAMMA_NAME:
+            newBox = toolboxes.GammaBox()
+        elif functionName == constants.RGB2GRAY_NAME:
+            newBox = toolboxes.RGB2GrayBox()
+        elif functionName == constants.THRESHOLDING_NAME:
+            newBox = toolboxes.ThresholdingBox()
+        elif functionName == constants.COMPLEMENT_NAME:
+            newBox = toolboxes.ComplementBox()
+        elif functionName == constants.CROP_NAME:
+            newBox = toolboxes.CropBox()    
+        elif functionName == constants.FLIP_NAME:
+            newBox = toolboxes.FlipBox()
+        elif functionName == constants.ROTATE_NAME:
+            newBox = toolboxes.RotateBox()
+        elif functionName == constants.RESIZE_NAME:
+            newBox = toolboxes.ResizeBox()
+        elif functionName == constants.PADDING_NAME:
+            newBox = toolboxes.PaddingBox()
+        elif functionName == constants.HISTEQ_NAME:
+            newBox = toolboxes.HistEqualizationBox()
+        elif functionName == constants.HISTCLAHE_NAME:
+            newBox = toolboxes.HistCLAHEBox()
+        elif functionName == constants.MASK_NAME:
+            newBox = toolboxes.MaskBox()
+        elif functionName == constants.BITSLICE_NAME:
+            newBox = toolboxes.BitSliceBox()
+        elif functionName == constants.ADD_NOISE_NAME:
+            newBox = toolboxes.NoiseBox()
+        elif functionName == constants.ARITHMETIC_NAME:
+            newBox = toolboxes.ArithmeticBox()
+        elif functionName == constants.LOGIC_NAME:
+            newBox = toolboxes.LogicBox()
+        elif functionName == constants.LAPLACE_NAME:
+            newBox = toolboxes.LaplaceBox()
+        elif functionName == constants.SOBEL_NAME:
+            newBox = toolboxes.SobelBox()
+        elif functionName == constants.SPATIAL_NAME:
+            newBox = toolboxes.SpatialFilterBox()
         
         self.pipeline.append(newBox)                            # add the new function box to the pipeline
         newBox.updateTrigger.connect(self.ProcessPipeline)      # connect the process signal to the ProcessPipeline function
@@ -403,7 +403,7 @@ class MainWidget(QWidget):
             for pipe in self.pipeline:
                 # check if the function box is activated
                 if pipe.switch.isChecked():
-                    image = pipe.process(image)             # call the process function of the function box
+                    image = pipe.execute(image)             # call the process function of the function box
             
             self.outputBGRA = image.copy()                # make a copy of the processed image for output
 

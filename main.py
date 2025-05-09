@@ -1,12 +1,12 @@
 import sys
 from PySide6.QtWidgets import QApplication
 
-from ui.main_widget import MainWidget 
+from ui.main_window import MainWindow 
 
 if __name__ == "__main__":
     app = QApplication([])    
 
-    widget = MainWidget()     
+    widget = MainWindow()     
     widget.resize(800, 600) 
     widget.show()       
 
