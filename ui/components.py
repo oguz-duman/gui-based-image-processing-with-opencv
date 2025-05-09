@@ -1,9 +1,7 @@
-
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QFrame, QSlider,
-                               QCheckBox, QComboBox, QLineEdit, QRadioButton, QButtonGroup, QFileDialog)
+from PySide6.QtWidgets import (QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QSlider,
+                               QCheckBox, QComboBox, QLineEdit, QRadioButton, QButtonGroup)
 from PySide6.QtGui import QFont
-
 
 
 class UiComponents():
@@ -30,17 +28,43 @@ class UiComponents():
     def combo_on_change(self, new_index, adapt_widgets=[]):
         """
         """
+        # Hide all widgets in the adapt_widgets list
         if adapt_widgets:
             for i, group in enumerate(adapt_widgets):
                 for widgets in group:
                     for widget in widgets:
-                        widget.setVisible(i == new_index)
+                        widget.hide()
+                        
+        # Show the widgets corresponding to the selected index
+        if adapt_widgets:
+            for i, group in enumerate(adapt_widgets):
+                if i == new_index:
+                    for widgets in group:
+                        for widget in widgets:
+                            widget.show()
+                    break
+
+
+    def get_component_value(self, widgets, mins=None, maxs=None, defaults=None, decimal=1):
+        """
+        """
+        mins = [0] * len(widgets) if mins is None else mins
+        maxs = [float('inf')] * len(widgets) if maxs is None else maxs
+        defaults = [0] * len(widgets) if defaults is None else defaults
+        
+        try:
+            values = []
+            for widget, min, max, default in zip(widgets, mins, maxs, defaults):
+                values.append(int(widget.text()) if min <= int(widget.text()) <= max else default)
+            
+            return values[0] if len(values) == 1 else values
+        except:
+            return defaults[0] if len(defaults) == 1 else defaults 
+    
 
     def mono_input(self, heading, defaultValue=0):
         """
-        This function is called to insert a single input box into the function box.
         """
-
         # layout for the input box
         layout = QHBoxLayout()
         self.parent.addLayout(layout)
@@ -63,7 +87,6 @@ class UiComponents():
 
     def dual_input(self, heading, default1=0, default2=255):
         """
-        This function is called to insert min and max input boxes into the function box.
         """
         # Input range area
         layout1 = QHBoxLayout()
@@ -133,9 +156,8 @@ class UiComponents():
         return [value1, value2, value3, label]
     
 
-    def slider(self, heading, minValue, maxValue, defaultValue=0, decimal=1):
+    def slider(self, heading, minValue, maxValue, defaultValue=0, rescale=1):
         """
-        This function is called to insert a slider into the function box.
         """
         # Create a label to display the current value of the slider
         label = QLabel(f"{heading}: {defaultValue}")
@@ -147,8 +169,8 @@ class UiComponents():
         slider.setMinimum(minValue)
         slider.setMaximum(maxValue)
         slider.setValue(defaultValue)
-        slider.valueChanged[int].connect(lambda new_value: self.on_change(new_value/10, label))
-        self.on_change(slider.value()/10, label)  # call the function to set the initial value of the label
+        slider.valueChanged[int].connect(lambda new_value: self.on_change(new_value if rescale == 1 else new_value/rescale, label))
+        self.on_change(slider.value() if rescale == 1 else slider.value()/rescale, label)  # call the function to set the initial value of the label
         self.parent.addWidget(slider)
 
         return [slider, label]
@@ -156,15 +178,13 @@ class UiComponents():
 
     def radio_buttons(self, headings=[]):
         """
-        This function is called to insert radio buttons into the function box.
-        It creates a vertical layout for the radio buttons and adds them to the content layout.
         """
         # layout for radio buttons
         layout = QVBoxLayout()
         self.parent.addLayout(layout)
 
         # create a button group to hold the radio buttons
-        radio_buttons = QButtonGroup(self)  
+        radio_buttons = QButtonGroup(None)  
         radio_buttons.buttonClicked.connect(self.on_change)      
 
         # create radio buttons
@@ -183,7 +203,6 @@ class UiComponents():
 
     def combo_list(self, headings=[]):
         """
-        This function is called to insert a combo box into the function box.
         """
         combo = QComboBox()
         combo.addItems(headings)
@@ -203,7 +222,6 @@ class UiComponents():
 
     def switch(self, heading):
         """
-        This function is called to insert a switch into the function box.
         """
         switch = QCheckBox(heading)
         switch.setChecked(False)
@@ -217,7 +235,6 @@ class UiComponents():
 
     def button(self, heading):
         """
-        This function is called to insert a button into the function box.
         """
         button = QPushButton(heading)
         button.setFont(self.font)
@@ -225,4 +242,4 @@ class UiComponents():
         self.parent.addWidget(button)
 
         return [button]
-
+    
