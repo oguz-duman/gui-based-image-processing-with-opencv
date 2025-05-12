@@ -3,6 +3,11 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 
 def select_image():
+    """
+    Open a file dialog to select an image file and read it using OpenCV.
+    Returns:
+        image (np.ndarray): The selected image as a NumPy array.
+    """
     # Open file dialog to select an image file
     filePath, _ = QFileDialog.getOpenFileName(None, "Select an image file", "", "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp)")
 
@@ -12,13 +17,13 @@ def select_image():
         
         if image is None:
             raise ValueError("No input image provided")
-        elif len(image.shape) == 2:  # if image is  (h,w)
+        elif len(image.shape) == 2:                             # if image is (h,w)
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGRA)
-        elif len(image.shape) == 3 and image.shape[2] == 1:  # if image is (h,w,1)
+        elif len(image.shape) == 3 and image.shape[2] == 1:     # if image is (h,w,1)
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGRA)
-        elif len(image.shape) == 3 and image.shape[2] == 3:  # ig image is (BGR) (h,w,3)
+        elif len(image.shape) == 3 and image.shape[2] == 3:     # if image is (BGR) (h,w,3)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
-        elif len(image.shape) == 3 and image.shape[2] == 4:  # if image is (BGRA) (h,w,4)
+        elif len(image.shape) == 3 and image.shape[2] == 4:     # if image is (BGRA) (h,w,4)
             pass
         else:
             raise ValueError("Unsupported image format")
@@ -28,7 +33,9 @@ def select_image():
 
 def save_image(image):
     """
-    Open a file dialog to save the output image.
+    Open a file dialog to select a file path to save the image.
+    Args:
+        image (np.ndarray): The image to be saved.
     """
     # Open file dialog to select a file path to save the image
     filePath, _ = QFileDialog.getSaveFileName(None, "Save the image", "", "Image Files (*.jpg *.jpeg *.png *.bmp *.gif *.tif *.tiff *.webp)")

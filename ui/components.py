@@ -6,27 +6,46 @@ from PySide6.QtGui import QFont
 
 class UiComponents():
     """
+    This class contains the UI components for the application.
+    It provides methods to create and manage various UI elements such as input boxes, sliders, radio buttons, etc.
+    It also handles the events triggered by these components.
+    Args:
+        parent_widget (QWidget): The parent widget to which the UI components will be added.
+        onchange_trigger (Signal): The signal to be emitted when the value of any input box is changed.
     """
-
     def __init__(self, parent_widget, onchange_trigger):
         
+        # create a base font for the UI components
         self.font = QFont()              
         self.font.setPointSize(10) 
+
+        # get the parent widget and the signal to be emitted 
         self.parent = parent_widget
         self.trigger = onchange_trigger
 
+
     def on_change(self, new_value=None, label=None):
         """
-        This function is called when the value of any input box changes.
-        It triggers the onchange event.
+        This method is called when the value of any input box is changed.
+        It updates the label text to reflect the new value and emits the trigger signal.
+        Args:
+            new_value (str): The new value of the input box.
+            label (QLabel): The label associated with the input box.
         """
+        # if a new value is provided, update the label text 
         if label is not None:
             label.setText(f"{label.text().split(':')[0]}: {new_value}")
 
-        self.trigger.emit()
+        self.trigger.emit()                     # emit the signal to notify that the value has changed
+
 
     def combo_on_change(self, new_index, adapt_widgets=[]):
         """
+        This method is called when the index of the combo box is changed.
+        It shows or hides the widgets associated with the selected index.
+        Args:
+            new_index (int): The index of the selected item in the combo box.
+            adapt_widgets (list): A list of lists containing the widgets to be shown or hidden.
         """
         # Hide all widgets in the adapt_widgets list
         if adapt_widgets:
@@ -45,25 +64,40 @@ class UiComponents():
                     break
 
 
-    def get_component_value(self, widgets, mins=None, maxs=None, defaults=None, decimal=1):
+    def get_component_value(self, widgets, mins=None, maxs=None, defaults=None):
         """
+        This method retrieves the values from the input boxes and validates them.
+        It returns the values as a list of integers or floats.
+        Args:
+            widgets (list): A list of input boxes to retrieve values from.
+            mins (list): A list of minimum values for each input box to validate against.
+            maxs (list): A list of maximum values for each input box to validate against.
+            defaults (list): A list of default values for each input box if the input is invalid.
         """
+        # set default values for mins, maxs, and defaults if not provided
         mins = [0] * len(widgets) if mins is None else mins
         maxs = [float('inf')] * len(widgets) if maxs is None else maxs
         defaults = [0] * len(widgets) if defaults is None else defaults
         
         try:
             values = []
+            # iterate through the widgets and get their values
             for widget, min, max, default in zip(widgets, mins, maxs, defaults):
                 values.append(int(widget.text()) if min <= int(widget.text()) <= max else default)
             
-            return values[0] if len(values) == 1 else values
+            return values[0] if len(values) == 1 else values        # return a list or a single value based on the number of inputs
         except:
-            return defaults[0] if len(defaults) == 1 else defaults 
+            return defaults[0] if len(defaults) == 1 else defaults  # return a list or a single value based on the number of inputs
     
 
     def mono_input(self, heading, defaultValue=0):
         """
+        This method creates a single input box for the user to enter a value.
+        Args:
+            heading (str): The label for the input box.
+            defaultValue (int): The default value to be displayed in the input box.
+        Returns:
+            list: A list containing the input box and its label.
         """
         # layout for the input box
         layout = QHBoxLayout()
@@ -87,6 +121,13 @@ class UiComponents():
 
     def dual_input(self, heading, default1=0, default2=255):
         """
+        This method creates two input boxes for the user to enter a range of values.
+        Args:
+            heading (str): The label for the input boxes.
+            default1 (int): The default minimum value to be displayed in the first input box.
+            default2 (int): The default maximum value to be displayed in the second input box.
+        Returns:
+            list: A list containing the two input boxes and their label.
         """
         # Input range area
         layout1 = QHBoxLayout()
@@ -118,6 +159,14 @@ class UiComponents():
 
     def triple_input(self, heading, default1=0, default2=0, default3=0):
         """
+        This method creates three input boxes for the user to enter a range of values.
+        Args:
+            heading (str): The label for the input boxes.
+            default1 (int): The default minimum value to be displayed in the first input box.
+            default2 (int): The default maximum value to be displayed in the second input box.
+            default3 (int): The default maximum value to be displayed in the third input box.
+        Returns:
+            list: A list containing the three input boxes and their label.
         """
         # Input range area
         layout1 = QHBoxLayout()
@@ -158,6 +207,15 @@ class UiComponents():
 
     def slider(self, heading, minValue, maxValue, defaultValue=0, rescale=1):
         """
+        This method creates a slider for the user to adjust a value.
+        Args:
+            heading (str): The label for the slider.
+            minValue (int): The minimum value of the slider.
+            maxValue (int): The maximum value of the slider.
+            defaultValue (int): The default value to be displayed on the slider.
+            rescale (int): A factor to rescale the slider value.
+        Returns:
+            list: A list containing the slider and its label.
         """
         # Create a label to display the current value of the slider
         label = QLabel(f"{heading}: {defaultValue}")
@@ -169,8 +227,12 @@ class UiComponents():
         slider.setMinimum(minValue)
         slider.setMaximum(maxValue)
         slider.setValue(defaultValue)
+        
+        # connect the slider value changed event to the on_change method
         slider.valueChanged[int].connect(lambda new_value: self.on_change(new_value if rescale == 1 else new_value/rescale, label))
-        self.on_change(slider.value() if rescale == 1 else slider.value()/rescale, label)  # call the function to set the initial value of the label
+        # call the on_change method to set the initial value of the label
+        self.on_change(slider.value() if rescale == 1 else slider.value()/rescale, label)  
+        
         self.parent.addWidget(slider)
 
         return [slider, label]
@@ -178,6 +240,11 @@ class UiComponents():
 
     def radio_buttons(self, headings=[]):
         """
+        This method creates a group of radio buttons for the user to select an option.
+        Args:
+            headings (list): A list of labels for the radio buttons.
+        Returns:
+            list: A list containing the radio buttons and their label.
         """
         # layout for radio buttons
         layout = QVBoxLayout()
@@ -203,25 +270,42 @@ class UiComponents():
 
     def combo_list(self, headings=[]):
         """
+        This method creates a combo box for the user to select an option from a list.
+        Args:
+            headings (list): A list of labels for the combo box items.
+        Returns:
+            QComboBox: The combo box containing the list of items.
         """
         combo = QComboBox()
         combo.addItems(headings)
         combo.setFont(self.font)
-        combo.currentIndexChanged.connect(self.on_change)       # onchange event for the combo box
-        self.parent.addWidget(combo)                     # add the combo box to the content layout
+        combo.currentIndexChanged.connect(self.on_change)       # onchange event to emit the signal indicating the value has changed
+        self.parent.addWidget(combo)                            # add the combo box to the content layout
 
         return combo
     
 
     def set_combo_adapt_widgets(self, combo, adapt_widgets):
         """
+        This method sets up the combo box to show or hide widgets based on the selected index.
+        Args:
+            combo (QComboBox): The combo box to be set up.
+            adapt_widgets (list): A list of lists containing the widgets to be shown or hidden based on the selected index.
         """
+        # onchange event to show/hide widgets based on the selected index
         combo.currentIndexChanged[int].connect(lambda new_index: self.combo_on_change(new_index, adapt_widgets))    
-        self.combo_on_change(combo.currentIndex(), adapt_widgets)  # call the function to set the initial state of the widgets   
+        
+        # call the function to set the initial state of the widgets   
+        self.combo_on_change(combo.currentIndex(), adapt_widgets)  
 
 
     def switch(self, heading):
         """
+        This method creates a switch (checkbox) for the user to toggle an option.
+        Args:
+            heading (str): The label for the switch.
+        Returns:
+            list: A list containing the switch and its label.
         """
         switch = QCheckBox(heading)
         switch.setChecked(False)
@@ -235,6 +319,11 @@ class UiComponents():
 
     def button(self, heading):
         """
+        This method creates a button for the user to click.
+        Args:
+            heading (str): The label for the button.
+        Returns:
+            list: A list containing the button.
         """
         button = QPushButton(heading)
         button.setFont(self.font)

@@ -2,9 +2,9 @@ import numpy as np
 import cv2
 
 from PySide6.QtCore import Qt, Signal, QMimeData
+from PySide6.QtGui import QFont, QDrag
 from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, 
                                QSizePolicy, QFrame, QCheckBox, QComboBox)
-from PySide6.QtGui import QFont, QDrag
 
 from processing.processor import Processor
 from ui.components import UiComponents 
@@ -14,7 +14,7 @@ import utils
 
 class AddNewBox(QWidget):
     """
-    A box that allows the user to add a new function.
+    A widget that allows the user to add new toolboxes.
     """
     # Signal to communicate with the main application
     trigger = Signal(str)
@@ -58,7 +58,6 @@ class AddNewBox(QWidget):
         self.combo.setFont(self.font)
         self.combo.setStyleSheet("padding: 5px;")  
         self.frameLayout.addWidget(self.combo, alignment=Qt.AlignVCenter)
-
         view = self.combo.view()
         view.setMouseTracking(False)  
         view.setAutoScroll(False)     
@@ -76,8 +75,10 @@ class AddNewBox(QWidget):
 
 class FunctionBox(QWidget):
     """
-    A base class for creating function boxes in the GUI.
-    This class provides a template for creating specific function boxes by subclassing it.
+    A base class for all toolboxes. It provides a common interface.
+    Parameters:
+        title (str): The title of the toolbox.
+        parent (QWidget): The parent widget where the toolbox will be added.
     """
     # Signals to communicate with the main application
     updateTrigger = Signal()
@@ -87,17 +88,21 @@ class FunctionBox(QWidget):
     def __init__(self, title="Function", parent=None):
         super().__init__(parent)
 
-        self.contentLayout = QVBoxLayout()
-        self.processor = Processor()        # create an instance of the Processor class
-        # create an instance of the self.ui_components class
+
+        self.contentLayout = QVBoxLayout()      # create a layout to hold the content of the toolbox
+
+        self.processor = Processor()            # create an instance of the Processor class to get the image processing functions
+        # create an instance of the self.ui_components class to create the UI components
         self.ui_components = UiComponents(parent_widget=self.contentLayout, onchange_trigger=self.updateTrigger)        
-        self.initiate_ui(title)             # call the initiate_ui method to set up the UI
+        
+        self.title = title                      # set the title of the function box
+        self.initiate_ui(title)                 # set up the UI
 
 
-    def initiate_ui(self, title):
+    def initiate_ui(self):
         """
+        Initiate the UI for the function box.
         """
-        self.title = title                  # set the title of the function box
         self.setFixedWidth(200)             # make the widget fixed size
         
         # set a font size variable
@@ -127,7 +132,7 @@ class FunctionBox(QWidget):
         titleLayout.setAlignment(Qt.AlignTop)
 
         # create a title label
-        label = QLabel(title)
+        label = QLabel(self.title)
         label.setFont(self.font)
         titleLayout.addWidget(label)
 
@@ -135,7 +140,7 @@ class FunctionBox(QWidget):
         removeBtn = QPushButton("X")
         removeBtn.setFont(self.font)
         removeBtn.setFixedWidth(30)
-        removeBtn.clicked.connect(lambda: self.removeTrigger.emit(title))
+        removeBtn.clicked.connect(lambda: self.removeTrigger.emit(self.title))
         titleLayout.addWidget(removeBtn,1)
         
         # create a layout for the ON/OFF switch
@@ -161,27 +166,41 @@ class FunctionBox(QWidget):
 
 
 class DraggableFunctionBox(FunctionBox):
+    """
+    A base class for all toolboxes that can be dragged and dropped.
+    """
     def mousePressEvent(self, event):
+        """
+        Handles the mouse press event to initiate dragging.
+        Stores the starting position of the drag when the left mouse button is pressed.
+        """
         if event.button() == Qt.LeftButton:
             self.dragStartPosition = event.position()
 
     def mouseMoveEvent(self, event):
+        """
+        Handles the mouse move event to perform dragging.
+        Initiates a drag operation if the left mouse button is held and the mouse is moved beyond a threshold.
+        """
+        # Check if the left mouse button is pressed
         if not event.buttons() & Qt.LeftButton:
             return
+        # Check if the mouse has moved beyond a small threshold
         if (event.position() - self.dragStartPosition).manhattanLength() < 10:
             return
 
-        drag = QDrag(self)
-        mimeData = QMimeData()
-        drag.setMimeData(mimeData)
-        drag.setHotSpot(event.position().toPoint())
-        drag.setPixmap(self.grab())
-        drag.exec(Qt.MoveAction)
+        drag = QDrag(self)                              # Create a QDrag object to handle the drag operation
+        mimeData = QMimeData()                          # Create a QMimeData object to store data for the drag
+        drag.setMimeData(mimeData)                      
+        drag.setHotSpot(event.position().toPoint())     # Set the hotspot for the drag operation
+        drag.setPixmap(self.grab())                     # # Set the pixmap for the drag operation (visual representation)
+        drag.exec(Qt.MoveAction)                        # Execute the drag operation with a move action
 
 
 
 class BrightnessBox(DraggableFunctionBox):
     """
+    A class to create a brightness adjustment toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.BRIGHTNESS_NAME, parent)
@@ -190,6 +209,7 @@ class BrightnessBox(DraggableFunctionBox):
         self.brightness = self.ui_components.slider(heading="Brightness", minValue=-50, maxValue=50)  
 
     def execute(self, imageBGRA):
+        # apply brightness adjustment
         imageBGRA = self.processor.brightness(imageBGRA, self.brightness[0].value())  
 
         return imageBGRA
@@ -197,6 +217,7 @@ class BrightnessBox(DraggableFunctionBox):
 
 class SaturationBox(DraggableFunctionBox):
     """
+    A class to create a saturation adjustment toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.SATURATION_NAME, parent)
@@ -205,6 +226,7 @@ class SaturationBox(DraggableFunctionBox):
         self.saturation = self.ui_components.slider(heading="Saturation", minValue=-50, maxValue=50)
 
     def execute(self, imageBGRA):
+        # apply saturation adjustment
         imageBGRA = self.processor.saturation(imageBGRA, self.saturation[0].value())     
 
         return imageBGRA
@@ -212,25 +234,25 @@ class SaturationBox(DraggableFunctionBox):
 
 class ContrastBox(DraggableFunctionBox):
     """
+    A class to create a contrast adjustment toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.CONTRAST_NAME, parent)
 
-        self.slider_rescale = 10
+        self.slider_rescale = 10    # set a rescale factor for the slider
 
-        # create a combo list to select between input type (range or T(s))
+        # insert a combo list to select between input type (range or T(s))
         self.combo = self.ui_components.combo_list(["by Input-Output Range", "by T(s)"])
 
-        # Create min and max input boxes for input range
+        # insert min-max input boxes for input and output range
         self.inMinMax = self.ui_components.dual_input("Input Range:")
-        # Create min and max input boxes for output range
         self.outMinMax = self.ui_components.dual_input("Output Range:")
 
-        # Create sliders for alpha and beta values
+        # insert sliders for alpha and beta values
         self.alpha = self.ui_components.slider(heading="Alpha:", minValue=1, maxValue=30, defaultValue=10, rescale=self.slider_rescale)
         self.beta = self.ui_components.slider(heading="Beta:", minValue=-50, maxValue=50)  
 
-        # connect the combo box to the on_change function
+        # connect the combo box to the on_change function 
         self.ui_components.set_combo_adapt_widgets(self.combo, [[self.inMinMax, self.outMinMax], [self.alpha, self.beta]])
 
     def execute(self, imageBGRA):
@@ -258,12 +280,11 @@ class ContrastBox(DraggableFunctionBox):
 
 class FullScaleContrastBox(DraggableFunctionBox):
     """
-    A box that performs full scale contrast stretching on the image.
+    A class to create a full scale contrast adjustment toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.FULL_SCALE_CONTRAST_NAME, parent)
   
-
     def execute(self, imageBGRA):
         # apply full scale contrast stretching
         imageBGRA = self.processor.full_scale_contrast(imageBGRA)  
@@ -273,12 +294,11 @@ class FullScaleContrastBox(DraggableFunctionBox):
 
 class LogBox(DraggableFunctionBox):
     """
-    A box that performs log transformation on the image.
+    A class to create a log transformation toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.LOG_NAME, parent)
   
-
     def execute(self, imageBGRA):
         # apply log transformation
         imageBGRA = self.processor.log_transform(imageBGRA)  
@@ -288,31 +308,26 @@ class LogBox(DraggableFunctionBox):
 
 class GammaBox(DraggableFunctionBox):
     """
-    A box that performs gamma transformation on the image.
-    This is a non-linear transformation that can be used to adjust the brightness and contrast of the image.
+    A class to create a gamma transformation toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.GAMMA_NAME, parent)
 
-        self.slider_rescale = 10
+        self.slider_rescale = 10        # set a rescale factor for the slider
 
-        # insert signle input box for gamma value
+        # insert signle input box to select the gamma value
         self.gamma = self.ui_components.slider(heading="Gamma:", minValue=1, maxValue=100, defaultValue=10, rescale=self.slider_rescale)
 
     def execute(self, imageBGRA):
-        # get the threshold value from slider
-        gamma = self.gamma[0].value() / self.slider_rescale
-        
-        # apply gamma transformation
-        imageBGRA = self.processor.gamma_transform(imageBGRA, gamma)  
+        gamma = self.gamma[0].value() / self.slider_rescale             # get the threshold value from slider
+        imageBGRA = self.processor.gamma_transform(imageBGRA, gamma)    # apply gamma transformation
 
         return np.uint8(imageBGRA)     
 
 
 class RGB2GrayBox(DraggableFunctionBox):
     """
-    A box that converts image from RGB to grayscale.
-    This class provides a UI for specifying the conversion and processes the image accordingly.
+    A class to create a RGB to grayscale conversion toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.RGB2GRAY_NAME, parent)
@@ -326,56 +341,49 @@ class RGB2GrayBox(DraggableFunctionBox):
 
 class ThresholdingBox(DraggableFunctionBox):
     """
-    A box that converts image to black and white by thresholding.
+    A class to create a thresholding toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.THRESHOLDING_NAME, parent)
 
-        # insert slider for threshold value
+        # insert slider to select the threshold value
         self.threshold = self.ui_components.slider(heading="Threshold:", minValue=0, maxValue=255, defaultValue=128)
 
     def execute(self, imageBGRA):
-        # get the threshold value from slider
-        threshold = self.threshold[0].value()                                       
-
-        # apply thresholding
-        imageBGRA = self.processor.threshold(imageBGRA, threshold)          
+        threshold = self.threshold[0].value()                               # get the threshold value from slider
+        imageBGRA = self.processor.threshold(imageBGRA, threshold)          # apply thresholding
         
         return imageBGRA
 
 
 class ComplementBox(DraggableFunctionBox):
     """
-    A box that performs complememnt of image.
-    This is a simple image processing operation that inverts the colors of the image.
+    A class to create a complement toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.COMPLEMENT_NAME, parent)
   
     def execute(self, imageBGRA):
-        # apply complement operation
-        imageBGRA = self.processor.complement(imageBGRA)  
+        imageBGRA = self.processor.complement(imageBGRA)    # apply complement operation
 
         return imageBGRA
 
 
 class CropBox(DraggableFunctionBox):
     """
-    A box that allows the user to crop the image.
-    This class provides a UI for specifying the crop ranges and processes the image accordingly.
+    A class to create a cropping toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.CROP_NAME, parent)
 
-        # Create input boxes for crop ranges
+        # Insert input boxes to select the crop values
         self.leftRight  = self.ui_components.dual_input("Left-Right:", 0, 0)      
         self.topBottom = self.ui_components.dual_input("Top-Bottom:", 0, 0)
                         
     def execute(self, imageBGRA):
-        # get the height and width of the image
-        h,w = imageBGRA.shape[:2]            
+        h,w = imageBGRA.shape[:2]       # get the height and width of the input image
 
-        # get the crop values from the input boxes
+        # get the crop values from input
         leftCut, rightCut = self.ui_components.get_component_value(self.leftRight[:2], maxs=[w,w], defaults=[0, 0])
         topCut, bottomCut = self.ui_components.get_component_value(self.topBottom[:2], maxs=[h,h], defaults=[0, 0])
         
@@ -387,70 +395,60 @@ class CropBox(DraggableFunctionBox):
 
 class FlipBox(DraggableFunctionBox):
     """
-    A box that allows the user to flip the image.
-    This class provides a UI for specifying the flip angle and processes the image accordingly.
+    A class to create a flipping toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.FLIP_NAME, parent)
 
-        # Create a radio button group to select the flip direction
+        # Insert a radio button group to select the flip direction
         self.buttonGroup = self.ui_components.radio_buttons(["Horizontal", "Vertical", "Both"])
 
     def execute(self, imageBGRA):
         flipCodes = [1, 0, -1]          # horizontal, vertical, both
-
-        # apply flipping
-        imageBGRA = self.processor.flip(imageBGRA, flipCodes[self.buttonGroup[0].checkedId()])
+        imageBGRA = self.processor.flip(imageBGRA, flipCodes[self.buttonGroup[0].checkedId()])  # apply flipping
 
         return imageBGRA
     
 
 class RotateBox(DraggableFunctionBox):
     """
+    A class to create a rotation toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.ROTATE_NAME, parent)
 
-        # Create a slider to adjust the rotate angle
+        # Insert a slider to adjust the rotate angle
         self.angle = self.ui_components.slider(heading="Angle: ", minValue=-180, maxValue=180)  
 
     def execute(self, imageBGRA):
-        # Get the current value of the slider
-        value = self.angle[0].value()         
-
-        # apply rotation
-        imageBGRA = self.processor.rotate(imageBGRA, value)  
+        value = self.angle[0].value()                           # Get the current value of the slider
+        imageBGRA = self.processor.rotate(imageBGRA, value)     # apply rotation
 
         return imageBGRA
 
 
 class ResizeBox(DraggableFunctionBox):
     """
-    A box that allows the user to resize the image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.RESIZE_NAME, parent)
 
-        # Create min and max input boxes for input size
+        # Insert min-max input boxes to select the new size
         self.newWidthHeight  = self.ui_components.dual_input("Size:", 0, 0)
         
-        # set a flag to check if the input size is set to default values
-        self.init = False
+        self.init = False       # set a flag to check if the inputs are set to the image size as default
                         
     def execute(self, imageBGRA):
-        # get the height and width of the image
-        (w, h) = imageBGRA.shape[:2]            
+        (w, h) = imageBGRA.shape[:2]        # get the height and width of the image
 
-        # set the default values for the input boxes
+        # set the input boxes to the image size as default
         if not self.init:
             self.newWidthHeight[0].setText(str(w))
             self.newWidthHeight[1].setText(str(h))
             self.init = True
 
-        # get input and output range values from the text boxes
+        # get input and output range values from the text boxes and apply resizing
         reWidth, reHeight = self.ui_components.get_component_value(self.newWidthHeight[:2], mins=[0, 0], defaults=[w, h])
-
-        # apply resizing
         imageBGRA = self.processor.resize(imageBGRA, reWidth, reHeight)  
 
         return imageBGRA
@@ -458,19 +456,18 @@ class ResizeBox(DraggableFunctionBox):
 
 class PaddingBox(DraggableFunctionBox):
     """
-    A box that allows the user to add padding to the image.
-    This class provides a UI for specifying the padding type and values.
+    A class to create a padding toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.PADDING_NAME, parent)
 
-        # Create  a combo list to select the padding type
+        # Insert a combo list to select the padding type
         self.combo = self.ui_components.combo_list(["Constant", "Reflect", "Replicate"])
 
-        # insert signle input box for constant value
+        # Insert a signle input box to select the constant value
         self.constant = self.ui_components.mono_input("Value:", defaultValue=0)
         
-        # Create input boxes for padding amounts
+        # Insert input boxes to select the padding values
         self.leftRight = self.ui_components.dual_input("Left-Right:", 0, 0)      
         self.topBottom = self.ui_components.dual_input("Top-Bottom:", 0, 0)
 
@@ -484,10 +481,8 @@ class PaddingBox(DraggableFunctionBox):
         selectedId = self.combo.currentIndex()        
         paddingType = padCodes[selectedId]
 
-        # get the constant value from input box
+        # get the input values from the input boxes
         constant = self.ui_components.get_component_value(self.constant[:1], mins=[0], maxs=[255], defaults=[0])
-
-        # get the padding values from the input boxes
         lPad, rPad = self.ui_components.get_component_value(self.leftRight[:2], defaults=[0, 0])
         tPad, bPad = self.ui_components.get_component_value(self.topBottom[:2], defaults=[0, 0])
 
@@ -499,8 +494,7 @@ class PaddingBox(DraggableFunctionBox):
 
 class HistEqualizationBox(DraggableFunctionBox):
     """
-    A box that performs histogram equalization on the image.
-    This is a technique used to enhance the contrast of the image by redistributing the pixel intensity values.
+    A class to create a histogram equalization toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.HISTEQ_NAME, parent)
@@ -514,15 +508,14 @@ class HistEqualizationBox(DraggableFunctionBox):
 
 class HistCLAHEBox(DraggableFunctionBox):
     """
-    CLAHE (Contrast Limited Adaptive Histogram Equalization) is a technique used to enhance the contrast of images.
-    It is particularly useful for improving the visibility of details in images with varying lighting conditions.
+    A class to create a histogram CLAHE toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.HISTCLAHE_NAME, parent)
 
-        self.clipLimit_rescale = 10
+        self.clipLimit_rescale = 10     # set a rescale factor for the slider
 
-        # create slider and input box for clip limit and tile grid size
+        # Insert a slider and input box to select the clip limit and tile grid size
         self.clipLimit = self.ui_components.slider(heading="Clip Limit:", minValue=1, maxValue=100, defaultValue=2, rescale=self.clipLimit_rescale)  
         self.tileGridSize = self.ui_components.mono_input("Tile Grid Size:", defaultValue=8)
 
@@ -540,16 +533,17 @@ class HistCLAHEBox(DraggableFunctionBox):
 
 class MaskBox(DraggableFunctionBox):
     """
+    A class to create a masking toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.MASK_NAME, parent)
 
-        # Create input boxes for mask range values
+        # Insert input boxes to select the min-max HSV values
         self.intensityMin = self.ui_components.triple_input("min HSV:", 0, 0, 0)
         self.intensityMax = self.ui_components.triple_input("max HSV:", 0, 0, 0)
 
     def execute(self, imageBGRA):
-        # get the mask range values from the input boxes
+        # get the min-max HSV values from the input boxes
         rMin, gMin, bMin = self.ui_components.get_component_value(self.intensityMin[:3], mins=[0, 0, 0], maxs=[255,255, 255], defaults=[0, 0, 0])
         rMax, gMax, bMax = self.ui_components.get_component_value(self.intensityMax[:3], mins=[0, 0, 0], maxs=[255,255, 255], defaults=[0, 0, 0])
 
@@ -561,13 +555,12 @@ class MaskBox(DraggableFunctionBox):
 
 class BitSliceBox(DraggableFunctionBox):
     """
-    A box that allows the user to select a bit plane from the image.
-    This class provides a UI for specifying the bit plane and processes the image accordingly.
+    A class to create a bit plane slicing toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.BITSLICE_NAME, parent)
 
-        # Create  a combo list to select a bit plane
+        # Insert a combo list to select a bit plane
         self.combo = self.ui_components.combo_list(["0", "1", "2", "3", "4", "5", "6", "7"])
 
     def execute(self, imageBGRA):
@@ -579,22 +572,21 @@ class BitSliceBox(DraggableFunctionBox):
 
 class NoiseBox(DraggableFunctionBox):
     """
-    A box that allows the user to add noise to the image.
-    This class provides a UI for specifying the noise type and parameters.
+    A class to create a noise toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.ADD_NOISE_NAME, parent)
 
-        self.saltPepProb_rescale = 1000
+        self.saltPepProb_rescale = 1000         # set a rescale factor for the slider
 
-        # Create a combo list to select the noise type
+        # Insert a combo list to select the noise type
         self.combo = self.ui_components.combo_list(["Gaussian", "Salt & Pepper", "Poisson"])
 
-        # insert signle input boxes for mean and std values
+        # insert signle input boxes to select the mean and std values
         self.mean = self.ui_components.slider(heading="Mean:", minValue=-30, maxValue=300, defaultValue=0)
         self.std = self.ui_components.slider(heading="Std:", minValue=0, maxValue=100, defaultValue=25)
 
-        # insert signle input boxes for salt and pepper values
+        # insert signle input boxes to select the salt and pepper probability
         self.saltPepProb = self.ui_components.slider(heading="Probability:", minValue=0, maxValue=200, defaultValue=20, rescale=self.saltPepProb_rescale)
 
         # connect the combo box to the on_change function
@@ -602,20 +594,16 @@ class NoiseBox(DraggableFunctionBox):
    
     def execute(self, imageBGRA):
         if self.combo.currentText() == "Gaussian":
-            # get mean and std values from the text boxes
+            # get mean and std values from inputs and apply gaussian noise
             mean = self.mean[0].value() 
             std = self.std[0].value()
-
-            # apply gaussian noise
             imageBGRA = self.processor.gaussian_noise(imageBGRA, mean, std)  
             
             return imageBGRA
         
         elif self.combo.currentText() == "Salt & Pepper":
-            # get salt and pepper probability values from the text boxes
+            # get salt and pepper probability values from the text boxes and apply salt and pepper noise
             saltPepProb = self.saltPepProb[0].value() / self.saltPepProb_rescale
-
-            # apply salt and pepper noise
             imageBGRA = self.processor.salt_pepper_noise(imageBGRA, saltPepProb)
             
             return imageBGRA    
@@ -629,78 +617,89 @@ class NoiseBox(DraggableFunctionBox):
 
 class ArithmeticBox(DraggableFunctionBox):
     """
+    A class to create an arithmetic operation toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.ARITHMETIC_NAME, parent)
 
-        self.secondImage = None
-
-        self.alpha_rescale = 100
+        self.secondImage = None         # set a variable to store the second image
+        self.alpha_rescale = 100        # set a rescale factor for the slider
 
         # insert a combo list to select the arithmetic operation
         self.combo = self.ui_components.combo_list(["Add", "Subtract", "Multiply", "Divide"])
         
-        # insert a slider for alpha value
+        # insert a slider to select the alpha value
         self.alpha = self.ui_components.slider(heading="Alpha:", minValue=1, maxValue=1000, defaultValue=100, rescale=self.alpha_rescale)
 
-        # insert a button to select the second image
+        # insert a button to select a new second image
         self.button = self.ui_components.button("Select Image")
-        self.button[0].clicked.connect(self.open_second_image)  # connect the button to the select_image function
+        self.button[0].clicked.connect(self.open_second_image_button)  # connect the button click to the open_second_image_button function
 
     def execute(self, imageBGRA):
         if self.secondImage is not None:
-            alpha = self.alpha[0].value() / self.alpha_rescale           # get the alpha value from input box
-            operation = self.combo.currentText()                # get the selected operation from combo box
+            alpha = self.alpha[0].value() / self.alpha_rescale                      # get the alpha value from input 
+            operation = self.combo.currentText()                                    # get the selected operation from combo box
             imageBGRA = self.processor.arithmetic(imageBGRA, self.secondImage, alpha, operation)  # apply arithmetic operation
 
         return imageBGRA
     
-    
-    def open_second_image(self):
-
+    def open_second_image_button(self):
+        """
+        Open a file dialog to select the second image.
+        """
         imageBGRA = utils.select_image()     # read the image
 
         if imageBGRA is not None:
-            imageBGR = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)  # convert the image to BGR format
-            self.secondImage = imageBGR
+            self.secondImage = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)  # convert the image to BGR format
             self.on_change()        # emit the signal to indicate that the settings have been changed
 
 
 
 class LogicBox(DraggableFunctionBox):
     """
+    A class to create a logic operation toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.LOGIC_NAME, parent)
 
-        self.secondImage = None
+        self.secondImage = None         # set a variable to store the second image
 
         # insert a combo list to select the logic operation
         self.combo = self.ui_components.combo_list(["And", "Or", "Xor"])
         
         # insert a button to select the second image
         self.button = self.ui_components.button("Select Image")
-        self.button[0].clicked.connect(self.open_second_image)  # connect the button to the select_image function
+        self.button[0].clicked.connect(self.open_second_image_button)  # connect the button click to the open_second_image_button function
+
 
     def execute(self, imageBGRA):
         if self.secondImage is not None:
-            operation = self.combo.currentText()                # get the selected operation from combo box
-            imageBGRA = self.processor.logic(imageBGRA, self.secondImage, operation)  # apply logic operation
+            operation = self.combo.currentText()                                        # get the selected operation from combo box
+            imageBGRA = self.processor.logic(imageBGRA, self.secondImage, operation)    # apply logic operation
 
         return imageBGRA 
+
+    def open_second_image_button(self):
+        """
+        Open a file dialog to select the second image.
+        """
+        imageBGRA = utils.select_image()     # read the image
+
+        if imageBGRA is not None:
+            self.secondImage = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)  # convert the image to BGR format
+            self.on_change()        # emit the signal to indicate that the settings have been changed
+
 
 
 class LaplaceBox(DraggableFunctionBox):
     """
-    A box that performs laplace transformation on the image.
+    A class to create a laplace transformation toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.LAPLACE_NAME, parent)
 
-        # insert switch for extended laplace choice
+        # insert switch to select extended laplace and normalize options
         self.extended = self.ui_components.switch("Extended Laplace")
-        
-        # insert switch for normalize choice
         self.norm = self.ui_components.switch("Normalize")
 
     def execute(self, imageBGRA):
@@ -712,11 +711,12 @@ class LaplaceBox(DraggableFunctionBox):
 
 class SobelBox(DraggableFunctionBox):
     """
+    A class to create a sobel transformation toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.LAPLACE_NAME, parent)
 
-        # insert switch for extended laplace choice
+        # insert a switch to select the normalize option
         self.norm = self.ui_components.switch("Normalize")
         
     def execute(self, imageBGRA):
@@ -728,16 +728,16 @@ class SobelBox(DraggableFunctionBox):
 
 class SpatialFilterBox(DraggableFunctionBox):
     """
-    A box that allows the user to apply spatial filters to the image.
-    This class provides a UI for specifying the filter type and parameters.
+    A class to create a spatial filter toolbox.
     """
     def __init__(self, parent=None):
         super().__init__(constants.SPATIAL_NAME, parent)
 
+        # set rescale factors for sliders
         self.alpha_rescale = 100
         self.sigma_rescale = 10
 
-        # insert nedded widgets
+        # insert nedded input widgets
         self.combo = self.ui_components.combo_list(["Median", "Max", "Min", "Mean", "Gaussian", "Laplace Sharpening", "Sobel Sharpening", "Unsharp Masking"])
         self.kernel = self.ui_components.mono_input("Kernel Size:", defaultValue=3)
         self.sigma = self.ui_components.slider(heading="Std:", minValue=1, maxValue=100, defaultValue=10, rescale=self.sigma_rescale)  
@@ -750,13 +750,16 @@ class SpatialFilterBox(DraggableFunctionBox):
                                                                    [self.alpha], [self.kernel, self.sigma, self.alpha]])
 
     def execute(self, imageBGRA):
-        w = self.ui_components.get_component_value(self.kernel[:1], mins=[0], defaults=[3])         # get the kernel size from input box
-        w = w if w % 2 == 1 else w + 1                                      # make sure the kernel size is odd
+        # get the kernel size and make sure it is odd
+        w = self.ui_components.get_component_value(self.kernel[:1], mins=[0], defaults=[3])         
+        w = w if w % 2 == 1 else w + 1                                      
         
-        sigma = self.sigma[0].value() / self.sigma_rescale           # get the sigma value from input box
-        alpha = self.alpha[0].value() / self.alpha_rescale       # get the alpha value from input box
-        extended = self.extended[0].isChecked()    # get the extended laplace choice from switch
-
+        # get the sigma, alpha and extended laplace values from inputs
+        sigma = self.sigma[0].value() / self.sigma_rescale      
+        alpha = self.alpha[0].value() / self.alpha_rescale      
+        extended = self.extended[0].isChecked()                 
+        
+        # apply the selected spatial filter
         if self.combo.currentText() == "Median":
             imageBGRA = self.processor.order_statistics(imageBGRA, w, "median")  
         elif self.combo.currentText() == "Max":

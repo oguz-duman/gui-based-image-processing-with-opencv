@@ -1,4 +1,3 @@
-
 # the name which will be displayed in the toolbox of each function
 BRIGHTNESS_NAME = "Brightness"
 SATURATION_NAME = "Saturation"
@@ -25,11 +24,13 @@ LAPLACE_NAME = "Laplacian Filter"
 SOBEL_NAME = "Sobel Filter"
 SPATIAL_NAME = "Spatial Filter"
 
+
 # list of function names to use in combo box. They will be listed in the order they are defined here.
 FUNCTION_NAMES = [BRIGHTNESS_NAME, SATURATION_NAME, CONTRAST_NAME, FULL_SCALE_CONTRAST_NAME, LOG_NAME, GAMMA_NAME, RGB2GRAY_NAME, 
                   THRESHOLDING_NAME, COMPLEMENT_NAME, CROP_NAME, FLIP_NAME, ROTATE_NAME, RESIZE_NAME, PADDING_NAME, HISTEQ_NAME,
                   HISTCLAHE_NAME, MASK_NAME, BITSLICE_NAME, ADD_NOISE_NAME, ARITHMETIC_NAME, LOGIC_NAME, LAPLACE_NAME, SOBEL_NAME, 
                   SPATIAL_NAME]
+
 
 # default channel names for the image.
 CHANNEL_NAMES = ["Red", "Green", "Blue", "Alpha"]
@@ -41,6 +42,7 @@ HISTOGRAM_BUTTON = "Histogram"
 CHANNELS_BUTTON = "Channels"
 FREQUENCY_BUTTON = "Frequency"
 SAVE_BUTTON = "Save"
+
 
 # title of the 'add new' toolbox
 ADD_TOOLBOX_TITLE = "Add New"
