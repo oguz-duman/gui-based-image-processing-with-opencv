@@ -29,6 +29,7 @@ class MainWindow(QWidget):
 
         self.init_variables()  # Initialize variables
         self.init_ui()      # Initialize UI
+        self.pipeline = Pipeline()  # create an instance of the pipeline class
         
 
     def init_ui(self):
@@ -50,7 +51,6 @@ class MainWindow(QWidget):
         """
         Initialize the variables used in the widget.
         """
-        self.pipeline = Pipeline()  # create an instance of the pipeline class
         self.inputBGRA = None  # input image variable
         self.outputBGRA = None  # output image variable
         self.curHistLayer = -1  # current histogram layer variable
@@ -240,27 +240,18 @@ class MainWindow(QWidget):
         Args:
             event (QDropEvent): The drop event containing information about the dropped data.
         """
-        # Get the position where the item is dropped
-        pos = event.position().toPoint()
-        # Get the source widget being dragged
-        source = event.source()
-        # Find the index where the item should be inserted
-        index = self.find_insert_index(pos)
+        pos = event.position().toPoint()                # Get the position where the item is dropped
+        source = event.source()                         # Get the source widget being dragged
+        index = self.find_insert_index(pos)             # Find the index where the item should be inserted
 
         # Check if the source is a valid FunctionBox
         if source and isinstance(source, toolboxes.FunctionBox):
-            self.pipeline.move_step(source, index)  # move the function box in the pipeline
-            
-            # Remove the widget from its current position in the layout
-            self.contentLayout.removeWidget(source)
-            # Insert the widget at the new index in the layout
-            self.contentLayout.insertWidget(index, source)
+            self.pipeline.move_step(source, index)              # move the function box in the pipeline
+            self.contentLayout.removeWidget(source)             # Remove the widget from its current position in the layout
+            self.contentLayout.insertWidget(index, source)      # Insert the widget at the new index in the layout
 
-            # Accept the proposed action for the drop event
-            event.acceptProposedAction()
-
-            # Rerun the pipeline to update the output image
-            self.process_pipeline()
+            event.acceptProposedAction()            # Accept the proposed action for the drop event
+            self.run_pipeline()                     # Rerun the pipeline to update the output image
 
 
     def find_insert_index(self, pos):
@@ -342,7 +333,7 @@ class MainWindow(QWidget):
             newBox = toolboxes.SpatialFilterBox()
         
         self.pipeline.add_step(newBox)                              # add the new function box to the pipeline
-        newBox.updateTrigger.connect(self.process_pipeline)      # connect the process signal to the ProcessPipeline function
+        newBox.updateTrigger.connect(self.run_pipeline)      # connect the process signal to the ProcessPipeline function
         newBox.removeTrigger.connect(self.remove_func)           # connect the remove signal to the RemoveFunc function
 
         self.contentLayout.removeWidget(self.addNewBox)         # remove the special footer widget (addNewBox) from the layout
@@ -350,7 +341,7 @@ class MainWindow(QWidget):
         self.contentLayout.addWidget(newBox)                    # add the new function box to the layout
         self.contentLayout.addWidget(self.addNewBox)            # add the special footer widget (addNewBox) back to the layout
 
-        self.process_pipeline()                                  # rerun the pipeline to update the output image
+        self.run_pipeline()                                  # rerun the pipeline to update the output image
 
     
     @Slot(str)
@@ -370,11 +361,11 @@ class MainWindow(QWidget):
                 break
         
         # rerun the pipeline to update the output image
-        self.process_pipeline()
+        self.run_pipeline()
         
 
     @Slot()
-    def process_pipeline(self):
+    def run_pipeline(self):
         """
         This function is called to process the image through the function boxes.
         """        
@@ -416,7 +407,7 @@ class MainWindow(QWidget):
             self.image_pixmap(self.inputBGRA, self.rightLabel)  
 
             # process the image through the pipeline
-            self.process_pipeline()  
+            self.run_pipeline()  
 
 
 
