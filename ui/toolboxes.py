@@ -3,13 +3,13 @@ import cv2
 
 from PySide6.QtCore import Qt, Signal, QMimeData
 from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, 
-                               QSizePolicy, QFrame, QCheckBox, QComboBox, QFileDialog)
+                               QSizePolicy, QFrame, QCheckBox, QComboBox)
 from PySide6.QtGui import QFont, QDrag
 
 from processing.processor import Processor
+from ui.components import UiComponents 
 import constants
 import utils
-from ui.components import UiComponents 
 
 
 class AddNewBox(QWidget):
@@ -47,14 +47,14 @@ class AddNewBox(QWidget):
         self.frameLayout.setContentsMargins(10, 10, 10, 10)
 
         # create a title label
-        label = QLabel("Add New")
+        label = QLabel(constants.ADD_TOOLBOX_TITLE)
         label.setFont(self.font)
         label.setAlignment(Qt.AlignHCenter)
         self.frameLayout.addWidget(label)
         
         # Create a combo box to select the function type
         self.combo = QComboBox()
-        self.combo.addItems(constants.function_names)
+        self.combo.addItems(constants.FUNCTION_NAMES)
         self.combo.setFont(self.font)
         self.combo.setStyleSheet("padding: 5px;")  
         self.frameLayout.addWidget(self.combo, alignment=Qt.AlignVCenter)
@@ -241,7 +241,7 @@ class ContrastBox(DraggableFunctionBox):
             out_min, out_max = self.ui_components.get_component_value(self.outMinMax[:2], maxs=[255,255], defaults=[0, 255])
 
             # apply contrast stretching using input-output range method
-            imageBGRA = self.processor.contrastByRange(imageBGRA, [in_min, in_max], [out_min, out_max])  
+            imageBGRA = self.processor.contrast_by_range(imageBGRA, [in_min, in_max], [out_min, out_max])  
 
             return imageBGRA  
 
@@ -251,7 +251,7 @@ class ContrastBox(DraggableFunctionBox):
             beta = self.beta[0].value()
 
             # apply contrast stretching using T(s) method
-            imageBGRA = self.processor.contrastByT(imageBGRA, alpha, beta)  
+            imageBGRA = self.processor.contrast_by_T(imageBGRA, alpha, beta)  
             
             return imageBGRA
               
@@ -266,7 +266,7 @@ class FullScaleContrastBox(DraggableFunctionBox):
 
     def execute(self, imageBGRA):
         # apply full scale contrast stretching
-        imageBGRA = self.processor.fullScaleContrast(imageBGRA)  
+        imageBGRA = self.processor.full_scale_contrast(imageBGRA)  
         
         return imageBGRA
 
@@ -281,7 +281,7 @@ class LogBox(DraggableFunctionBox):
 
     def execute(self, imageBGRA):
         # apply log transformation
-        imageBGRA = self.processor.logTransform(imageBGRA)  
+        imageBGRA = self.processor.log_transform(imageBGRA)  
 
         return imageBGRA
 
@@ -304,7 +304,7 @@ class GammaBox(DraggableFunctionBox):
         gamma = self.gamma[0].value() / self.slider_rescale
         
         # apply gamma transformation
-        imageBGRA = self.processor.gammaTransform(imageBGRA, gamma)  
+        imageBGRA = self.processor.gamma_transform(imageBGRA, gamma)  
 
         return np.uint8(imageBGRA)     
 
@@ -507,7 +507,7 @@ class HistEqualizationBox(DraggableFunctionBox):
   
     def execute(self, imageBGRA):
         # apply histogram equalization
-        imageBGRA = self.processor.histogramEqualization(imageBGRA)  
+        imageBGRA = self.processor.histogram_equalization(imageBGRA)  
         
         return imageBGRA
 
@@ -572,7 +572,7 @@ class BitSliceBox(DraggableFunctionBox):
 
     def execute(self, imageBGRA):
         # apply bit plane slicing
-        imageBGRA = self.processor.bitSlice(imageBGRA, int(self.combo.currentText()))
+        imageBGRA = self.processor.bit_slice(imageBGRA, int(self.combo.currentText()))
 
         return imageBGRA
 
@@ -607,7 +607,7 @@ class NoiseBox(DraggableFunctionBox):
             std = self.std[0].value()
 
             # apply gaussian noise
-            imageBGRA = self.processor.gaussianNoise(imageBGRA, mean, std)  
+            imageBGRA = self.processor.gaussian_noise(imageBGRA, mean, std)  
             
             return imageBGRA
         
@@ -616,13 +616,13 @@ class NoiseBox(DraggableFunctionBox):
             saltPepProb = self.saltPepProb[0].value() / self.saltPepProb_rescale
 
             # apply salt and pepper noise
-            imageBGRA = self.processor.saltPepperNoise(imageBGRA, saltPepProb)
+            imageBGRA = self.processor.salt_pepper_noise(imageBGRA, saltPepProb)
             
             return imageBGRA    
         
         elif self.combo.currentText() == "Poisson": 
             # apply poisson noise
-            imageBGRA = self.processor.poissonNoise(imageBGRA)
+            imageBGRA = self.processor.poisson_noise(imageBGRA)
             
             return imageBGRA
    
@@ -645,7 +645,7 @@ class ArithmeticBox(DraggableFunctionBox):
 
         # insert a button to select the second image
         self.button = self.ui_components.button("Select Image")
-        self.button[0].clicked.connect(self.select_image)  # connect the button to the select_image function
+        self.button[0].clicked.connect(self.open_second_image)  # connect the button to the select_image function
 
     def execute(self, imageBGRA):
         if self.secondImage is not None:
@@ -656,29 +656,15 @@ class ArithmeticBox(DraggableFunctionBox):
         return imageBGRA
     
     
-    def select_image(self):
+    def open_second_image(self):
 
-        # Open file dialog to select an image file
-        filePath, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select an image file",
-            "", 
-            "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp)"
-        )
+        imageBGRA = utils.select_image()     # read the image
 
-        if filePath:
-            self.secondImage = cv2.imread(filePath, cv2.IMREAD_UNCHANGED)          # Read the image using OpenCV
-
-            if len(self.secondImage.shape) == 2:  # if image is  (h,w)
-                self.secondImage = cv2.cvtColor(self.secondImage, cv2.COLOR_GRAY2BGR)
-            elif self.secondImage.shape[2] == 1:  # if image is (h,w,1)
-                self.secondImage = cv2.cvtColor(self.secondImage, cv2.COLOR_GRAY2BGR)
-            elif self.secondImage.shape[2] == 3:  # ig image is (BGR) (h,w,3)
-                pass
-            elif self.secondImage.shape[2] == 4:  # if image is (BGRA) (h,w,4)
-                self.secondImage = self.secondImage[:, :, :3]  # remove the alpha channel
-
+        if imageBGRA is not None:
+            imageBGR = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)  # convert the image to BGR format
+            self.secondImage = imageBGR
             self.on_change()        # emit the signal to indicate that the settings have been changed
+
 
 
 class LogicBox(DraggableFunctionBox):
@@ -694,7 +680,7 @@ class LogicBox(DraggableFunctionBox):
         
         # insert a button to select the second image
         self.button = self.ui_components.button("Select Image")
-        self.button[0].clicked.connect(self.select_image)  # connect the button to the select_image function
+        self.button[0].clicked.connect(self.open_second_image)  # connect the button to the select_image function
 
     def execute(self, imageBGRA):
         if self.secondImage is not None:
@@ -702,31 +688,6 @@ class LogicBox(DraggableFunctionBox):
             imageBGRA = self.processor.logic(imageBGRA, self.secondImage, operation)  # apply logic operation
 
         return imageBGRA 
-
-    
-    def select_image(self):
-
-        # Open file dialog to select an image file
-        filePath, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select an image file",
-            "", 
-            "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp)"
-        )
-
-        if filePath:
-            self.secondImage = cv2.imread(filePath, cv2.IMREAD_UNCHANGED)          # Read the image using OpenCV
-
-            if len(self.secondImage.shape) == 2:  # if image is  (h,w)
-                self.secondImage = cv2.cvtColor(self.secondImage, cv2.COLOR_GRAY2BGR)
-            elif self.secondImage.shape[2] == 1:  # if image is (h,w,1)
-                self.secondImage = cv2.cvtColor(self.secondImage, cv2.COLOR_GRAY2BGR)
-            elif self.secondImage.shape[2] == 3:  # ig image is (BGR) (h,w,3)
-                pass
-            elif self.secondImage.shape[2] == 4:  # if image is (BGRA) (h,w,4)
-                self.secondImage = self.secondImage[:, :, :3]  # remove the alpha channel
-
-            self.on_change()        # emit the signal to indicate that the settings have been changed
 
 
 class LaplaceBox(DraggableFunctionBox):
@@ -797,21 +758,21 @@ class SpatialFilterBox(DraggableFunctionBox):
         extended = self.extended[0].isChecked()    # get the extended laplace choice from switch
 
         if self.combo.currentText() == "Median":
-            imageBGRA = self.processor.orderStatistics(imageBGRA, w, "median")  
+            imageBGRA = self.processor.order_statistics(imageBGRA, w, "median")  
         elif self.combo.currentText() == "Max":
-            imageBGRA = self.processor.orderStatistics(imageBGRA, w, "max")  
+            imageBGRA = self.processor.order_statistics(imageBGRA, w, "max")  
         elif self.combo.currentText() == "Min":
-            imageBGRA = self.processor.orderStatistics(imageBGRA, w, "min")  
+            imageBGRA = self.processor.order_statistics(imageBGRA, w, "min")  
         elif self.combo.currentText() == "Mean":
-            imageBGRA = self.processor.boxFilter(imageBGRA, w)
+            imageBGRA = self.processor.box_filter(imageBGRA, w)
         elif self.combo.currentText() == "Gaussian":
-            imageBGRA = self.processor.gaussianBlur(imageBGRA, w, sigma)  
+            imageBGRA = self.processor.gaussian_blur(imageBGRA, w, sigma)  
         elif self.combo.currentText() == "Laplace Sharpening":
-            imageBGRA = self.processor.laplacianSharpening(imageBGRA, alpha, extended)
+            imageBGRA = self.processor.laplacian_sharpening(imageBGRA, alpha, extended)
         elif self.combo.currentText() == "Sobel Sharpening":
-            imageBGRA = self.processor.sobelSharpening(imageBGRA, alpha)
+            imageBGRA = self.processor.sobel_sharpening(imageBGRA, alpha)
         elif self.combo.currentText() == "Unsharp Masking":
-            imageBGRA = self.processor.unsharpMasking(imageBGRA, w, sigma, alpha)
+            imageBGRA = self.processor.unsharp_masking(imageBGRA, w, sigma, alpha)
 
         return imageBGRA
     

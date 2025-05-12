@@ -29,7 +29,7 @@ class Processor():
         return imageBGRA
     
 
-    def isGrayscale(self, imageBGRA):
+    def is_grayscale(self, imageBGRA):
         """
         Checks if the given image is grayscale.
         This method is used to determine if the image has color information or not.
@@ -50,7 +50,7 @@ class Processor():
     def saturation(self, imageBGRA, value):
         """
         """
-        if not self.isGrayscale(imageBGRA):
+        if not self.is_grayscale(imageBGRA):
             imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
             imageHSVA[:, :, 1] = cv2.add(imageHSVA[:, :, 1], value)     # brighten the V channel of the HSVA image
             imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
@@ -58,7 +58,7 @@ class Processor():
         return imageBGRA
     
 
-    def contrastByRange(self, imageBGRA, inRange, outRange):
+    def contrast_by_range(self, imageBGRA, inRange, outRange):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
@@ -73,7 +73,7 @@ class Processor():
         return imageBGRA
 
 
-    def contrastByT(self, imageBGRA, alpha, beta):
+    def contrast_by_T(self, imageBGRA, alpha, beta):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
@@ -86,7 +86,7 @@ class Processor():
         return imageBGRA
 
 
-    def fullScaleContrast(self, imageBGRA):
+    def full_scale_contrast(self, imageBGRA):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
@@ -99,7 +99,7 @@ class Processor():
         return imageBGRA
 
 
-    def logTransform(self, imageBGRA):
+    def log_transform(self, imageBGRA):
         """
         """        
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
@@ -113,7 +113,7 @@ class Processor():
         return imageBGRA
 
 
-    def gammaTransform(self, imageBGRA, gamma):
+    def gamma_transform(self, imageBGRA, gamma):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
@@ -215,7 +215,7 @@ class Processor():
         return imageBGRA
     
 
-    def histogramEqualization(self, imageBGRA):
+    def histogram_equalization(self, imageBGRA):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                           # convert the image to HSVA color space
@@ -245,7 +245,7 @@ class Processor():
         return imageBGRA
 
 
-    def bitSlice(self, imageBGRA, bitPlane):
+    def bit_slice(self, imageBGRA, bitPlane):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                           # convert the image to HSVA color space
@@ -258,13 +258,13 @@ class Processor():
         return imageBGRA
     
 
-    def gaussianNoise(self, imageBGRA, mean, std):
+    def gaussian_noise(self, imageBGRA, mean, std):
         """
         """
         imageBGR = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)          # convert the BGRA image to BGR color space
 
         # If the image is grayscale, make the noise channels identical
-        if self.isGrayscale(imageBGRA):
+        if self.is_grayscale(imageBGRA):
             noise = np.random.normal(mean, std, imageBGR[:, :, 0].shape).astype(np.float32) 
             noise = cv2.merge((noise, noise, noise))
         else:
@@ -277,7 +277,7 @@ class Processor():
         return imageBGRA
 
 
-    def saltPepperNoise(self, imageBGRA, saltPepProb):
+    def salt_pepper_noise(self, imageBGRA, saltPepProb):
         """
         """
         imageBGR = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)          # convert the BGRA image to BGR color space
@@ -296,11 +296,11 @@ class Processor():
         return imageBGRA    
 
 
-    def poissonNoise(self, imageBGRA):
+    def poisson_noise(self, imageBGRA):
         """
         """
         imageBGR = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)
-        if self.isGrayscale(imageBGRA):
+        if self.is_grayscale(imageBGRA):
             imageGray = np.random.poisson(imageBGR[:, :, 0].astype(np.float32))
             imageBGR = cv2.merge((imageGray, imageGray, imageGray))
         else:
@@ -409,7 +409,7 @@ class Processor():
         return imageBGRA
 
 
-    def orderStatistics(self, imageBGRA, kernelSize, order):
+    def order_statistics(self, imageBGRA, kernelSize, order):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
@@ -428,7 +428,7 @@ class Processor():
         return imageBGRA
     
 
-    def boxFilter(self, imageBGRA, kernelSize):
+    def box_filter(self, imageBGRA, kernelSize):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
@@ -442,7 +442,7 @@ class Processor():
         return imageBGRA
     
 
-    def gaussianBlur(self, imageBGRA, kernelSize, sigma):
+    def gaussian_blur(self, imageBGRA, kernelSize, sigma):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
@@ -456,7 +456,7 @@ class Processor():
         return imageBGRA
 
 
-    def laplacianSharpening(self, imageBGRA, alpha, extended=False):
+    def laplacian_sharpening(self, imageBGRA, alpha, extended=False):
         """
         """
         # create the laplace kernel
@@ -481,7 +481,7 @@ class Processor():
         return imageBGRA
     
 
-    def sobelSharpening(self, imageBGRA, alpha):
+    def sobel_sharpening(self, imageBGRA, alpha):
         """
         """
         # create the sobel kernels
@@ -509,7 +509,7 @@ class Processor():
         return imageBGRA
 
 
-    def unsharpMasking(self, imageBGRA, kernelSize, sigma, alpha):
+    def unsharp_masking(self, imageBGRA, kernelSize, sigma, alpha):
         """
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space

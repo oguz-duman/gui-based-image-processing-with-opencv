@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
 # Import custom function boxes
 from ui import toolboxes
 import constants
+import utils
+from constants import CHANNEL_NAMES
 
 
 # -------------------------- main class definitions -------------------
@@ -25,11 +27,11 @@ class MainWindow(QWidget):
         super().__init__()  
 
         self.pipeline = []  # pipeline variable to store function boxes
-        self.InitVariables()  # Initialize variables
-        self.InitUi()      # Initialize UI
+        self.init_variables()  # Initialize variables
+        self.init_ui()      # Initialize UI
         
 
-    def InitUi(self):
+    def init_ui(self):
         """
         Initialize the UI components and layout.
         """
@@ -39,12 +41,12 @@ class MainWindow(QWidget):
         self.mainLayout.setSpacing(15)
 
         # init top, mid and bottom layouts
-        self.InitTopLayout()
-        self.InitMidLayout()
-        self.InitBottomLayout()
+        self.init_topLayout()
+        self.init_midLayout()
+        self.init_bottomLayout()
 
 
-    def InitVariables(self):
+    def init_variables(self):
         """
         Initialize the variables used in the widget.
         """
@@ -55,10 +57,9 @@ class MainWindow(QWidget):
         self.histView = False  # histogram view variable
         self.yLim = 0  # y-axis limit variable for histogram
         self.zoomAmount = 0  # zoom amount variable for histogram
-        self.channelNames = ["Red", "Green", "Blue", "Alpha"]    # channel names variable
 
 
-    def InitTopLayout(self):
+    def init_topLayout(self):
         """
         Initialize the top layout with two labels for displaying images.
         """
@@ -98,7 +99,7 @@ class MainWindow(QWidget):
         self.zoomOut.setFixedWidth(40)
         self.zoomOut.setFont(font) 
         self.zoomOut.setStyleSheet("padding-bottom: 2px;")
-        self.zoomOut.clicked.connect(lambda: self.DisplayHistogram(zoom=-1)) 
+        self.zoomOut.clicked.connect(lambda: self.display_histogram(zoom=-1)) 
         zoomLayout.addWidget(self.zoomOut, 1, alignment=Qt.AlignBottom)
         self.zoomOut.hide()
         
@@ -107,7 +108,7 @@ class MainWindow(QWidget):
         self.zoomIn.setFixedWidth(40)
         self.zoomIn.setFont(font) 
         self.zoomIn.setStyleSheet("padding-bottom: 2px;")
-        self.zoomIn.clicked.connect(lambda: self.DisplayHistogram(zoom=1))
+        self.zoomIn.clicked.connect(lambda: self.display_histogram(zoom=1))
         zoomLayout.addWidget(self.zoomIn, 1, alignment=Qt.AlignBottom)
         self.zoomIn.hide()
         
@@ -137,7 +138,7 @@ class MainWindow(QWidget):
         rightLayout.addWidget(self.rightLabel, 12)
 
 
-    def InitMidLayout(self):
+    def init_midLayout(self):
         """
         Initialize the mid layout with buttons for various actions.
         """
@@ -150,42 +151,42 @@ class MainWindow(QWidget):
         font.setPointSize(10)  
         
         # Button 1 - open image
-        btn = QPushButton(f"Open")
+        btn = QPushButton(constants.OPEN_BUTTON)
         midLayout.addWidget(btn)      
-        btn.clicked.connect(self.OpenImage)   
+        btn.clicked.connect(self.select_image)   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 2 - switch to histogram
-        btn = QPushButton(f"Histogram")
+        btn = QPushButton(constants.HISTOGRAM_BUTTON)
         midLayout.addWidget(btn)    
-        btn.clicked.connect(self.SwitchToHistogram)   
+        btn.clicked.connect(self.switch_to_histogram)   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 3 - See Layers
-        btn = QPushButton(f"Channels")
+        btn = QPushButton(constants.CHANNELS_BUTTON)
         midLayout.addWidget(btn)    
-        btn.clicked.connect(self.SwitchToColorLayer)  
+        btn.clicked.connect(self.switch_to_colorLayer)  
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 4 - switch to frequency domain
-        btn = QPushButton(f"Frequency")
+        btn = QPushButton(constants.FREQUENCY_BUTTON)
         midLayout.addWidget(btn)    
-        btn.clicked.connect(self.SwitchToFrequency)  
+        btn.clicked.connect(self.switch_to_frequency)  
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 5 - save image
-        btn = QPushButton(f"Save")
+        btn = QPushButton(constants.SAVE_BUTTON)
         midLayout.addWidget(btn)   
-        btn.clicked.connect(self.SaveImage)   
+        btn.clicked.connect(lambda: utils.save_image(self.outputBGRA))   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
 
-    def InitBottomLayout(self):
+    def init_bottomLayout(self):
         """
         Initialize the bottom layout with scroll area for function boxes.
         """
@@ -211,7 +212,7 @@ class MainWindow(QWidget):
         # insert 'new function' box
         self.addNewBox = toolboxes.AddNewBox()
         self.contentLayout.addWidget(self.addNewBox)
-        self.addNewBox.trigger.connect(self.AddNewFunc)  # connect signal to the slot
+        self.addNewBox.trigger.connect(self.add_new_func)  # connect signal to the slot
 
         # drag and drop functionality
         contentWidget.setAcceptDrops(True)
@@ -243,20 +244,20 @@ class MainWindow(QWidget):
         # Get the source widget being dragged
         source = event.source()
         # Find the index where the item should be inserted
-        index = self.findInsertIndex(pos)
+        index = self.find_insert_index(pos)
 
         # Check if the source is a valid FunctionBox
         if source and isinstance(source, toolboxes.FunctionBox):
             # Move the function box to the new index in the pipeline
-            self.moveFunctionBox(source, index)
+            self.move_function_box(source, index)
             # Accept the proposed action for the drop event
             event.acceptProposedAction()
 
             # Rerun the pipeline to update the output image
-            self.ProcessPipeline()
+            self.process_pipeline()
 
 
-    def findInsertIndex(self, pos):
+    def find_insert_index(self, pos):
         """
         Find the index in the layout where a widget should be inserted based on the drop position.
 
@@ -278,7 +279,7 @@ class MainWindow(QWidget):
         return self.contentLayout.count() - 1
 
 
-    def moveFunctionBox(self, widget, index):
+    def move_function_box(self, widget, index):
         """
         Move a function box widget to a new position in the pipeline and layout.
 
@@ -299,7 +300,7 @@ class MainWindow(QWidget):
 
 
     @Slot(str)
-    def AddNewFunc(self, functionName):
+    def add_new_func(self, functionName):
         """
         This function is called when a new function box is added.
         It creates a new function box and adds it to the content layout.
@@ -355,19 +356,19 @@ class MainWindow(QWidget):
             newBox = toolboxes.SpatialFilterBox()
         
         self.pipeline.append(newBox)                            # add the new function box to the pipeline
-        newBox.updateTrigger.connect(self.ProcessPipeline)      # connect the process signal to the ProcessPipeline function
-        newBox.removeTrigger.connect(self.RemoveFunc)           # connect the remove signal to the RemoveFunc function
+        newBox.updateTrigger.connect(self.process_pipeline)      # connect the process signal to the ProcessPipeline function
+        newBox.removeTrigger.connect(self.remove_func)           # connect the remove signal to the RemoveFunc function
 
         self.contentLayout.removeWidget(self.addNewBox)         # remove the special footer widget (addNewBox) from the layout
         self.addNewBox.setParent(None)
         self.contentLayout.addWidget(newBox)                    # add the new function box to the layout
         self.contentLayout.addWidget(self.addNewBox)            # add the special footer widget (addNewBox) back to the layout
 
-        self.ProcessPipeline()                                  # rerun the pipeline to update the output image
+        self.process_pipeline()                                  # rerun the pipeline to update the output image
 
     
     @Slot(str)
-    def RemoveFunc(self, functionName):
+    def remove_func(self, functionName):
         """
         This function is called when a function box is removed.
         It removes the function box from the pipeline and the layout.
@@ -387,11 +388,11 @@ class MainWindow(QWidget):
                 break
         
         # rerun the pipeline to update the output image
-        self.ProcessPipeline()
+        self.process_pipeline()
         
 
     @Slot()
-    def ProcessPipeline(self):
+    def process_pipeline(self):
         """
         This function is called to process the image through the function boxes.
         """        
@@ -409,78 +410,41 @@ class MainWindow(QWidget):
 
             # update the output image
             if self.histView:
-                self.DisplayHistogram()
+                self.display_histogram()
             elif self.curColorLayer != -1:
-                self.DisplayColorLayer()
+                self.display_color_layer()
             else:
-                self.ImagePixmap(self.outputBGRA, self.rightLabel)
+                self.image_pixmap(self.outputBGRA, self.rightLabel)
         
         except Exception as e:
             QMessageBox.information(self, "Error", traceback.format_exc())
 
 
     @Slot() 
-    def OpenImage(self):
-        """
-        Open a file dialog to select an image file and display it in the left label.
-        """
-        # Open file dialog to select an image file
-        filePath, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select an image file",
-            "", 
-            "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp)"
-        )
+    def select_image(self):
 
-        # Check if a file was selected
-        if filePath:
+        image = utils.select_image()     # read the image
+
+        if image is not None:
             # reinitialize variables since a new image is opened
-            self.InitVariables()
+            self.init_variables()
             self.zoomIn.hide()  # deactivate zoom buttons
-            self.zoomOut.hide()
+            self.zoomOut.hide()     
 
-            self.inputBGRA = cv2.imread(filePath, cv2.IMREAD_UNCHANGED)      # read the image
-            self.inputBGRA = self.any2RGBA(self.inputBGRA)                    # convert the image to RGBA format
-            
-            self.outputBGRA = self.inputBGRA          # make a copy of the input image for output
+            self.inputBGRA = image.copy()          # make a copy of the input image
+            self.outputBGRA = self.inputBGRA.copy()          # make a copy of the input image for output
 
             # display the image
-            self.ImagePixmap(self.inputBGRA, self.leftLabel)  
-            self.ImagePixmap(self.inputBGRA, self.rightLabel)  
+            self.image_pixmap(self.inputBGRA, self.leftLabel)  
+            self.image_pixmap(self.inputBGRA, self.rightLabel)  
 
             # process the image through the pipeline
-            self.ProcessPipeline()  
+            self.process_pipeline()  
 
-
-
-    def any2RGBA(self, image):
-        """
-        Convert the input image to RGBA format if it is not already in that format.
-        The function checks the number of channels in the input image and converts it accordingly.
-        The function raises a ValueError if the input image is None or if the image format is unsupported.
-        The function also handles grayscale images by converting them to RGBA format.
-        """
-        if image is None:
-            raise ValueError("No input image provided")
-            
-        elif len(image.shape) == 2:  # if image is  (h,w)
-            return cv2.cvtColor(image, cv2.COLOR_GRAY2BGRA)
-
-        elif len(image.shape) == 3 and image.shape[2] == 1:  # if image is (h,w,1)
-            return cv2.cvtColor(image, cv2.COLOR_GRAY2BGRA)
-
-        elif len(image.shape) == 3 and image.shape[2] == 3:  # ig image is (BGR) (h,w,3)
-            return cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
-        
-        elif len(image.shape) == 3 and image.shape[2] == 4:  # if image is (BGRA) (h,w,4)
-            return image
-
-        else:
-            raise ValueError("Unsupported image format")
 
 
     @Slot() 
-    def SwitchToHistogram(self):
+    def switch_to_histogram(self):
         """
         Switch between displaying the image and its histogram in the labels.
         """
@@ -493,8 +457,8 @@ class MainWindow(QWidget):
                 self.zoomIn.hide()      # deactivate zoom buttons
                 self.zoomOut.hide()
                 self.zoomAmount = 0
-                self.ImagePixmap(self.inputBGRA, self.leftLabel)  
-                self.ImagePixmap(self.outputBGRA, self.rightLabel)
+                self.image_pixmap(self.inputBGRA, self.leftLabel)  
+                self.image_pixmap(self.outputBGRA, self.rightLabel)
             
             # else, display the histogram of the current layer
             else:
@@ -502,13 +466,13 @@ class MainWindow(QWidget):
                 self.histView = True
                 self.zoomIn.show()          # activate zoom buttons
                 self.zoomOut.show()
-                self.DisplayHistogram()     
+                self.display_histogram()     
 
         except Exception as e:
             QMessageBox.information(self, "Error", f"{e}")
 
 
-    def DisplayHistogram(self, zoom=0):
+    def display_histogram(self, zoom=0):
         """
         Display the histogram of the input and output images in the left and right labels respectively.
         """
@@ -518,18 +482,18 @@ class MainWindow(QWidget):
         bgra2rgba = [2, 1, 0, 3]  # OpenCV reads images in BGR format
         ascImgIn = np.ascontiguousarray(self.inputBGRA[:,:,bgra2rgba[self.curHistLayer]])
         ascImgOut = np.ascontiguousarray(self.outputBGRA[:,:,bgra2rgba[self.curHistLayer]])
-        self.HistogramPixmap(ascImgIn, self.leftLabel, zoom)
-        self.HistogramPixmap(ascImgOut, self.rightLabel)        # no needed zoom parameter in the second call
+        self.histogram_pixmap(ascImgIn, self.leftLabel, zoom)
+        self.histogram_pixmap(ascImgOut, self.rightLabel)        # no needed zoom parameter in the second call
 
 
     @Slot() 
-    def SwitchToColorLayer(self):
+    def switch_to_colorLayer(self):
         try:
             # if the last color layer is reached, switch back to original view 
             if self.curColorLayer+1 >= 4:
                     self.curColorLayer = -1
-                    self.ImagePixmap(self.inputBGRA, self.leftLabel)  
-                    self.ImagePixmap(self.outputBGRA, self.rightLabel)
+                    self.image_pixmap(self.inputBGRA, self.leftLabel)  
+                    self.image_pixmap(self.outputBGRA, self.rightLabel)
                     # change the text of leftTitle and rightTitle to empty string
                     self.leftTitle.setText("")
                     self.rightTitle.setText("")
@@ -537,13 +501,13 @@ class MainWindow(QWidget):
             # else, display the current color layer
             else:
                 self.curColorLayer += 1
-                self.DisplayColorLayer()  
+                self.display_color_layer()  
 
         except Exception as e:
             QMessageBox.information(self, "Error", f"{e}")
 
 
-    def DisplayColorLayer(self):
+    def display_color_layer(self):
         """
         Display the current color layer of the input and output images in the left and right labels respectively.
         """
@@ -556,12 +520,12 @@ class MainWindow(QWidget):
         bgra2rgba = [2, 1, 0, 3]  # OpenCV reads images in BGRA format
         ascImgIn = np.ascontiguousarray(self.inputBGRA[:,:,bgra2rgba[self.curColorLayer]])
         ascImgOut = np.ascontiguousarray(self.outputBGRA[:,:,bgra2rgba[self.curColorLayer]])
-        self.ImagePixmap(ascImgIn, self.leftLabel, title=True)
-        self.ImagePixmap(ascImgOut, self.rightLabel, title=True)
+        self.image_pixmap(ascImgIn, self.leftLabel, title=True)
+        self.image_pixmap(ascImgOut, self.rightLabel, title=True)
 
 
     @Slot() 
-    def SwitchToFrequency(self):
+    def switch_to_frequency(self):
         """
         Switch between displaying the image and its frequency domain representation.
         """
@@ -572,29 +536,7 @@ class MainWindow(QWidget):
             QMessageBox.information(self, "Error", f"{e}")
 
 
-    @Slot() 
-    def SaveImage(self):
-        """
-        Open a file dialog to save the output image.
-        """
-        # Open file dialog to select a file path to save the image
-        filePath, _ = QFileDialog.getSaveFileName(
-            self,
-            "Save the image",
-            "",
-            "Image Files (*.jpg *.jpeg *.png *.bmp *.gif *.tif *.tiff *.webp)"
-        )
-        
-        # Check if a file path was selected
-        if filePath:
-            try:
-                # Save the image using OpenCV
-                cv2.imwrite(filePath, self.outputBGRA)
-            except:
-                QMessageBox.information(self, "Error", f"Failed to save the image. Please try again.")
-
-
-    def ImagePixmap(self, image, label, title=False):
+    def image_pixmap(self, image, label, title=False):
         """
         Convert a NumPy image array to QPixmap and display it in the given QLabel.
 
@@ -605,8 +547,8 @@ class MainWindow(QWidget):
         """
         # set the title if enabled
         if title:
-            self.leftTitle.setText(f"{self.channelNames[self.curColorLayer]} Channel")
-            self.rightTitle.setText(f"{self.channelNames[self.curColorLayer]} Channel")
+            self.leftTitle.setText(f"{CHANNEL_NAMES[self.curColorLayer]} Channel")
+            self.rightTitle.setText(f"{CHANNEL_NAMES[self.curColorLayer]} Channel")
         else:
             self.leftTitle.setText("")
             self.rightTitle.setText("")
@@ -624,7 +566,7 @@ class MainWindow(QWidget):
         label.setPixmap(scaled)
 
 
-    def HistogramPixmap(self, image, label, zoom=0):
+    def histogram_pixmap(self, image, label, zoom=0):
         """
         Display the histogram of the given image in the specified QLabel.
 
@@ -657,7 +599,7 @@ class MainWindow(QWidget):
             ax.set_yticks(np.int16(np.arange(0, yLim+1, yLim / 5)))
 
         # set title based on the color format and layer
-        ax.set_title(f"{self.channelNames[self.curHistLayer]} Channel")
+        ax.set_title(f"{CHANNEL_NAMES[self.curHistLayer]} Channel")
 
         # Save the figure to a BytesIO buffer
         buf = BytesIO()
