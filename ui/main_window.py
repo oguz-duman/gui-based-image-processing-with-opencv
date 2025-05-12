@@ -13,10 +13,11 @@ from PySide6.QtWidgets import (
 )
 
 # Import custom function boxes
+from constants import CHANNEL_NAMES
+from processing.pipeline import Pipeline
 from ui import toolboxes
 import constants
 import utils
-from constants import CHANNEL_NAMES
 
 
 # -------------------------- main class definitions -------------------
@@ -26,7 +27,6 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()  
 
-        self.pipeline = []  # pipeline variable to store function boxes
         self.init_variables()  # Initialize variables
         self.init_ui()      # Initialize UI
         
@@ -50,6 +50,7 @@ class MainWindow(QWidget):
         """
         Initialize the variables used in the widget.
         """
+        self.pipeline = Pipeline()  # create an instance of the pipeline class
         self.inputBGRA = None  # input image variable
         self.outputBGRA = None  # output image variable
         self.curHistLayer = -1  # current histogram layer variable
@@ -248,8 +249,13 @@ class MainWindow(QWidget):
 
         # Check if the source is a valid FunctionBox
         if source and isinstance(source, toolboxes.FunctionBox):
-            # Move the function box to the new index in the pipeline
-            self.move_function_box(source, index)
+            self.pipeline.move_step(source, index)  # move the function box in the pipeline
+            
+            # Remove the widget from its current position in the layout
+            self.contentLayout.removeWidget(source)
+            # Insert the widget at the new index in the layout
+            self.contentLayout.insertWidget(index, source)
+
             # Accept the proposed action for the drop event
             event.acceptProposedAction()
 
@@ -277,26 +283,6 @@ class MainWindow(QWidget):
                     return i
         # If no suitable position is found, return the last index (before addNewBox)
         return self.contentLayout.count() - 1
-
-
-    def move_function_box(self, widget, index):
-        """
-        Move a function box widget to a new position in the pipeline and layout.
-
-        Args:
-            widget (QWidget): The function box widget to move.
-            index (int): The new index position in the pipeline and layout.
-        """
-        # Check if the widget is in the pipeline
-        if widget in self.pipeline:
-            # Remove the widget from its current position in the pipeline
-            self.pipeline.remove(widget)
-            # Insert the widget at the new index in the pipeline
-            self.pipeline.insert(index, widget)
-            # Remove the widget from its current position in the layout
-            self.contentLayout.removeWidget(widget)
-            # Insert the widget at the new index in the layout
-            self.contentLayout.insertWidget(index, widget)
 
 
     @Slot(str)
@@ -355,7 +341,7 @@ class MainWindow(QWidget):
         elif functionName == constants.SPATIAL_NAME:
             newBox = toolboxes.SpatialFilterBox()
         
-        self.pipeline.append(newBox)                            # add the new function box to the pipeline
+        self.pipeline.add_step(newBox)                              # add the new function box to the pipeline
         newBox.updateTrigger.connect(self.process_pipeline)      # connect the process signal to the ProcessPipeline function
         newBox.removeTrigger.connect(self.remove_func)           # connect the remove signal to the RemoveFunc function
 
@@ -373,11 +359,7 @@ class MainWindow(QWidget):
         This function is called when a function box is removed.
         It removes the function box from the pipeline and the layout.
         """
-        # remove the function box from the pipeline
-        for pipe in self.pipeline:
-            if pipe.title == functionName:
-                self.pipeline.remove(pipe)
-                break
+        self.pipeline.remove_step(functionName)  # remove the function box from the pipeline
         
         # remove the function box from the layout
         for i in range(self.contentLayout.count()):
@@ -399,14 +381,9 @@ class MainWindow(QWidget):
         if self.inputBGRA is None:
             return                                      # if no image is loaded, return
         
+
         try:
-            image = self.inputBGRA.copy()                # make a copy of the input image for processing
-            for pipe in self.pipeline:
-                # check if the function box is activated
-                if pipe.switch.isChecked():
-                    image = pipe.execute(image)             # call the process function of the function box
-            
-            self.outputBGRA = image.copy()                # make a copy of the processed image for output
+            self.outputBGRA = self.pipeline.run(self.inputBGRA)                     # run the pipeline on the input image
 
             # update the output image
             if self.histView:
