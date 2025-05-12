@@ -96,7 +96,7 @@ class FunctionBox(QWidget):
         self.ui_components = UiComponents(parent_widget=self.contentLayout, onchange_trigger=self.updateTrigger)        
         
         self.title = title                      # set the title of the function box
-        self.initiate_ui(title)                 # set up the UI
+        self.initiate_ui()                 # set up the UI
 
 
     def initiate_ui(self):
