@@ -203,7 +203,7 @@ class BrightnessBox(DraggableToolbox):
     A class to create a brightness adjustment toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.BRIGHTNESS_NAME, parent)
+        super().__init__(constants.BRIGHTNESS, parent)
 
         # Create a slider to adjust brightness
         self.brightness = self.ui_components.slider(heading="Brightness", minValue=-50, maxValue=50)  
@@ -220,7 +220,7 @@ class SaturationBox(DraggableToolbox):
     A class to create a saturation adjustment toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.SATURATION_NAME, parent)
+        super().__init__(constants.SATURATION, parent)
 
         # Create a slider to adjust saturation
         self.saturation = self.ui_components.slider(heading="Saturation", minValue=-50, maxValue=50)
@@ -237,7 +237,7 @@ class ContrastBox(DraggableToolbox):
     A class to create a contrast adjustment toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.CONTRAST_NAME, parent)
+        super().__init__(constants.CONTRAST, parent)
 
         self.slider_rescale = 10    # set a rescale factor for the slider
 
@@ -283,7 +283,7 @@ class FullScaleContrastBox(DraggableToolbox):
     A class to create a full scale contrast adjustment toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.FULL_SCALE_CONTRAST_NAME, parent)
+        super().__init__(constants.FULL_SCALE_CONTRAST, parent)
   
     def execute(self, imageBGRA):
         # apply full scale contrast stretching
@@ -297,7 +297,7 @@ class LogBox(DraggableToolbox):
     A class to create a log transformation toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.LOG_NAME, parent)
+        super().__init__(constants.LOG, parent)
   
     def execute(self, imageBGRA):
         # apply log transformation
@@ -311,7 +311,7 @@ class GammaBox(DraggableToolbox):
     A class to create a gamma transformation toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.GAMMA_NAME, parent)
+        super().__init__(constants.GAMMA, parent)
 
         self.slider_rescale = 10        # set a rescale factor for the slider
 
@@ -330,7 +330,7 @@ class RGB2GrayBox(DraggableToolbox):
     A class to create a RGB to grayscale conversion toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.RGB2GRAY_NAME, parent)
+        super().__init__(constants.RGB2GRAY, parent)
 
     def execute(self, imageBGRA):
         # apply RGB to grayscale conversion
@@ -344,7 +344,7 @@ class ThresholdingBox(DraggableToolbox):
     A class to create a thresholding toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.THRESHOLDING_NAME, parent)
+        super().__init__(constants.THRESHOLDING, parent)
 
         # insert slider to select the threshold value
         self.threshold = self.ui_components.slider(heading="Threshold:", minValue=0, maxValue=255, defaultValue=128)
@@ -361,7 +361,7 @@ class ComplementBox(DraggableToolbox):
     A class to create a complement toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.COMPLEMENT_NAME, parent)
+        super().__init__(constants.COMPLEMENT, parent)
   
     def execute(self, imageBGRA):
         imageBGRA = self.processor.complement(imageBGRA)    # apply complement operation
@@ -374,7 +374,7 @@ class CropBox(DraggableToolbox):
     A class to create a cropping toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.CROP_NAME, parent)
+        super().__init__(constants.CROP, parent)
 
         # Insert input boxes to select the crop values
         self.leftRight  = self.ui_components.dual_input("Left-Right:", 0, 0)      
@@ -398,7 +398,7 @@ class FlipBox(DraggableToolbox):
     A class to create a flipping toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.FLIP_NAME, parent)
+        super().__init__(constants.FLIP, parent)
 
         # Insert a radio button group to select the flip direction
         self.buttonGroup = self.ui_components.radio_buttons(["Horizontal", "Vertical", "Both"])
@@ -415,7 +415,7 @@ class RotateBox(DraggableToolbox):
     A class to create a rotation toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.ROTATE_NAME, parent)
+        super().__init__(constants.ROTATE, parent)
 
         # Insert a slider to adjust the rotate angle
         self.angle = self.ui_components.slider(heading="Angle: ", minValue=-180, maxValue=180)  
@@ -431,7 +431,7 @@ class ResizeBox(DraggableToolbox):
     """
     """
     def __init__(self, parent=None):
-        super().__init__(constants.RESIZE_NAME, parent)
+        super().__init__(constants.RESIZE, parent)
 
         # Insert min-max input boxes to select the new size
         self.newWidthHeight  = self.ui_components.dual_input("Size:", 0, 0)
@@ -459,7 +459,7 @@ class PaddingBox(DraggableToolbox):
     A class to create a padding toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.PADDING_NAME, parent)
+        super().__init__(constants.PADDING, parent)
 
         # Insert a combo list to select the padding type
         self.combo = self.ui_components.combo_list(["Constant", "Reflect", "Replicate"])
@@ -497,7 +497,7 @@ class HistEqualizationBox(DraggableToolbox):
     A class to create a histogram equalization toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.HISTEQ_NAME, parent)
+        super().__init__(constants.HISTEQ, parent)
   
     def execute(self, imageBGRA):
         # apply histogram equalization
@@ -511,7 +511,7 @@ class HistCLAHEBox(DraggableToolbox):
     A class to create a histogram CLAHE toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.HISTCLAHE_NAME, parent)
+        super().__init__(constants.HISTCLAHE, parent)
 
         self.clipLimit_rescale = 10     # set a rescale factor for the slider
 
@@ -536,7 +536,7 @@ class MaskBox(DraggableToolbox):
     A class to create a masking toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.MASK_NAME, parent)
+        super().__init__(constants.MASK, parent)
 
         # Insert input boxes to select the min-max HSV values
         self.intensityMin = self.ui_components.triple_input("min HSV:", 0, 0, 0)
@@ -558,7 +558,7 @@ class BitSliceBox(DraggableToolbox):
     A class to create a bit plane slicing toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.BITSLICE_NAME, parent)
+        super().__init__(constants.BITSLICE, parent)
 
         # Insert a combo list to select a bit plane
         self.combo = self.ui_components.combo_list(["0", "1", "2", "3", "4", "5", "6", "7"])
@@ -575,7 +575,7 @@ class NoiseBox(DraggableToolbox):
     A class to create a noise toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.ADD_NOISE_NAME, parent)
+        super().__init__(constants.ADD_NOISE, parent)
 
         self.saltPepProb_rescale = 1000         # set a rescale factor for the slider
 
@@ -620,7 +620,7 @@ class ArithmeticBox(DraggableToolbox):
     A class to create an arithmetic operation toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.ARITHMETIC_NAME, parent)
+        super().__init__(constants.ARITHMETIC, parent)
 
         self.secondImage = None         # set a variable to store the second image
         self.alpha_rescale = 100        # set a rescale factor for the slider
@@ -659,7 +659,7 @@ class LogicBox(DraggableToolbox):
     A class to create a logic operation toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.LOGIC_NAME, parent)
+        super().__init__(constants.LOGIC, parent)
 
         self.secondImage = None         # set a variable to store the second image
 
@@ -694,7 +694,7 @@ class LaplaceBox(DraggableToolbox):
     A class to create a laplace transformation toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.LAPLACE_NAME, parent)
+        super().__init__(constants.LAPLACE, parent)
 
         # insert switch to select extended laplace and normalize options
         self.extended = self.ui_components.switch("Extended Laplace")
@@ -712,7 +712,7 @@ class SobelBox(DraggableToolbox):
     A class to create a sobel transformation toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.LAPLACE_NAME, parent)
+        super().__init__(constants.LAPLACE, parent)
 
         # insert a switch to select the normalize option
         self.norm = self.ui_components.switch("Normalize")
@@ -724,28 +724,91 @@ class SobelBox(DraggableToolbox):
         return imageBGRA
 
 
-class SpatialFilterBox(DraggableToolbox):
+class OrderStatBox(DraggableToolbox):
     """
-    A class to create a spatial filter toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.SPATIAL_NAME, parent)
+        super().__init__(constants.ORDER_STAT, parent)
+
+        # insert nedded input widgets
+        self.combo = self.ui_components.combo_list(["Median", "Max", "Min"])
+        self.kernel = self.ui_components.mono_input("Kernel Size:", defaultValue=3)
+
+        # connect the combo box to the on_change method
+        self.ui_components.set_combo_adapt_widgets(self.combo, [[self.kernel], [self.kernel], [self.kernel]])
+
+    def execute(self, imageBGRA):
+        # get the kernel size and make sure it is odd
+        w = self.ui_components.get_component_value(self.kernel[:1], mins=[0], defaults=[3])         
+        w = w if w % 2 == 1 else w + 1                                      
+        
+        # apply the selected smoothing method
+        if self.combo.currentText() == "Median":
+            imageBGRA = self.processor.order_statistics(imageBGRA, w, "median")  
+        elif self.combo.currentText() == "Max":
+            imageBGRA = self.processor.order_statistics(imageBGRA, w, "max")  
+        elif self.combo.currentText() == "Min":
+            imageBGRA = self.processor.order_statistics(imageBGRA, w, "min")   
+
+        return imageBGRA
+
+class SmoothingBox(DraggableToolbox):
+    """
+    A class to create a smoothing toolbox.
+    """
+    def __init__(self, parent=None):
+        super().__init__(constants.SMOOTHING, parent)
+
+        # set rescale factor for sigma slider
+        self.sigma_rescale = 10
+
+        # insert nedded input widgets
+        self.combo = self.ui_components.combo_list(["Mean", "Gaussian"])
+        self.kernel = self.ui_components.mono_input("Kernel Size:", defaultValue=3)
+        self.sigma = self.ui_components.slider(heading="Std:", minValue=1, maxValue=100, defaultValue=10, rescale=self.sigma_rescale)  
+
+        # connect the combo box to the on_change method
+        self.ui_components.set_combo_adapt_widgets(self.combo, [[self.kernel], [self.kernel, self.sigma]])
+
+    def execute(self, imageBGRA):
+        # get the kernel size and make sure it is odd
+        w = self.ui_components.get_component_value(self.kernel[:1], mins=[0], defaults=[3])         
+        w = w if w % 2 == 1 else w + 1                                      
+        
+        # get the sigma value from inputs
+        sigma = self.sigma[0].value() / self.sigma_rescale      
+        
+        # apply the selected smoothing method
+        if self.combo.currentText() == "Mean":
+            imageBGRA = self.processor.box_filter(imageBGRA, w)
+        elif self.combo.currentText() == "Gaussian":
+            imageBGRA = self.processor.gaussian_blur(imageBGRA, w, sigma)  
+
+        return imageBGRA
+    
+
+
+class SharpeningBox(DraggableToolbox):
+    """
+    A class to create a sharpening toolbox.
+    """
+    def __init__(self, parent=None):
+        super().__init__(constants.SHARPENING, parent)
 
         # set rescale factors for sliders
         self.alpha_rescale = 100
         self.sigma_rescale = 10
 
         # insert nedded input widgets
-        self.combo = self.ui_components.combo_list(["Median", "Max", "Min", "Mean", "Gaussian", "Laplace Sharpening", "Sobel Sharpening", "Unsharp Masking"])
+        self.combo = self.ui_components.combo_list(["Laplace Sharpening", "Sobel Sharpening", "Unsharp Masking"])
         self.kernel = self.ui_components.mono_input("Kernel Size:", defaultValue=3)
         self.sigma = self.ui_components.slider(heading="Std:", minValue=1, maxValue=100, defaultValue=10, rescale=self.sigma_rescale)  
         self.extended = self.ui_components.switch("Extended Laplace")
         self.alpha = self.ui_components.slider(heading="Alpha:", minValue=1, maxValue=1000, defaultValue=100, rescale=self.alpha_rescale)
 
         # connect the combo box to the on_change method
-        self.ui_components.set_combo_adapt_widgets(self.combo, [[self.kernel], [self.kernel], [self.kernel], [self.kernel],
-                                                                 [self.kernel, self.sigma], [self.extended, self.alpha],
-                                                                   [self.alpha], [self.kernel, self.sigma, self.alpha]])
+        self.ui_components.set_combo_adapt_widgets(self.combo, [[self.extended, self.alpha], [self.alpha],
+                                                                 [self.kernel, self.sigma, self.alpha]])
 
     def execute(self, imageBGRA):
         # get the kernel size and make sure it is odd
@@ -757,18 +820,8 @@ class SpatialFilterBox(DraggableToolbox):
         alpha = self.alpha[0].value() / self.alpha_rescale      
         extended = self.extended[0].isChecked()                 
         
-        # apply the selected spatial filter
-        if self.combo.currentText() == "Median":
-            imageBGRA = self.processor.order_statistics(imageBGRA, w, "median")  
-        elif self.combo.currentText() == "Max":
-            imageBGRA = self.processor.order_statistics(imageBGRA, w, "max")  
-        elif self.combo.currentText() == "Min":
-            imageBGRA = self.processor.order_statistics(imageBGRA, w, "min")  
-        elif self.combo.currentText() == "Mean":
-            imageBGRA = self.processor.box_filter(imageBGRA, w)
-        elif self.combo.currentText() == "Gaussian":
-            imageBGRA = self.processor.gaussian_blur(imageBGRA, w, sigma)  
-        elif self.combo.currentText() == "Laplace Sharpening":
+        # apply the selected sharpening method
+        if self.combo.currentText() == "Laplace Sharpening":
             imageBGRA = self.processor.laplacian_sharpening(imageBGRA, alpha, extended)
         elif self.combo.currentText() == "Sobel Sharpening":
             imageBGRA = self.processor.sobel_sharpening(imageBGRA, alpha)
