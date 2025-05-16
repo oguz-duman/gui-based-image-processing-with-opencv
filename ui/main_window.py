@@ -4,7 +4,6 @@ from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLa
 
 from ui import toolboxes
 import constants
-import utils
 from ui.ui_management import UiManagement
 
 
@@ -160,7 +159,7 @@ class MainWindow(QWidget):
         # Button 5 - save image
         btn = QPushButton(constants.SAVE_BUTTON)
         midLayout.addWidget(btn)   
-        btn.clicked.connect(lambda: utils.save_image(self.ui_management.output_BGRA))   
+        btn.clicked.connect(lambda: self.ui_management.save_image())   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 

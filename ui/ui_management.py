@@ -342,7 +342,7 @@ class UiManagement():
         ]                    
 
 
-    def save_image(self, image):
+    def save_image(self):
         """
         Open a file dialog to select a file path to save the image.
         Args:
@@ -354,7 +354,7 @@ class UiManagement():
         # Check if a file path was selected
         if filePath:
             try:
-                cv2.imwrite(filePath, image)            # Save the image using OpenCV
+                cv2.imwrite(filePath, self.output_BGRA)            # Save the image using OpenCV
             except Exception as e:
                 QMessageBox.information(None, "Error", f"Failed to save the image.\n{str(e)}")
 

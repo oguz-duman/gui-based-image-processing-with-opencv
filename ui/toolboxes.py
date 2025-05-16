@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxL
 from processing.processor import Processor
 from ui.components import UiComponents 
 import constants
-import utils
+from ui.ui_management import UiManagement
 
 
 class AddNewBox(QWidget):
@@ -647,7 +647,7 @@ class ArithmeticBox(DraggableFunctionBox):
         """
         Open a file dialog to select the second image.
         """
-        imageBGRA = utils.select_image()     # read the image
+        imageBGRA = UiManagement.select_image(None)     # read the image
 
         if imageBGRA is not None:
             self.secondImage = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)  # convert the image to BGR format
@@ -683,7 +683,7 @@ class LogicBox(DraggableFunctionBox):
         """
         Open a file dialog to select the second image.
         """
-        imageBGRA = utils.select_image()     # read the image
+        imageBGRA = UiManagement.select_image(None)     # read the image
 
         if imageBGRA is not None:
             self.secondImage = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)  # convert the image to BGR format
