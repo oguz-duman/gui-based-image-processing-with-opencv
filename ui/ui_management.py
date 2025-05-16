@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from io import BytesIO
-import traceback
 
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QPixmap, QImage
@@ -25,7 +24,7 @@ class UiManagement():
     def init_ui_variables(self, toolbox_wrapper, footer_toolbox, leftLabel, 
                           rightLabel, leftTitle, rightTitle, zoomIn, zoomOut):
         """
-        Initialize the UI variables used in the application.
+        Gets the necessary widgets and layout from the 'main_window' and sets up the pipeline.
         Args:
             toolbox_wrapper (QVBoxLayout): The layout where the toolboxes are added.
             footer_toolbox (QWidget): The footer widget for the toolbox layout.
@@ -55,7 +54,7 @@ class UiManagement():
             'CHANNELS': lambda: self.display_image(self.get_color_channels()),  
             'FREQUENCY': None
         }
-        # Decide which widgets to show or hide when the mode is changed
+        # Declares which widgets will be shown and which widgets will be hidden based on the selected mode
         self.widgets_per_mode = {
             'IMAGE': [],
             'HISTOGRAM': [self.zoomIn, self.zoomOut],
@@ -80,14 +79,13 @@ class UiManagement():
         
     def open_new_image(self):
         """
-        Open a new image using a file dialog and update the input and output images.
-        This method is called when the "Open Image" button is clicked.
-        It allows the user to select an image file and processes it through the pipeline.
+        This method is called when the 'Open Image' button is clicked.
+        It opens a file dialog to select an image file, reads the image using OpenCV, and displays it in the UI.
         """
-        image = self.select_image()            # select an image using the file dialog
+        image = self.select_image()              # select an image using the file dialog
 
         if image is not None:
-            self.init_variables()               # reinitialize variables since a new image is opened
+            self.init_variables()                # reinitialize variables since a new image is opened
 
             self.input_BGRA = image.copy()       # make a copy of the input image for input
             self.output_BGRA = image.copy()      # make a copy of the input image for output
@@ -95,7 +93,7 @@ class UiManagement():
             # display the input and output images in the labels
             self.display_image([self.input_BGRA, self.output_BGRA])  
 
-            self.pipeline_on_change()           # process the image through the pipeline
+            self.pipeline_on_change()            # process the image through the pipeline
 
 
     def select_image(self):
@@ -130,7 +128,7 @@ class UiManagement():
     @Slot(str)
     def insert_toolbox(self, toolbox):
         """
-        Add a new method box to the pipeline and the layout based on the selected method name.
+        Add a new toolbox to the layout and pipeline.
         Args:
             toolbox (str): The name of the method to be added.
         """
@@ -191,11 +189,11 @@ class UiManagement():
         new_toolbox.updateTrigger.connect(self.pipeline_on_change)   
         new_toolbox.removeTrigger.connect(self.remove_toolbox) 
 
-        self.pipeline.add_step(new_toolbox)                             # add the toolbox to the pipeline
+        self.pipeline.add_step(new_toolbox)                         # add the toolbox to the pipeline
 
         self.toolbox_wrapper.removeWidget(self.footer_toolbox)      # remove the special footer widget
         self.footer_toolbox.setParent(None)           
-        self.toolbox_wrapper.addWidget(new_toolbox)                     # add the toolbox to the layout
+        self.toolbox_wrapper.addWidget(new_toolbox)                 # add the toolbox to the layout
         self.toolbox_wrapper.addWidget(self.footer_toolbox)         # add the special footer widget back
 
         self.pipeline_on_change()                                   # trigger the update method to rerun the updated pipeline 
@@ -204,11 +202,11 @@ class UiManagement():
     @Slot(str)
     def remove_toolbox(self, toolbox):
         """
-        Remove the method box from the pipeline and the layout.
+        Remove the toolbox from layout and pipeline.
         Args:
-            toolbox (str): The name of the method to be removed.
+            toolbox (str): The name of the toolbox to be removed.
         """
-        # remove the method box from the layout
+        # remove the toolbox from the layout
         for i in range(self.toolbox_wrapper.count()):
             widget = self.toolbox_wrapper.itemAt(i).widget()
             if widget and widget.title == toolbox:
@@ -216,12 +214,14 @@ class UiManagement():
                 widget.setParent(None)
                 break
         
-        self.pipeline.remove_step(toolbox)         # remove the method box from the pipeline
-        self.pipeline_on_change()                  # rerun the pipeline to update the output image
+        self.pipeline.remove_step(toolbox)         # remove toolbox from the pipeline
+        self.pipeline_on_change()                  # rerun the pipeline
    
 
     def pipeline_on_change(self):
         """
+        This method is called when the pipeline is updated.
+        It runs the pipeline on the input image and updates the ui based on the current mode.
         """
         if self.input_BGRA is not None:
             self.output_BGRA = self.pipeline.run(self.input_BGRA)              # run the pipeline on the input image
@@ -239,14 +239,18 @@ class UiManagement():
 
     def mode_buttons(self, mode_name):
         """
+        Handles mode button clicks: switches to a new mode if needed,
+        or cycles within the current mode if applicable.
+        Args:
+            mode_name (str): The name of the mode that was selected.
         """
         if self.input_BGRA is None:
             return
         elif not self.active_mode == mode_name:
             self.switch_mode(mode_name)   
-            self.mode_handlers[mode_name]()          # call the method corresponding to the mode name             
+            self.mode_handlers[mode_name]()             # call the method corresponding to the mode name             
         else:
-            self.channel_index = self.channel_index + 1 if self.channel_index < len(CHANNEL_NAMES) else 0       # increment the channel index 
+            self.channel_index = self.channel_index + 1 if self.channel_index + 1 < len(CHANNEL_NAMES) else 0  # increment channel index 
             if self.channel_index == 0:
                 self.switch_mode('IMAGE')  
                 self.display_image([self.input_BGRA, self.output_BGRA])
@@ -256,6 +260,9 @@ class UiManagement():
 
     def switch_mode(self, mode_name):
         """
+        Updates the active mode and toggles visibility of related UI widgets.
+        Args:
+            mode_name (str): The name of the mode to switch to.
         """
         self.active_mode = mode_name                # active mode name
         self.channel_index = 0                      # reset channel index
@@ -273,6 +280,9 @@ class UiManagement():
 
     def display_image(self, images):
         """
+        Display the input and output images in the respective labels.
+        Args:
+            images (list): A list of images to be displayed in the left and right labels respectively.
         """
         # set the title to current color channel
         self.leftTitle.setText(f"{CHANNEL_NAMES[self.channel_index]} Channel")
@@ -291,32 +301,36 @@ class UiManagement():
  
     def display_histogram(self, zoom=0):
         """
+        Display the histogram of the input and output images in the respective labels.
+        Can make a zoom effect on the histogram by changing the y-axis limit.
+        Args:
+            zoom (int): The zoom amount for the histogram. Default is 0.
         """
-        self.zoomAmount += zoom                                         # update the zoom amount if a zoom amount is passed
+        self.zoomAmount += zoom                         # update the zoom amount if a zoom amount value is passed
+        zoom_factor = 1 / (1 + self.zoomAmount * 0.3)   
 
+        # display the histogram for both input and output images
+        y_lims = []             
         for image, label in zip(self.get_color_channels(), [self.leftLabel, self.rightLabel]):
-            fig, ax = plt.subplots()                                        # Create a new figure for the histogram
-            histNums = ax.hist(image.ravel(), bins=100, color='black')      # Plot the histogram
-            # set y-axis limit and step
-            if self.y_lim == 0 or self.y_lim < np.max(histNums[0]):
-                self.y_lim = np.max(histNums[0]) * 1.2       # set y-axis limit to 20% more than max value
-                self.yStep = self.y_lim / 5 
+
+            # create a new figure and plot the histogram
+            fig, ax = plt.subplots()                                        
+            histNums = ax.hist(image.ravel(), bins=100, color='black')   
+
+            y_lim = np.max(histNums[0]) * 1.1               # set y-axis limit to 10% more than the max value
+            y_lims.append(round(y_lim * zoom_factor))       # apply the zoom effect to the y-axis limit
+            
+            y_lim = np.max(y_lims)                          # Select the larger y_lim between the input and output histograms
+            yStep = y_lim / 5                               # set the y-axis step size to 1/5 of the y-axis limit
                 
             # Set style and labels
             ax.grid(True)
             ax.set_xlim(0, 255)
-            ax.set_ylim(0, self.y_lim)
+            ax.set_ylim(0, y_lim)
             ax.set_xticks(np.append(np.arange(0, 250, 25), 255))
-            ax.set_yticks(np.arange(0, self.y_lim+1, self.yStep))
+            ax.set_yticks(np.uint32(np.arange(0, y_lim+1, yStep)))
             
-            # Overwrite the y-axis limit and ticks if the zoom amount is not 0 
-            if self.zoomAmount != 0:
-                zoom_factor = 1 / (1 + self.zoomAmount * 0.3)  
-                yLim = round(self.y_lim * zoom_factor)
-                ax.set_ylim(0, yLim)
-                ax.set_yticks(np.int16(np.arange(0, yLim+1, yLim / 5)))
-
-            # set title based on the RGBA color format and current channel
+            # set title based on the currently active color channel
             ax.set_title(f"{CHANNEL_NAMES[self.channel_index]} Channel")
 
             # Save the figure to a BytesIO buffer
@@ -334,8 +348,13 @@ class UiManagement():
 
     def get_color_channels(self):
         """
+        Get the currently active color channel from the input and output images.
+        Returns:
+            list: A list containing the currently active color channel from the input and output images.
         """
-        bgra2rgba = [2, 1, 0, 3]                        # OpenCV reads images in BGRA format
+        # OpenCV handles images in BGRA format. Convert RGBA indeces to BGRA.
+        bgra2rgba = [2, 1, 0, 3]    
+
         return [
             self.input_BGRA[:,:,bgra2rgba[self.channel_index]], 
             self.output_BGRA[:,:,bgra2rgba[self.channel_index]]
@@ -344,9 +363,7 @@ class UiManagement():
 
     def save_image(self):
         """
-        Open a file dialog to select a file path to save the image.
-        Args:
-            image (np.ndarray): The image to be saved.
+        Open a file dialog to select a file path to save the output image.
         """
         # Open file dialog to select a file path to save the image
         filePath, _ = QFileDialog.getSaveFileName(None, "Save the image", "", "Image Files (*.jpg *.jpeg *.png *.bmp *.gif *.tif *.tiff *.webp)")
