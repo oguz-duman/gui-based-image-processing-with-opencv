@@ -53,6 +53,7 @@ class MainWindow(QWidget):
         # create leftTitle label for displaying the input image title
         self.leftTitle = QLabel("")
         leftLayout.addWidget(self.leftTitle, 0.5, alignment=Qt.AlignCenter)
+        self.leftTitle.hide()
 
         # Create leftLabel for displaying the input image
         self.leftLabel = QLabel(self)
@@ -106,6 +107,7 @@ class MainWindow(QWidget):
         # create rightTitle label for displaying the output image title
         self.rightTitle = QLabel("")
         rightLayout.addWidget(self.rightTitle, 0.5, alignment=Qt.AlignCenter)
+        self.rightTitle.hide()
 
         # Create rightLabel for displaying the output image
         self.rightLabel = QLabel(self)
@@ -136,29 +138,29 @@ class MainWindow(QWidget):
 
         # Button 2 - switch to histogram
         btn = QPushButton(constants.HISTOGRAM_BUTTON)
-        midLayout.addWidget(btn)    
-        btn.clicked.connect(self.ui_management.switch_to_histogram)   
+        midLayout.addWidget(btn)   
+        btn.clicked.connect(lambda: self.ui_management.mode_buttons('HISTOGRAM'))   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 3 - See Layers
         btn = QPushButton(constants.CHANNELS_BUTTON)
         midLayout.addWidget(btn)    
-        btn.clicked.connect(self.ui_management.switch_to_colorLayer)  
+        btn.clicked.connect(lambda: self.ui_management.mode_buttons('CHANNELS'))   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 4 - switch to frequency domain
         btn = QPushButton(constants.FREQUENCY_BUTTON)
         midLayout.addWidget(btn)    
-        btn.clicked.connect(self.ui_management.switch_to_frequency)  
+        btn.clicked.connect(lambda: self.ui_management.mode_buttons('FREQUENCY'))   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 5 - save image
         btn = QPushButton(constants.SAVE_BUTTON)
         midLayout.addWidget(btn)   
-        btn.clicked.connect(lambda: utils.save_image(self.ui_management.outputBGRA))   
+        btn.clicked.connect(lambda: utils.save_image(self.ui_management.output_BGRA))   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
