@@ -52,9 +52,9 @@ class AddNewBox(QWidget):
         label.setAlignment(Qt.AlignHCenter)
         self.frameLayout.addWidget(label)
         
-        # Create a combo box to select the function type
+        # Create a combo box to select the toolbox
         self.combo = QComboBox()
-        self.combo.addItems(constants.FUNCTION_NAMES)
+        self.combo.addItems(constants.TOOLBOX_NAMES)
         self.combo.setFont(self.font)
         self.combo.setStyleSheet("padding: 5px;")  
         self.frameLayout.addWidget(self.combo, alignment=Qt.AlignVCenter)
@@ -62,7 +62,7 @@ class AddNewBox(QWidget):
         view.setMouseTracking(False)  
         view.setAutoScroll(False)     
     
-        # Create a button to add a new function
+        # Create a button to add a new method
         newBtn = QPushButton("+")
         font = QFont()              
         font.setPointSize(20)  
@@ -73,7 +73,7 @@ class AddNewBox(QWidget):
 
 
 
-class FunctionBox(QWidget):
+class Toolbox(QWidget):
     """
     A base class for all toolboxes. It provides a common interface.
     Parameters:
@@ -85,23 +85,23 @@ class FunctionBox(QWidget):
     removeTrigger = Signal(str)
    
 
-    def __init__(self, title="Function", parent=None):
+    def __init__(self, title="Toolbox", parent=None):
         super().__init__(parent)
 
 
         self.contentLayout = QVBoxLayout()      # create a layout to hold the content of the toolbox
 
-        self.processor = Processor()            # create an instance of the Processor class to get the image processing functions
+        self.processor = Processor()            # create an instance of the Processor class to get the image processing methods
         # create an instance of the self.ui_components class to create the UI components
         self.ui_components = UiComponents(parent_widget=self.contentLayout, onchange_trigger=self.updateTrigger)        
         
-        self.title = title                      # set the title of the function box
+        self.title = title                      # set the title of the toolbox
         self.initiate_ui()                 # set up the UI
 
 
     def initiate_ui(self):
         """
-        Initiate the UI for the function box.
+        Initiate the UI for the toolbox.
         """
         self.setFixedWidth(200)             # make the widget fixed size
         
@@ -136,7 +136,7 @@ class FunctionBox(QWidget):
         label.setFont(self.font)
         titleLayout.addWidget(label)
 
-        # create a button to remove the function box
+        # create a button to remove the toolbox
         removeBtn = QPushButton("X")
         removeBtn.setFont(self.font)
         removeBtn.setFixedWidth(30)
@@ -165,7 +165,7 @@ class FunctionBox(QWidget):
     
 
 
-class DraggableFunctionBox(FunctionBox):
+class DraggableToolbox(Toolbox):
     """
     A base class for all toolboxes that can be dragged and dropped.
     """
@@ -198,7 +198,7 @@ class DraggableFunctionBox(FunctionBox):
 
 
 
-class BrightnessBox(DraggableFunctionBox):
+class BrightnessBox(DraggableToolbox):
     """
     A class to create a brightness adjustment toolbox.
     """
@@ -215,7 +215,7 @@ class BrightnessBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class SaturationBox(DraggableFunctionBox):
+class SaturationBox(DraggableToolbox):
     """
     A class to create a saturation adjustment toolbox.
     """
@@ -232,7 +232,7 @@ class SaturationBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class ContrastBox(DraggableFunctionBox):
+class ContrastBox(DraggableToolbox):
     """
     A class to create a contrast adjustment toolbox.
     """
@@ -252,7 +252,7 @@ class ContrastBox(DraggableFunctionBox):
         self.alpha = self.ui_components.slider(heading="Alpha:", minValue=1, maxValue=30, defaultValue=10, rescale=self.slider_rescale)
         self.beta = self.ui_components.slider(heading="Beta:", minValue=-50, maxValue=50)  
 
-        # connect the combo box to the on_change function 
+        # connect the combo box to the on_change method 
         self.ui_components.set_combo_adapt_widgets(self.combo, [[self.inMinMax, self.outMinMax], [self.alpha, self.beta]])
 
     def execute(self, imageBGRA):
@@ -278,7 +278,7 @@ class ContrastBox(DraggableFunctionBox):
             return imageBGRA
               
 
-class FullScaleContrastBox(DraggableFunctionBox):
+class FullScaleContrastBox(DraggableToolbox):
     """
     A class to create a full scale contrast adjustment toolbox.
     """
@@ -292,7 +292,7 @@ class FullScaleContrastBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class LogBox(DraggableFunctionBox):
+class LogBox(DraggableToolbox):
     """
     A class to create a log transformation toolbox.
     """
@@ -306,7 +306,7 @@ class LogBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class GammaBox(DraggableFunctionBox):
+class GammaBox(DraggableToolbox):
     """
     A class to create a gamma transformation toolbox.
     """
@@ -325,7 +325,7 @@ class GammaBox(DraggableFunctionBox):
         return np.uint8(imageBGRA)     
 
 
-class RGB2GrayBox(DraggableFunctionBox):
+class RGB2GrayBox(DraggableToolbox):
     """
     A class to create a RGB to grayscale conversion toolbox.
     """
@@ -339,7 +339,7 @@ class RGB2GrayBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class ThresholdingBox(DraggableFunctionBox):
+class ThresholdingBox(DraggableToolbox):
     """
     A class to create a thresholding toolbox.
     """
@@ -356,7 +356,7 @@ class ThresholdingBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class ComplementBox(DraggableFunctionBox):
+class ComplementBox(DraggableToolbox):
     """
     A class to create a complement toolbox.
     """
@@ -369,7 +369,7 @@ class ComplementBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class CropBox(DraggableFunctionBox):
+class CropBox(DraggableToolbox):
     """
     A class to create a cropping toolbox.
     """
@@ -393,7 +393,7 @@ class CropBox(DraggableFunctionBox):
         return imageBGRA    
 
 
-class FlipBox(DraggableFunctionBox):
+class FlipBox(DraggableToolbox):
     """
     A class to create a flipping toolbox.
     """
@@ -410,7 +410,7 @@ class FlipBox(DraggableFunctionBox):
         return imageBGRA
     
 
-class RotateBox(DraggableFunctionBox):
+class RotateBox(DraggableToolbox):
     """
     A class to create a rotation toolbox.
     """
@@ -427,7 +427,7 @@ class RotateBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class ResizeBox(DraggableFunctionBox):
+class ResizeBox(DraggableToolbox):
     """
     """
     def __init__(self, parent=None):
@@ -454,7 +454,7 @@ class ResizeBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class PaddingBox(DraggableFunctionBox):
+class PaddingBox(DraggableToolbox):
     """
     A class to create a padding toolbox.
     """
@@ -471,7 +471,7 @@ class PaddingBox(DraggableFunctionBox):
         self.leftRight = self.ui_components.dual_input("Left-Right:", 0, 0)      
         self.topBottom = self.ui_components.dual_input("Top-Bottom:", 0, 0)
 
-        # connect the combo box to the on_change function
+        # connect the combo box to the on_change method
         self.ui_components.set_combo_adapt_widgets(self.combo, [[self.constant, self.leftRight, self.topBottom], 
                                                                 [self.leftRight, self.topBottom], [self.leftRight, self.topBottom]])
 
@@ -492,7 +492,7 @@ class PaddingBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class HistEqualizationBox(DraggableFunctionBox):
+class HistEqualizationBox(DraggableToolbox):
     """
     A class to create a histogram equalization toolbox.
     """
@@ -506,7 +506,7 @@ class HistEqualizationBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class HistCLAHEBox(DraggableFunctionBox):
+class HistCLAHEBox(DraggableToolbox):
     """
     A class to create a histogram CLAHE toolbox.
     """
@@ -531,7 +531,7 @@ class HistCLAHEBox(DraggableFunctionBox):
         return imageBGRA
     
 
-class MaskBox(DraggableFunctionBox):
+class MaskBox(DraggableToolbox):
     """
     A class to create a masking toolbox.
     """
@@ -553,7 +553,7 @@ class MaskBox(DraggableFunctionBox):
         return imageBGRA
     
 
-class BitSliceBox(DraggableFunctionBox):
+class BitSliceBox(DraggableToolbox):
     """
     A class to create a bit plane slicing toolbox.
     """
@@ -570,7 +570,7 @@ class BitSliceBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class NoiseBox(DraggableFunctionBox):
+class NoiseBox(DraggableToolbox):
     """
     A class to create a noise toolbox.
     """
@@ -589,7 +589,7 @@ class NoiseBox(DraggableFunctionBox):
         # insert signle input boxes to select the salt and pepper probability
         self.saltPepProb = self.ui_components.slider(heading="Probability:", minValue=0, maxValue=200, defaultValue=20, rescale=self.saltPepProb_rescale)
 
-        # connect the combo box to the on_change function
+        # connect the combo box to the on_change method
         self.ui_components.set_combo_adapt_widgets(self.combo, [[self.mean, self.std], [self.saltPepProb], []])
    
     def execute(self, imageBGRA):
@@ -615,7 +615,7 @@ class NoiseBox(DraggableFunctionBox):
             return imageBGRA
    
 
-class ArithmeticBox(DraggableFunctionBox):
+class ArithmeticBox(DraggableToolbox):
     """
     A class to create an arithmetic operation toolbox.
     """
@@ -633,7 +633,7 @@ class ArithmeticBox(DraggableFunctionBox):
 
         # insert a button to select a new second image
         self.button = self.ui_components.button("Select Image")
-        self.button[0].clicked.connect(self.open_second_image_button)  # connect the button click to the open_second_image_button function
+        self.button[0].clicked.connect(self.open_second_image_button)  # connect the button click to the open_second_image_button method
 
     def execute(self, imageBGRA):
         if self.secondImage is not None:
@@ -651,11 +651,10 @@ class ArithmeticBox(DraggableFunctionBox):
 
         if imageBGRA is not None:
             self.secondImage = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)  # convert the image to BGR format
-            self.on_change()        # emit the signal to indicate that the settings have been changed
+            self.updateTrigger.emit()        # emit the signal to indicate that the settings have been changed
 
 
-
-class LogicBox(DraggableFunctionBox):
+class LogicBox(DraggableToolbox):
     """
     A class to create a logic operation toolbox.
     """
@@ -669,7 +668,7 @@ class LogicBox(DraggableFunctionBox):
         
         # insert a button to select the second image
         self.button = self.ui_components.button("Select Image")
-        self.button[0].clicked.connect(self.open_second_image_button)  # connect the button click to the open_second_image_button function
+        self.button[0].clicked.connect(self.open_second_image_button)  # connect the button click to the open_second_image_button method
 
 
     def execute(self, imageBGRA):
@@ -687,11 +686,10 @@ class LogicBox(DraggableFunctionBox):
 
         if imageBGRA is not None:
             self.secondImage = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)  # convert the image to BGR format
-            self.on_change()        # emit the signal to indicate that the settings have been changed
+            self.updateTrigger.emit()        # emit the signal to indicate that the settings have been changed
 
 
-
-class LaplaceBox(DraggableFunctionBox):
+class LaplaceBox(DraggableToolbox):
     """
     A class to create a laplace transformation toolbox.
     """
@@ -709,7 +707,7 @@ class LaplaceBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class SobelBox(DraggableFunctionBox):
+class SobelBox(DraggableToolbox):
     """
     A class to create a sobel transformation toolbox.
     """
@@ -726,7 +724,7 @@ class SobelBox(DraggableFunctionBox):
         return imageBGRA
 
 
-class SpatialFilterBox(DraggableFunctionBox):
+class SpatialFilterBox(DraggableToolbox):
     """
     A class to create a spatial filter toolbox.
     """
@@ -744,7 +742,7 @@ class SpatialFilterBox(DraggableFunctionBox):
         self.extended = self.ui_components.switch("Extended Laplace")
         self.alpha = self.ui_components.slider(heading="Alpha:", minValue=1, maxValue=1000, defaultValue=100, rescale=self.alpha_rescale)
 
-        # connect the combo box to the on_change function
+        # connect the combo box to the on_change method
         self.ui_components.set_combo_adapt_widgets(self.combo, [[self.kernel], [self.kernel], [self.kernel], [self.kernel],
                                                                  [self.kernel, self.sigma], [self.extended, self.alpha],
                                                                    [self.alpha], [self.kernel, self.sigma, self.alpha]])

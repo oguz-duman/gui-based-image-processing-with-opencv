@@ -220,7 +220,7 @@ class MainWindow(QWidget):
         index = self.find_insert_index(pos)             # Find the index where the item should be inserted
 
         # Check if the source is a valid FunctionBox
-        if source and isinstance(source, toolboxes.FunctionBox):
+        if source and isinstance(source, toolboxes.Toolbox):
             self.ui_management.pipeline.move_step(source, index)              # move the function box in the pipeline
             self.contentLayout.removeWidget(source)             # Remove the widget from its current position in the layout
             self.contentLayout.insertWidget(index, source)      # Insert the widget at the new index in the layout
