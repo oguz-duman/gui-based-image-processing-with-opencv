@@ -48,4 +48,3 @@ def save_image(image):
             QMessageBox.information(None, "Error", f"Failed to save the image. Please try again.")
 
 
-
