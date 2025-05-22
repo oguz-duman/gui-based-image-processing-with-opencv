@@ -10,6 +10,7 @@ from processing.processor import Processor
 from ui.components import UiComponents 
 import constants
 from ui.ui_management import UiManagement
+import uuid
 
 
 class AddNewBox(QWidget):
@@ -21,6 +22,8 @@ class AddNewBox(QWidget):
 
     def __init__(self):
         super().__init__()
+
+        self.id = str(uuid.uuid4())                     # generate a unique id for the toolbox
 
         # make the widget fixed size
         self.setFixedWidth(200)
@@ -96,7 +99,8 @@ class Toolbox(QWidget):
         self.ui_components = UiComponents(parent_widget=self.contentLayout, onchange_trigger=self.updateTrigger)        
         
         self.title = title                      # set the title of the toolbox
-        self.initiate_ui()                 # set up the UI
+        self.id = 0                             # initialize the id of the toolbox
+        self.initiate_ui()                      # set up the UI
 
 
     def initiate_ui(self):
@@ -140,7 +144,7 @@ class Toolbox(QWidget):
         removeBtn = QPushButton("X")
         removeBtn.setFont(self.font)
         removeBtn.setFixedWidth(30)
-        removeBtn.clicked.connect(lambda: self.removeTrigger.emit(self.title))
+        removeBtn.clicked.connect(lambda: self.removeTrigger.emit(self.id))
         titleLayout.addWidget(removeBtn,1)
         
         # create a layout for the ON/OFF switch
@@ -204,6 +208,7 @@ class BrightnessBox(DraggableToolbox):
     """
     def __init__(self, parent=None):
         super().__init__(constants.BRIGHTNESS, parent)
+        self.id = str(uuid.uuid4())                     # generate a unique id for the toolbox
 
         # Create a slider to adjust brightness
         self.brightness = self.ui_components.slider(heading="Brightness", minValue=-50, maxValue=50)  
@@ -435,6 +440,13 @@ class ResizeBox(DraggableToolbox):
 
         # Insert min-max input boxes to select the new size
         self.newWidthHeight  = self.ui_components.dual_input("Size:", 0, 0)
+
+        # order of the interpolation types in this list must be in the same order as in self.interpolation_types
+        self.combo = self.ui_components.combo_list(["None", "INTER_NEAREST", "INTER_LINEAR", "INTER_AREA", "INTER_CUBIC",
+                                                     "INTER_LANCZOS4", "INTER_LINEAR_EXACT", "INTER_MAX"])
+        
+        self.interpolation_types = [None, cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_AREA, cv2.INTER_CUBIC,
+                                    cv2.INTER_LANCZOS4, cv2.INTER_LINEAR_EXACT, cv2.INTER_MAX]
         
         self.init = False       # set a flag to check if the inputs are set to the image size as default
                         
@@ -443,13 +455,13 @@ class ResizeBox(DraggableToolbox):
 
         # set the input boxes to the image size as default
         if not self.init:
-            self.newWidthHeight[0].setText(str(w))
-            self.newWidthHeight[1].setText(str(h))
+            self.newWidthHeight[0].setText(str(h))
+            self.newWidthHeight[1].setText(str(w))
             self.init = True
 
         # get input and output range values from the text boxes and apply resizing
         reWidth, reHeight = self.ui_components.get_component_value(self.newWidthHeight[:2], mins=[0, 0], defaults=[w, h])
-        imageBGRA = self.processor.resize(imageBGRA, reWidth, reHeight)  
+        imageBGRA = self.processor.resize(imageBGRA, reWidth, reHeight, self.interpolation_types[self.combo.currentIndex()])  
 
         return imageBGRA
 

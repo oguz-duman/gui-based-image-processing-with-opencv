@@ -204,7 +204,7 @@ class UiManagement():
 
 
     @Slot(str)
-    def remove_toolbox(self, toolbox):
+    def remove_toolbox(self, id):
         """
         Remove the toolbox from layout and pipeline.
         Args:
@@ -213,13 +213,13 @@ class UiManagement():
         # remove the toolbox from the layout
         for i in range(self.toolbox_wrapper.count()):
             widget = self.toolbox_wrapper.itemAt(i).widget()
-            if widget and widget.title == toolbox:
+            if widget and widget.id == id:
                 self.toolbox_wrapper.removeWidget(widget)
                 widget.setParent(None)
                 break
         
-        self.pipeline.remove_step(toolbox)         # remove toolbox from the pipeline
-        self.pipeline_on_change()                  # rerun the pipeline
+        self.pipeline.remove_step(id)               # remove toolbox from the pipeline
+        self.pipeline_on_change()                   # rerun the pipeline
    
 
     def pipeline_on_change(self):

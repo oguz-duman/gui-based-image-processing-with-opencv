@@ -51,14 +51,14 @@ class Pipeline():
             self.steps.insert(new_index, step)          # Insert the widget at the new index in the pipeline
 
 
-    def remove_step(self, step_name):
+    def remove_step(self, step_id):
         """
         Remove a step from the pipeline.
         Args:
             step_name (str): The name of the step to be removed from the pipeline.
         """
         for step in self.steps:
-            if step.title == step_name:
+            if step.id == step_id:
                 self.steps.remove(step)
                 break
         

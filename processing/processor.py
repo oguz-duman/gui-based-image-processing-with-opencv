@@ -275,7 +275,7 @@ class Processor():
         return imageBGRA
 
 
-    def resize(self, imageBGRA, newWidth, newHeight):
+    def resize(self, imageBGRA, newWidth, newHeight, interpolation):
         """
         Resizes the given image to the specified width and height.
         Args:
@@ -284,7 +284,10 @@ class Processor():
         Returns:
             imageBGRA (numpy.ndarray): The resized image in the BGRA format.
         """
-        imageBGRA = cv2.resize(imageBGRA, (newWidth, newHeight))       # resize the image to the specified size
+        if interpolation is None:
+            imageBGRA = cv2.resize(imageBGRA, (newWidth, newHeight))       # resize the image to the specified size
+        else:
+            imageBGRA = cv2.resize(imageBGRA, (newWidth, newHeight), interpolation=interpolation)       # resize the image to the specified size
 
         return imageBGRA
 
