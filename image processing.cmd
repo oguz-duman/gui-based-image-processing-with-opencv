@@ -1,4 +1,4 @@
-cd C:\Users\oguzd\My Drive\1) Desktop\1) Dersler\3) Image Processing\App\cv2-image-processing-gui
+cd /d "%~dp0"
 
 python main.py
 

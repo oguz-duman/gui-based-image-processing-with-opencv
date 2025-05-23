@@ -586,11 +586,15 @@ class SpatialMaskBox(DraggableToolbox):
     def __init__(self, parent=None):
         super().__init__(constants.SPATIAL_MASKING, parent)
 
-        self.width = 0
-        self.height = 0
+        self.im_size = [0, 0]
 
 
     def execute(self, imageBGRA):
+
+        # get the slider values and apply spatial masking
+        imageBGRA = self.processor.spatial_masking(imageBGRA, self.slid_width[0].value(), self.slid_height[0].value(),
+                                                    self.slid_left[0].value(), self.slid_top[0].value(), 
+                                                    self.slid_bor_radius[0].value())  
 
         return imageBGRA
     
@@ -598,17 +602,17 @@ class SpatialMaskBox(DraggableToolbox):
     def update_toolbox(self, imageBGRA):
         super().update_toolbox(imageBGRA)  
 
-        if [self.width, self.height] == [0, 0]:
+        if self.im_size == [0, 0]:
         
             # get the height and width of the image
-            self.width, self.height = [0, 0] if self.imageBGRA is None else self.imageBGRA.shape[:2]  
+            self.im_size = [0, 0] if self.imageBGRA is None else self.imageBGRA.shape[:2]  
 
             # insert sliders for width, height, left position, top position and border radius
-            self.width = self.ui_components.slider(heading="Width:", minValue=0, maxValue=self.width, defaultValue=self.width)
-            self.height = self.ui_components.slider(heading="Height:", minValue=0, maxValue=self.height, defaultValue=self.height)
-            self.left = self.ui_components.slider(heading="Left:", minValue=0, maxValue=100, defaultValue=0)
-            self.top = self.ui_components.slider(heading="Top:", minValue=0, maxValue=100, defaultValue=0)
-            self.borderRadius = self.ui_components.slider(heading="Border Radius:", minValue=0, maxValue=100, defaultValue=0) 
+            self.slid_width = self.ui_components.slider(heading="Width:", minValue=0, maxValue=self.im_size[1], defaultValue=self.im_size[1])
+            self.slid_height = self.ui_components.slider(heading="Height:", minValue=0, maxValue=self.im_size[0], defaultValue=self.im_size[0])
+            self.slid_left = self.ui_components.slider(heading="Left:", minValue=0, maxValue=self.im_size[1], defaultValue=0)
+            self.slid_top = self.ui_components.slider(heading="Top:", minValue=0, maxValue=self.im_size[0], defaultValue=0)
+            self.slid_bor_radius = self.ui_components.slider(heading="Border Radius:", minValue=0, maxValue=100, defaultValue=0) 
         
 
 
