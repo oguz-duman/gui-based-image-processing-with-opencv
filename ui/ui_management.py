@@ -95,6 +95,11 @@ class UiManagement():
 
             self.pipeline_on_change()            # process the image through the pipeline
 
+            # update toolbox components according to new image (max slider values, etc.)
+            for toolbox in self.pipeline.steps:  
+                toolbox.update_toolbox(self.input_BGRA)
+
+
 
     def select_image(self):
         """
@@ -165,8 +170,10 @@ class UiManagement():
             new_toolbox = toolboxes.HistEqualizationBox()
         elif toolbox == constants.HISTCLAHE:
             new_toolbox = toolboxes.HistCLAHEBox()
-        elif toolbox == constants.MASK:
-            new_toolbox = toolboxes.MaskBox()
+        elif toolbox == constants.COLOR_MASKING:
+            new_toolbox = toolboxes.ColorMaskBox()
+        elif toolbox == constants.SPATIAL_MASKING:
+            new_toolbox = toolboxes.SpatialMaskBox()
         elif toolbox == constants.BITSLICE:
             new_toolbox = toolboxes.BitSliceBox()
         elif toolbox == constants.ADD_NOISE:
@@ -192,6 +199,8 @@ class UiManagement():
         # connect the toolbox signals
         new_toolbox.updateTrigger.connect(self.pipeline_on_change)   
         new_toolbox.removeTrigger.connect(self.remove_toolbox) 
+
+        new_toolbox.update_toolbox(self.input_BGRA)                 # update the toolbox with the input image
 
         self.pipeline.add_step(new_toolbox)                         # add the toolbox to the pipeline
 

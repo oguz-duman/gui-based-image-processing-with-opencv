@@ -15,7 +15,7 @@ RESIZE = "Resize"
 PADDING = "Padding"
 HISTEQ = "Histogram Equalization"
 HISTCLAHE = "Local Hist. Equalization"
-MASK = "Masking"
+COLOR_MASKING = "Color Masking"
 BITSLICE = "Bit Plane Slicing"
 ADD_NOISE = "Add Noise"
 ARITHMETIC = "Image Arithmetic"
@@ -25,12 +25,13 @@ SOBEL = "Sobel Filter"
 ORDER_STAT = "Order Statistic Filter"
 SMOOTHING = "Smoothing Filter"
 SHARPENING = "Sharpening Filter"
+SPATIAL_MASKING = "Spatial Mask"
 
 
 # list of toolbox names to use in combo box. They will be listed in the order they are defined here.
 TOOLBOX_NAMES = [BRIGHTNESS, SATURATION, CONTRAST, FULL_SCALE_CONTRAST, LOG, GAMMA, RGB2GRAY, 
                   THRESHOLDING, COMPLEMENT, CROP, FLIP, ROTATE, RESIZE, PADDING, HISTEQ,
-                  HISTCLAHE, MASK, BITSLICE, ADD_NOISE, ARITHMETIC, LOGIC, LAPLACE, SOBEL,
+                  HISTCLAHE, COLOR_MASKING, SPATIAL_MASKING, BITSLICE, ADD_NOISE, ARITHMETIC, LOGIC, LAPLACE, SOBEL,
                   ORDER_STAT, SMOOTHING, SHARPENING]
 
 

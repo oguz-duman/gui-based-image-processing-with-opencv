@@ -91,7 +91,6 @@ class Toolbox(QWidget):
     def __init__(self, title="Toolbox", parent=None):
         super().__init__(parent)
 
-
         self.contentLayout = QVBoxLayout()      # create a layout to hold the content of the toolbox
 
         self.processor = Processor()            # create an instance of the Processor class to get the image processing methods
@@ -99,9 +98,8 @@ class Toolbox(QWidget):
         self.ui_components = UiComponents(parent_widget=self.contentLayout, onchange_trigger=self.updateTrigger)        
         
         self.title = title                      # set the title of the toolbox
-        self.id = 0                             # initialize the id of the toolbox
+        self.id = str(uuid.uuid4())             # generate a unique id for the toolbox
         self.initiate_ui()                      # set up the UI
-
 
     def initiate_ui(self):
         """
@@ -168,6 +166,12 @@ class Toolbox(QWidget):
         self.contentLayout.addWidget(dummy)
     
 
+    def update_toolbox(self, imageBGRA):
+        """
+        Runs only when the toolbox is created for the first time and everytime the input image is changed. 
+        """
+        self.imageBGRA = imageBGRA
+
 
 class DraggableToolbox(Toolbox):
     """
@@ -208,7 +212,6 @@ class BrightnessBox(DraggableToolbox):
     """
     def __init__(self, parent=None):
         super().__init__(constants.BRIGHTNESS, parent)
-        self.id = str(uuid.uuid4())                     # generate a unique id for the toolbox
 
         # Create a slider to adjust brightness
         self.brightness = self.ui_components.slider(heading="Brightness", minValue=-50, maxValue=50)  
@@ -438,32 +441,43 @@ class ResizeBox(DraggableToolbox):
     def __init__(self, parent=None):
         super().__init__(constants.RESIZE, parent)
 
-        # Insert min-max input boxes to select the new size
-        self.newWidthHeight  = self.ui_components.dual_input("Size:", 0, 0)
-
-        # order of the interpolation types in this list must be in the same order as in self.interpolation_types
-        self.combo = self.ui_components.combo_list(["None", "INTER_NEAREST", "INTER_LINEAR", "INTER_AREA", "INTER_CUBIC",
-                                                     "INTER_LANCZOS4", "INTER_LINEAR_EXACT", "INTER_MAX"])
-        
-        self.interpolation_types = [None, cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_AREA, cv2.INTER_CUBIC,
-                                    cv2.INTER_LANCZOS4, cv2.INTER_LINEAR_EXACT, cv2.INTER_MAX]
-        
-        self.init = False       # set a flag to check if the inputs are set to the image size as default
+        self.width = 0
+        self.height = 0
                         
     def execute(self, imageBGRA):
-        (w, h) = imageBGRA.shape[:2]        # get the height and width of the image
-
-        # set the input boxes to the image size as default
-        if not self.init:
-            self.newWidthHeight[0].setText(str(h))
-            self.newWidthHeight[1].setText(str(w))
-            self.init = True
-
         # get input and output range values from the text boxes and apply resizing
-        reWidth, reHeight = self.ui_components.get_component_value(self.newWidthHeight[:2], mins=[0, 0], defaults=[w, h])
+        reWidth, reHeight = self.ui_components.get_component_value(self.newWidthHeight[:2], mins=[0, 0], defaults=[self.width, self.height])
         imageBGRA = self.processor.resize(imageBGRA, reWidth, reHeight, self.interpolation_types[self.combo.currentIndex()])  
 
         return imageBGRA
+
+
+    def update_toolbox(self, imageBGRA):
+        """
+        Runs only when the toolbox is created for the first time and everytime the input image is changed. 
+        """
+        super().update_toolbox(imageBGRA)
+
+        if [self.width, self.height] == [0, 0]:
+            
+            # Insert min-max input boxes to select the new size
+            self.newWidthHeight  = self.ui_components.dual_input("Size:", 0, 0)
+
+            # order of the interpolation types in this list must be in the same order as in self.interpolation_types
+            self.combo = self.ui_components.combo_list(["None", "INTER_NEAREST", "INTER_LINEAR", "INTER_AREA", "INTER_CUBIC",
+                                                        "INTER_LANCZOS4", "INTER_LINEAR_EXACT", "INTER_MAX"])
+            
+            self.interpolation_types = [None, cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_AREA, cv2.INTER_CUBIC,
+                                        cv2.INTER_LANCZOS4, cv2.INTER_LINEAR_EXACT, cv2.INTER_MAX]
+            
+            # get the height and width of the image
+            self.width, self.height = [128, 128] if self.imageBGRA is None else self.imageBGRA.shape[:2]  
+
+            # set the input boxes to the image size as default
+            self.newWidthHeight[0].setText(str(self.height))
+            self.newWidthHeight[1].setText(str(self.width))
+            
+
 
 
 class PaddingBox(DraggableToolbox):
@@ -543,12 +557,12 @@ class HistCLAHEBox(DraggableToolbox):
         return imageBGRA
     
 
-class MaskBox(DraggableToolbox):
+class ColorMaskBox(DraggableToolbox):
     """
     A class to create a masking toolbox.
     """
     def __init__(self, parent=None):
-        super().__init__(constants.MASK, parent)
+        super().__init__(constants.COLOR_MASKING, parent)
 
         # Insert input boxes to select the min-max HSV values
         self.intensityMin = self.ui_components.triple_input("min HSV:", 0, 0, 0)
@@ -564,6 +578,39 @@ class MaskBox(DraggableToolbox):
 
         return imageBGRA
     
+
+class SpatialMaskBox(DraggableToolbox):
+    """
+    A class to create a masking toolbox.
+    """
+    def __init__(self, parent=None):
+        super().__init__(constants.SPATIAL_MASKING, parent)
+
+        self.width = 0
+        self.height = 0
+
+
+    def execute(self, imageBGRA):
+
+        return imageBGRA
+    
+    
+    def update_toolbox(self, imageBGRA):
+        super().update_toolbox(imageBGRA)  
+
+        if [self.width, self.height] == [0, 0]:
+        
+            # get the height and width of the image
+            self.width, self.height = [0, 0] if self.imageBGRA is None else self.imageBGRA.shape[:2]  
+
+            # insert sliders for width, height, left position, top position and border radius
+            self.width = self.ui_components.slider(heading="Width:", minValue=0, maxValue=self.width, defaultValue=self.width)
+            self.height = self.ui_components.slider(heading="Height:", minValue=0, maxValue=self.height, defaultValue=self.height)
+            self.left = self.ui_components.slider(heading="Left:", minValue=0, maxValue=100, defaultValue=0)
+            self.top = self.ui_components.slider(heading="Top:", minValue=0, maxValue=100, defaultValue=0)
+            self.borderRadius = self.ui_components.slider(heading="Border Radius:", minValue=0, maxValue=100, defaultValue=0) 
+        
+
 
 class BitSliceBox(DraggableToolbox):
     """
@@ -763,6 +810,7 @@ class OrderStatBox(DraggableToolbox):
             imageBGRA = self.processor.order_statistics(imageBGRA, w, "min")   
 
         return imageBGRA
+
 
 class SmoothingBox(DraggableToolbox):
     """
