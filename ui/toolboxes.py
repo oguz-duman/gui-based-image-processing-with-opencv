@@ -209,6 +209,7 @@ class DraggableToolbox(Toolbox):
 class BrightnessBox(DraggableToolbox):
     """
     A class to create a brightness adjustment toolbox.
+    Adjusts the brightness of an image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.BRIGHTNESS, parent)
@@ -226,6 +227,7 @@ class BrightnessBox(DraggableToolbox):
 class SaturationBox(DraggableToolbox):
     """
     A class to create a saturation adjustment toolbox.
+    Adjusts the saturation of an image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.SATURATION, parent)
@@ -243,6 +245,7 @@ class SaturationBox(DraggableToolbox):
 class ContrastBox(DraggableToolbox):
     """
     A class to create a contrast adjustment toolbox.
+    Adjusts the contrast of an image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.CONTRAST, parent)
@@ -289,6 +292,7 @@ class ContrastBox(DraggableToolbox):
 class FullScaleContrastBox(DraggableToolbox):
     """
     A class to create a full scale contrast adjustment toolbox.
+    Adjusts the contrast of an image to full scale.
     """
     def __init__(self, parent=None):
         super().__init__(constants.FULL_SCALE_CONTRAST, parent)
@@ -303,6 +307,7 @@ class FullScaleContrastBox(DraggableToolbox):
 class LogBox(DraggableToolbox):
     """
     A class to create a log transformation toolbox.
+    Applies a logarithmic transformation to an image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.LOG, parent)
@@ -317,6 +322,7 @@ class LogBox(DraggableToolbox):
 class GammaBox(DraggableToolbox):
     """
     A class to create a gamma transformation toolbox.
+    Applies a gamma transformation to an image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.GAMMA, parent)
@@ -336,6 +342,8 @@ class GammaBox(DraggableToolbox):
 class RGB2GrayBox(DraggableToolbox):
     """
     A class to create a RGB to grayscale conversion toolbox.
+    Converts the input image to grayscale.
+    Works even if the input image is already grayscale.
     """
     def __init__(self, parent=None):
         super().__init__(constants.RGB2GRAY, parent)
@@ -350,6 +358,7 @@ class RGB2GrayBox(DraggableToolbox):
 class ThresholdingBox(DraggableToolbox):
     """
     A class to create a thresholding toolbox.
+    Applies a thresholding operation to the input image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.THRESHOLDING, parent)
@@ -367,6 +376,7 @@ class ThresholdingBox(DraggableToolbox):
 class ComplementBox(DraggableToolbox):
     """
     A class to create a complement toolbox.
+    Applies a complement operation to the input image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.COMPLEMENT, parent)
@@ -380,6 +390,7 @@ class ComplementBox(DraggableToolbox):
 class CropBox(DraggableToolbox):
     """
     A class to create a cropping toolbox.
+    Crops the input image based on the specified values.
     """
     def __init__(self, parent=None):
         super().__init__(constants.CROP, parent)
@@ -404,6 +415,7 @@ class CropBox(DraggableToolbox):
 class FlipBox(DraggableToolbox):
     """
     A class to create a flipping toolbox.
+    Flips the input image based on the selected direction.
     """
     def __init__(self, parent=None):
         super().__init__(constants.FLIP, parent)
@@ -421,6 +433,7 @@ class FlipBox(DraggableToolbox):
 class RotateBox(DraggableToolbox):
     """
     A class to create a rotation toolbox.
+    Rotates the input image based on the selected angle.
     """
     def __init__(self, parent=None):
         super().__init__(constants.ROTATE, parent)
@@ -437,6 +450,8 @@ class RotateBox(DraggableToolbox):
 
 class ResizeBox(DraggableToolbox):
     """
+    A class to create a resizing toolbox.
+    Resizes the input image based on the specified width and height.
     """
     def __init__(self, parent=None):
         super().__init__(constants.RESIZE, parent)
@@ -483,6 +498,7 @@ class ResizeBox(DraggableToolbox):
 class PaddingBox(DraggableToolbox):
     """
     A class to create a padding toolbox.
+    Applies padding to the input image based on the selected type and values.
     """
     def __init__(self, parent=None):
         super().__init__(constants.PADDING, parent)
@@ -521,6 +537,7 @@ class PaddingBox(DraggableToolbox):
 class HistEqualizationBox(DraggableToolbox):
     """
     A class to create a histogram equalization toolbox.
+    Applies histogram equalization to the input image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.HISTEQ, parent)
@@ -535,6 +552,7 @@ class HistEqualizationBox(DraggableToolbox):
 class HistCLAHEBox(DraggableToolbox):
     """
     A class to create a histogram CLAHE toolbox.
+    Applies CLAHE (Contrast Limited Adaptive Histogram Equalization) to the input image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.HISTCLAHE, parent)
@@ -560,6 +578,7 @@ class HistCLAHEBox(DraggableToolbox):
 class ColorMaskBox(DraggableToolbox):
     """
     A class to create a masking toolbox.
+    This toolbox allows the user to select a range of HSV values to create a mask.
     """
     def __init__(self, parent=None):
         super().__init__(constants.COLOR_MASKING, parent)
@@ -582,6 +601,8 @@ class ColorMaskBox(DraggableToolbox):
 class SpatialMaskBox(DraggableToolbox):
     """
     A class to create a masking toolbox.
+    This toolbox allows the user to select a rectangular area of the image and apply spatial masking.
+    This mask only affects the next toolbox in the pipeline not all 
     """
     def __init__(self, parent=None):
         super().__init__(constants.SPATIAL_MASKING, parent)
@@ -619,6 +640,7 @@ class SpatialMaskBox(DraggableToolbox):
 class BitSliceBox(DraggableToolbox):
     """
     A class to create a bit plane slicing toolbox.
+    Applies bit plane slicing to the input image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.BITSLICE, parent)
@@ -636,6 +658,8 @@ class BitSliceBox(DraggableToolbox):
 class NoiseBox(DraggableToolbox):
     """
     A class to create a noise toolbox.
+    Applies different types of noises to the input image.
+    Available noise types are Gaussian, Salt & Pepper, and Poisson.
     """
     def __init__(self, parent=None):
         super().__init__(constants.ADD_NOISE, parent)
@@ -681,6 +705,7 @@ class NoiseBox(DraggableToolbox):
 class ArithmeticBox(DraggableToolbox):
     """
     A class to create an arithmetic operation toolbox.
+    Applies arithmetic operations with the input image and a selected second image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.ARITHMETIC, parent)
@@ -720,6 +745,7 @@ class ArithmeticBox(DraggableToolbox):
 class LogicBox(DraggableToolbox):
     """
     A class to create a logic operation toolbox.
+    Applies logic operations with the input image and a selected second image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.LOGIC, parent)
@@ -755,6 +781,7 @@ class LogicBox(DraggableToolbox):
 class LaplaceBox(DraggableToolbox):
     """
     A class to create a laplace transformation toolbox.
+    Applies a laplace transformation to the input image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.LAPLACE, parent)
@@ -773,6 +800,7 @@ class LaplaceBox(DraggableToolbox):
 class SobelBox(DraggableToolbox):
     """
     A class to create a sobel transformation toolbox.
+    Applies a sobel transformation to the input image.
     """
     def __init__(self, parent=None):
         super().__init__(constants.LAPLACE, parent)
@@ -789,6 +817,9 @@ class SobelBox(DraggableToolbox):
 
 class OrderStatBox(DraggableToolbox):
     """
+    A class to create an order statistics toolbox.
+    Applies order statistics filtering to the input image.
+    Available methods are Median, Max, and Min.
     """
     def __init__(self, parent=None):
         super().__init__(constants.ORDER_STAT, parent)
@@ -819,6 +850,8 @@ class OrderStatBox(DraggableToolbox):
 class SmoothingBox(DraggableToolbox):
     """
     A class to create a smoothing toolbox.
+    Applies smoothing to the input image.
+    Available methods are Mean and Gaussian.
     """
     def __init__(self, parent=None):
         super().__init__(constants.SMOOTHING, parent)
@@ -855,6 +888,8 @@ class SmoothingBox(DraggableToolbox):
 class SharpeningBox(DraggableToolbox):
     """
     A class to create a sharpening toolbox.
+    Applies sharpening to the input image.
+    Available methods are Laplace, Sobel, and Unsharp Masking.
     """
     def __init__(self, parent=None):
         super().__init__(constants.SHARPENING, parent)
