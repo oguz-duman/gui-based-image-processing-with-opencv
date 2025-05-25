@@ -13,15 +13,30 @@ class UiComponents():
         parent_widget (QWidget): The parent widget to which the UI components will be added.
         onchange_trigger (Signal): The signal to be emitted when the value of any input box is changed.
     """
-    def __init__(self, parent_widget, onchange_trigger):
-        
+    def __init__(self):
         # create a base font for the UI components
         self.font = QFont()              
         self.font.setPointSize(10) 
 
-        # get the parent widget and the signal to be emitted 
-        self.parent = parent_widget
-        self.trigger = onchange_trigger
+        self.trigger = None          # signal to be emitted when the value of any input box is changed
+
+
+    def set_parent(self, parent_widget):
+        """
+        This method sets the parent widget for the UI components.
+        Args:
+            parent_widget (QWidget): The parent widget to which the UI components will be added.
+        """
+        self.parent_widget = parent_widget
+
+
+    def set_update_trigger(self, trigger):
+        """
+        This method sets the signal to be emitted when the value of any input box is changed.
+        Args:
+            onchange_trigger (Signal): The signal to be emitted when the value of any input box is changed.
+        """
+        self.trigger = trigger
 
 
     def on_change(self, new_value=None, label=None):
@@ -36,7 +51,9 @@ class UiComponents():
         if label is not None:
             label.setText(f"{label.text().split(':')[0]}: {new_value}")
 
-        self.trigger.emit()                     # emit the signal to notify that the value has changed
+        # If a trigger signal is set, emit the signal to notify that the value has changed
+        if self.trigger is not None:
+            self.trigger.emit()                     
 
 
     def combo_on_change(self, new_index, adapt_widgets=[]):
@@ -90,7 +107,7 @@ class UiComponents():
             return defaults[0] if len(defaults) == 1 else defaults  # return a list or a single value based on the number of inputs
     
 
-    def mono_input(self, heading, defaultValue=0):
+    def insert_mono_input(self, heading, defaultValue=0, parent=None):
         """
         This method creates a single input box for the user to enter a value.
         Args:
@@ -99,9 +116,12 @@ class UiComponents():
         Returns:
             list: A list containing the input box and its label.
         """
+        # if a parent widget is provided, use it; otherwise, use the main parent widget
+        parent = self.parent_widget if parent is None else parent
+
         # layout for the input box
         layout = QHBoxLayout()
-        self.parent.addLayout(layout)
+        parent.addLayout(layout)
 
         # heading for the input
         label = QLabel(heading)
@@ -119,7 +139,7 @@ class UiComponents():
         return [inArea, label]
     
 
-    def dual_input(self, heading, default1=0, default2=255):
+    def insert_dual_input(self, heading, default1=0, default2=255, parent=None):
         """
         This method creates two input boxes for the user to enter a range of values.
         Args:
@@ -129,9 +149,12 @@ class UiComponents():
         Returns:
             list: A list containing the two input boxes and their label.
         """
+        # if a parent widget is provided, use it; otherwise, use the main parent widget
+        parent = self.parent_widget if parent is None else parent
+
         # Input range area
         layout1 = QHBoxLayout()
-        self.parent.addLayout(layout1)
+        parent.addLayout(layout1)
 
         # an indicator for input range
         inLabel = QLabel(heading)
@@ -157,7 +180,7 @@ class UiComponents():
         return [inRangeMin, inRangeMax, inLabel]
     
 
-    def triple_input(self, heading, default1=0, default2=0, default3=0):
+    def insert_triple_input(self, heading, default1=0, default2=0, default3=0, parent=None):
         """
         This method creates three input boxes for the user to enter a range of values.
         Args:
@@ -168,10 +191,13 @@ class UiComponents():
         Returns:
             list: A list containing the three input boxes and their label.
         """
+        # if a parent widget is provided, use it; otherwise, use the main parent widget
+        parent = self.parent_widget if parent is None else parent
+
         # Input range area
         layout1 = QHBoxLayout()
         layout1.setSpacing(0)
-        self.parent.addLayout(layout1)
+        parent.addLayout(layout1)
 
         # an indicator for input range
         label = QLabel(heading)
@@ -205,7 +231,7 @@ class UiComponents():
         return [value1, value2, value3, label]
     
 
-    def slider(self, heading, minValue, maxValue, defaultValue=0, rescale=1):
+    def insert_slider(self, heading, minValue, maxValue, defaultValue=0, rescale=1, parent=None):
         """
         This method creates a slider for the user to adjust a value.
         Args:
@@ -217,10 +243,13 @@ class UiComponents():
         Returns:
             list: A list containing the slider and its label.
         """
+        # if a parent widget is provided, use it; otherwise, use the main parent widget
+        parent = self.parent_widget if parent is None else parent
+
         # Create a label to display the current value of the slider
         label = QLabel(f"{heading}: {defaultValue}")
         label.setFont(self.font)
-        self.parent.addWidget(label, alignment=Qt.AlignLeft)
+        parent.addWidget(label, alignment=Qt.AlignLeft)
 
         # Create a slider to adjust brightness
         slider = QSlider(Qt.Horizontal)
@@ -233,12 +262,12 @@ class UiComponents():
         # call the on_change method to set the initial value of the label
         self.on_change(slider.value() if rescale == 1 else slider.value()/rescale, label)  
         
-        self.parent.addWidget(slider)
+        parent.addWidget(slider)
 
         return [slider, label]
 
 
-    def radio_buttons(self, headings=[]):
+    def insert_radio_buttons(self, headings=[], parent=None):
         """
         This method creates a group of radio buttons for the user to select an option.
         Args:
@@ -246,9 +275,12 @@ class UiComponents():
         Returns:
             list: A list containing the radio buttons and their label.
         """
+        # if a parent widget is provided, use it; otherwise, use the main parent widget
+        parent = self.parent_widget if parent is None else parent
+
         # layout for radio buttons
         layout = QVBoxLayout()
-        self.parent.addLayout(layout)
+        parent.addLayout(layout)
 
         # create a button group to hold the radio buttons
         radio_buttons = QButtonGroup(None)  
@@ -268,7 +300,7 @@ class UiComponents():
         return [radio_buttons]
 
 
-    def combo_list(self, headings=[]):
+    def insert_combo_list(self, headings=[], parent=None):
         """
         This method creates a combo box for the user to select an option from a list.
         Args:
@@ -276,11 +308,14 @@ class UiComponents():
         Returns:
             QComboBox: The combo box containing the list of items.
         """
+        # if a parent widget is provided, use it; otherwise, use the main parent widget
+        parent = self.parent_widget if parent is None else parent
+
         combo = QComboBox()
         combo.addItems(headings)
         combo.setFont(self.font)
         combo.currentIndexChanged.connect(self.on_change)       # onchange event to emit the signal indicating the value has changed
-        self.parent.addWidget(combo)                            # add the combo box to the content layout
+        parent.addWidget(combo)                            # add the combo box to the content layout
 
         return combo
     
@@ -299,7 +334,7 @@ class UiComponents():
         self.combo_on_change(combo.currentIndex(), adapt_widgets)  
 
 
-    def switch(self, heading):
+    def insert_switch(self, heading, parent=None):
         """
         This method creates a switch (checkbox) for the user to toggle an option.
         Args:
@@ -307,17 +342,20 @@ class UiComponents():
         Returns:
             list: A list containing the switch and its label.
         """
+        # if no parent is provided, use the main parent widget
+        parent = self.parent_widget if parent is None else parent
+
         switch = QCheckBox(heading)
         switch.setChecked(False)
         switch.setFont(self.font)
         switch.stateChanged.connect(self.on_change)
         switch.setFixedHeight(30)
-        self.parent.addWidget(switch)
+        parent.addWidget(switch)
 
         return [switch]
 
 
-    def button(self, heading):
+    def insert_button(self, heading, parent=None):
         """
         This method creates a button for the user to click.
         Args:
@@ -325,10 +363,13 @@ class UiComponents():
         Returns:
             list: A list containing the button.
         """
+        # if no parent is provided, use the main parent widget
+        parent = self.parent_widget if parent is None else parent
+
         button = QPushButton(heading)
         button.setFont(self.font)
         button.setFixedHeight(30)
-        self.parent.addWidget(button)
+        parent.addWidget(button)
 
         return [button]
     

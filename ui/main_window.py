@@ -7,7 +7,7 @@ import constants
 from ui.ui_management import UiManagement
 
 
-class MainWindow(QWidget):
+class MainWindow(QWidget, UiManagement):
     """
     Main window class for the image processing application.
     This class initializes the UI components and manages drop events for reordering toolboxes.
@@ -15,9 +15,6 @@ class MainWindow(QWidget):
 
     def __init__(self):
         super().__init__()  
-
-        # create an instance of the UiManagement class
-        self.ui_management = UiManagement()  
 
         # Create main layout and set it to the widget
         self.mainLayout = QVBoxLayout(self) 
@@ -30,7 +27,7 @@ class MainWindow(QWidget):
         self.init_bottomLayout()
 
         # Initialize UI variables in UiManagement
-        self.ui_management.init_ui_variables(self.contentLayout, self.add_new_box, self.leftLabel,
+        self.init_ui_variables(self.contentLayout, self.add_new_box, self.leftLabel,
                                               self.rightLabel, self.leftTitle, self.rightTitle,
                                               self.zoomIn, self.zoomOut)  
                
@@ -39,7 +36,7 @@ class MainWindow(QWidget):
         super().resizeEvent(event)
 
         # Recall the pipeline to update the output image when the window is resized
-        self.ui_management.pipeline_on_change()
+        self.pipeline_on_change()
 
 
     def init_top_layout(self):
@@ -83,7 +80,7 @@ class MainWindow(QWidget):
         self.zoomOut.setFixedWidth(40)
         self.zoomOut.setFont(font) 
         self.zoomOut.setStyleSheet("padding-bottom: 2px;")
-        self.zoomOut.clicked.connect(lambda: self.ui_management.display_histogram(zoom=-1)) 
+        self.zoomOut.clicked.connect(lambda: self.display_histogram(zoom=-1)) 
         zoomLayout.addWidget(self.zoomOut, 1, alignment=Qt.AlignBottom)
         self.zoomOut.hide()
         
@@ -92,7 +89,7 @@ class MainWindow(QWidget):
         self.zoomIn.setFixedWidth(40)
         self.zoomIn.setFont(font) 
         self.zoomIn.setStyleSheet("padding-bottom: 2px;")
-        self.zoomIn.clicked.connect(lambda: self.ui_management.display_histogram(zoom=1))
+        self.zoomIn.clicked.connect(lambda: self.display_histogram(zoom=1))
         zoomLayout.addWidget(self.zoomIn, 1, alignment=Qt.AlignBottom)
         self.zoomIn.hide()
         
@@ -138,35 +135,35 @@ class MainWindow(QWidget):
         # Button 1 - open image
         btn = QPushButton(constants.OPEN_BUTTON)
         midLayout.addWidget(btn)      
-        btn.clicked.connect(self.ui_management.open_new_image)   
+        btn.clicked.connect(self.open_new_image)   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 2 - switch to histogram
         btn = QPushButton(constants.HISTOGRAM_BUTTON)
         midLayout.addWidget(btn)   
-        btn.clicked.connect(lambda: self.ui_management.mode_buttons('HISTOGRAM'))   
+        btn.clicked.connect(lambda: self.mode_buttons('HISTOGRAM'))   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 3 - See Layers
         btn = QPushButton(constants.CHANNELS_BUTTON)
         midLayout.addWidget(btn)    
-        btn.clicked.connect(lambda: self.ui_management.mode_buttons('CHANNELS'))   
+        btn.clicked.connect(lambda: self.mode_buttons('CHANNELS'))   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 4 - switch to frequency domain
         btn = QPushButton(constants.FREQUENCY_BUTTON)
         midLayout.addWidget(btn)    
-        btn.clicked.connect(lambda: self.ui_management.mode_buttons('FREQUENCY'))   
+        btn.clicked.connect(lambda: self.mode_buttons('FREQUENCY'))   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
         # Button 5 - save image
         btn = QPushButton(constants.SAVE_BUTTON)
         midLayout.addWidget(btn)   
-        btn.clicked.connect(lambda: self.ui_management.save_image())   
+        btn.clicked.connect(lambda: self.save_image())   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
@@ -197,7 +194,7 @@ class MainWindow(QWidget):
         # insert 'new function' box
         self.add_new_box = toolboxes.AddNewBox()
         self.contentLayout.addWidget(self.add_new_box)
-        self.add_new_box.trigger.connect(self.ui_management.insert_toolbox)  # connect click event to 'add_new_toolbox' method
+        self.add_new_box.trigger.connect(self.insert_toolbox)  # connect click event to 'add_new_toolbox' method
 
         # drag and drop functionality
         contentWidget.setAcceptDrops(True)
@@ -228,12 +225,12 @@ class MainWindow(QWidget):
 
         # Check if the source is a valid FunctionBox
         if source and isinstance(source, toolboxes.Toolbox):
-            self.ui_management.pipeline.move_step(source, index)              # move the function box in the pipeline
+            self.pipeline.move_step(source, index)              # move the function box in the pipeline
             self.contentLayout.removeWidget(source)             # Remove the widget from its current position in the layout
             self.contentLayout.insertWidget(index, source)      # Insert the widget at the new index in the layout
 
             event.acceptProposedAction()            # Accept the proposed action for the drop event
-            self.ui_management.pipeline_on_change()                     # Rerun the pipeline to update the output image
+            self.pipeline_on_change()                     # Rerun the pipeline to update the output image
 
 
     def find_insert_index(self, pos):
