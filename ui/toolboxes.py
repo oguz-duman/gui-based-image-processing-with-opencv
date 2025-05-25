@@ -437,15 +437,12 @@ class RotateBox(DraggableToolbox):
     def __init__(self, parent=None):
         super().__init__(constants.ROTATE, parent)
 
-        # insert a switch to decide whether to keep the image size fixed or not
-        self.fixed_size = self.insert_switch("Keep Image Size Fixed", setChecked=True)
-
         # Insert a slider to adjust the rotate angle
         self.angle = self.insert_slider(heading="Angle: ", minValue=-180, maxValue=180)  
 
     def execute(self, imageBGRA, mask):
-        value = self.angle[0].value()                                                       # Get the current value of the slider
-        imageBGRA = self.rotate_image(imageBGRA, value, self.fixed_size[0].isChecked())     # Apply rotation
+        value = self.angle[0].value()                           # Get the current value of the slider
+        imageBGRA = self.rotate_image(imageBGRA, value)         # Apply rotation
 
         return imageBGRA
 

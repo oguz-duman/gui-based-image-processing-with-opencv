@@ -288,42 +288,46 @@ class Processor():
         return imageBGRA
 
 
-    def rotate_image(self, imageBGRA, angle, fixed_size=False):
+    def rotate_image(self, imageBGRA, angle):
         """
         Rotates the given image by the specified angle.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             angle (float): The angle by which to rotate the image.
-            fixed_size (bool): If True, the image keeps its original size. Otherwise, the canvas is resized to fit.
         Returns:
             imageBGRA (numpy.ndarray): The rotated image in the BGRA format.
         """
+        # get the shape of the image and calculate the center
         (h, w) = imageBGRA.shape[:2]
         center = (w / 2, h / 2)
 
-        if fixed_size:
-            # Simple rotation without resizing canvas
-            M = cv2.getRotationMatrix2D(center, angle, 1)
-            imageBGRA = cv2.warpAffine(imageBGRA, M, (w, h))
-            
-        else:
-            padding = int(np.ceil((w-h)/2)) if w > h else int(np.ceil((h-w)/2))
+        # calculate the needed padding to avoid cropping after rotation
+        max_x = w * abs(np.cos(np.radians(angle))) + h * abs(np.sin(np.radians(angle)))
+        max_y = w * abs(np.sin(np.radians(angle))) + h * abs(np.cos(np.radians(angle)))
+        pad_w = int(np.ceil(max_x - w))
+        pad_h = int(np.ceil(max_y - h))
 
-            if w > h:
-                imageBGRA = self.apply_padding(imageBGRA, cv2.BORDER_CONSTANT, 0, 0, padding, padding, 0)
-            elif h > w:
-                imageBGRA = self.apply_padding(imageBGRA, cv2.BORDER_CONSTANT, padding, padding, 0, 0, 0)
+        # calculate the cut values to crop the image after rotation to avoid unnecessary paddings
+        cut_x = -pad_w if pad_w < 0 else 0
+        cut_y = -pad_h if pad_h < 0 else 0
 
-            # Update height width and scale then apply rotation
-            (h_, w_) = imageBGRA.shape[:2]  
-            center = (w_ / 2, h_ / 2)
-            M = cv2.getRotationMatrix2D(center, angle, 1)
-            imageBGRA = cv2.warpAffine(imageBGRA, M, (w_, h_))
+        # prevent negative padding values
+        pad_w = 0 if pad_w < 0 else pad_w
+        pad_h = 0 if pad_h < 0 else pad_h
 
-            if w > h:
-                imageBGRA = self.crop_image(imageBGRA, padding, padding, 0, 0)
-            elif h > w:              
-                imageBGRA = self.crop_image(imageBGRA, 0, 0, padding, padding)
+        # apply padding to the image before rotation
+        imageBGRA = self.apply_padding(imageBGRA, cv2.BORDER_CONSTANT, pad_w//2, pad_w//2, pad_h//2, pad_h//2, (0, 0, 0, 0))  
+        
+        # recalculate the shape and center after padding
+        (h, w) = imageBGRA.shape[:2]
+        center = (w / 2, h / 2)
+    
+        # rotate the image around the center
+        M = cv2.getRotationMatrix2D(center, angle, 1)
+        imageBGRA = cv2.warpAffine(imageBGRA, M, (w, h))
+
+        # crop the image to remove the unnecessary paddings
+        imageBGRA = self.crop_image(imageBGRA, cut_x//2, cut_x//2, cut_y//2, cut_y//2)
 
         return imageBGRA
 
@@ -359,7 +363,8 @@ class Processor():
 
         # apply padding to the image based on the specified padding type
         if paddingType == cv2.BORDER_CONSTANT:
-            imageBGR = cv2.copyMakeBorder(imageBGR, topPad, bottomPad, leftPad, rightPad, paddingType, value=(constant, constant, constant))
+            constant = ()
+            imageBGR = cv2.copyMakeBorder(imageBGR, topPad, bottomPad, leftPad, rightPad, paddingType, value=constant)
             imageA = cv2.copyMakeBorder(imageBGRA[:, :, 3], topPad, bottomPad, leftPad, rightPad, cv2.BORDER_CONSTANT, value=255)
         else:
             imageBGR = cv2.copyMakeBorder(imageBGR, topPad, bottomPad, leftPad, rightPad, paddingType)
