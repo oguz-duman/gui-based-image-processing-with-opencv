@@ -363,9 +363,9 @@ class Processor():
 
         # apply padding to the image based on the specified padding type
         if paddingType == cv2.BORDER_CONSTANT:
-            constant = ()
-            imageBGR = cv2.copyMakeBorder(imageBGR, topPad, bottomPad, leftPad, rightPad, paddingType, value=constant)
-            imageA = cv2.copyMakeBorder(imageBGRA[:, :, 3], topPad, bottomPad, leftPad, rightPad, cv2.BORDER_CONSTANT, value=255)
+            constant = (constant, constant, constant, constant) if isinstance(constant, int) else constant
+            imageBGR = cv2.copyMakeBorder(imageBGR, topPad, bottomPad, leftPad, rightPad, paddingType, value=constant[:3])  
+            imageA = cv2.copyMakeBorder(imageBGRA[:, :, 3], topPad, bottomPad, leftPad, rightPad, cv2.BORDER_CONSTANT, value=constant[3])  
         else:
             imageBGR = cv2.copyMakeBorder(imageBGR, topPad, bottomPad, leftPad, rightPad, paddingType)
             imageA = cv2.copyMakeBorder(imageBGRA[:, :, 3], topPad, bottomPad, leftPad, rightPad, cv2.BORDER_CONSTANT, value=255)
