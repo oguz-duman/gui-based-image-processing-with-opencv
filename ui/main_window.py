@@ -35,6 +35,13 @@ class MainWindow(QWidget):
                                               self.zoomIn, self.zoomOut)  
                
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+
+        # Recall the pipeline to update the output image when the window is resized
+        self.ui_management.pipeline_on_change()
+
+
     def init_top_layout(self):
         """
         Initialize the top layout with two labels for displaying images.
