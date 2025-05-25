@@ -388,7 +388,7 @@ class Processor():
         return imageBGRA
     
 
-    def color_masking(self, imageBGRA, lowerBound, upperBound):
+    def color_masking(self, imageBGRA, lowerBound, upperBound, invert=False):
         """
         Applies a mask to the given image based on the specified lower and upper bounds.
         Args:
@@ -399,10 +399,9 @@ class Processor():
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                           # convert the image to HSVA color space
         mask = cv2.inRange(imageHSVA[:, :, :3], lowerBound, upperBound) # create a mask based on the range values
-        imageBGR = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)               # convert the mask to grayscale
-        imageBGRA = cv2.merge((imageBGR, imageBGRA[:, :, 3]))           # set back the alpha channel of the image
+        mask = cv2.bitwise_not(mask) if invert else mask                # Invert the mask if 'invert' is True
 
-        return imageBGRA
+        return mask
 
 
     def spatial_masking(self, imageBGRA, width, height, left, top, border_radius, invert=False):
@@ -458,7 +457,7 @@ class Processor():
 
         mask[top:top+height, left:left+width] = submask         # Place on full mask
 
-        mask = cv2.bitwise_not(mask) if invert else mask  # Invert the mask if 
+        mask = cv2.bitwise_not(mask) if invert else mask        # Invert the mask if 'invert' is True
 
         return mask
     

@@ -581,6 +581,9 @@ class ColorMaskBox(DraggableToolbox):
     def __init__(self, parent=None):
         super().__init__(constants.COLOR_MASKING, parent)
 
+        # Insert a switch to invert the mask
+        self.invert = self.ui_components.switch("Invert the mask")
+
         # Insert input boxes to select the min-max HSV values
         self.intensityMin = self.ui_components.triple_input("min HSV:", 0, 0, 0)
         self.intensityMax = self.ui_components.triple_input("max HSV:", 0, 0, 0)
@@ -591,9 +594,9 @@ class ColorMaskBox(DraggableToolbox):
         rMax, gMax, bMax = self.ui_components.get_component_value(self.intensityMax[:3], mins=[0, 0, 0], maxs=[255,255, 255], defaults=[0, 0, 0])
 
         # apply masking
-        imageBGRA = self.processor.color_masking(imageBGRA, np.asarray([rMin, gMin, bMin]), np.asarray([rMax, gMax, bMax]))
+        mask = self.processor.color_masking(imageBGRA, np.asarray([rMin, gMin, bMin]), np.asarray([rMax, gMax, bMax]), self.invert[0].isChecked())
 
-        return imageBGRA
+        return imageBGRA, mask
     
 
 class SpatialMaskBox(DraggableToolbox):
