@@ -334,7 +334,7 @@ class UiComponents():
         self.combo_on_change(combo.currentIndex(), adapt_widgets)  
 
 
-    def insert_switch(self, heading, parent=None):
+    def insert_switch(self, heading, setChecked=False, parent=None):
         """
         This method creates a switch (checkbox) for the user to toggle an option.
         Args:
@@ -346,7 +346,7 @@ class UiComponents():
         parent = self.parent_widget if parent is None else parent
 
         switch = QCheckBox(heading)
-        switch.setChecked(False)
+        switch.setChecked(setChecked)
         switch.setFont(self.font)
         switch.stateChanged.connect(self.on_change)
         switch.setFixedHeight(30)

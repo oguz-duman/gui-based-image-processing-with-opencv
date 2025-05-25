@@ -288,19 +288,42 @@ class Processor():
         return imageBGRA
 
 
-    def rotate_image(self, imageBGRA, angle):
+    def rotate_image(self, imageBGRA, angle, fixed_size=False):
         """
         Rotates the given image by the specified angle.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             angle (float): The angle by which to rotate the image.
+            fixed_size (bool): If True, the image keeps its original size. Otherwise, the canvas is resized to fit.
         Returns:
             imageBGRA (numpy.ndarray): The rotated image in the BGRA format.
         """
-        (h, w) = imageBGRA.shape[:2]                        # get the height and width of the image
-        center = (w // 2, h // 2)                           # locate the center of the image
-        M = cv2.getRotationMatrix2D(center, angle, 1.0)     # get the rotation matrix for the image
-        imageBGRA = cv2.warpAffine(imageBGRA, M, (w, h))    # apply the rotation to the image
+        (h, w) = imageBGRA.shape[:2]
+        center = (w / 2, h / 2)
+
+        if fixed_size:
+            # Simple rotation without resizing canvas
+            M = cv2.getRotationMatrix2D(center, angle, 1)
+            imageBGRA = cv2.warpAffine(imageBGRA, M, (w, h))
+            
+        else:
+            padding = int(np.ceil((w-h)/2)) if w > h else int(np.ceil((h-w)/2))
+
+            if w > h:
+                imageBGRA = self.apply_padding(imageBGRA, cv2.BORDER_CONSTANT, 0, 0, padding, padding, 0)
+            elif h > w:
+                imageBGRA = self.apply_padding(imageBGRA, cv2.BORDER_CONSTANT, padding, padding, 0, 0, 0)
+
+            # Update height width and scale then apply rotation
+            (h_, w_) = imageBGRA.shape[:2]  
+            center = (w_ / 2, h_ / 2)
+            M = cv2.getRotationMatrix2D(center, angle, 1)
+            imageBGRA = cv2.warpAffine(imageBGRA, M, (w_, h_))
+
+            if w > h:
+                imageBGRA = self.crop_image(imageBGRA, padding, padding, 0, 0)
+            elif h > w:              
+                imageBGRA = self.crop_image(imageBGRA, 0, 0, padding, padding)
 
         return imageBGRA
 
