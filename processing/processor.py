@@ -8,9 +8,6 @@ class Processor():
     It includes helper methods for color space conversion, brightness, contrast, and other image manipulations.
     The methods are designed to work with images in the BGRA format.
     """
-    def __init__(self):
-        pass
-
 
     def bgra2hsva(self, imageBGRA):
         """
@@ -49,46 +46,57 @@ class Processor():
         return (np.array_equal(imageBGRA[:, :, 0], imageBGRA[:, :, 1]) and np.array_equal(imageBGRA[:, :, 1], imageBGRA[:, :, 2]))
 
 
-    def brightness(self, imageBGRA, value):
+    def brightness(self, imageBGRA, value, mask=None):
         """
         Brightens the given image by adding a value to the V channel of the image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             value (int): The value to be added to the V channel of the image.
+            mask (numpy.ndarray): A mask to apply the brightness only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The brightened image in the BGRA format.
         """
-        imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
-        imageHSVA[:, :, 2] = cv2.add(imageHSVA[:, :, 2], value)     # brighten the V channel of the HSVA image
-        imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
+        imageHSVA = self.bgra2hsva(imageBGRA)                           # convert the image to HSVA color space
+        brightened = cv2.add(imageHSVA[:, :, 2], value)                 # brighten the V channel of the HSVA image
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = brightened if mask is None else np.where(mask > 0, brightened, imageHSVA[:, :, 2])
+        
+        imageBGRA = self.hsva2bgra(imageHSVA)                           # convert back to BGRA color space
 
         return imageBGRA
 
 
-    def saturation(self, imageBGRA, value):
+    def saturation(self, imageBGRA, value, mask=None):
         """
         Adjusts the saturation of the given image by adding a value to the S channel of the image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             value (int): The value to be added to the S channel of the image.
+            mask (numpy.ndarray): A mask to apply the brightness only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with adjusted saturation in the BGRA format.
         """
         if not self.is_grayscale(imageBGRA):
             imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
-            imageHSVA[:, :, 1] = cv2.add(imageHSVA[:, :, 1], value)     # adjust the S channel of the HSVA image
+            saturated = cv2.add(imageHSVA[:, :, 1], value)     # adjust the S channel of the HSVA image
+
+            # If a mask is provided, use it to update only the pixels where mask != 0
+            imageHSVA[:, :, 2] = saturated if mask is None else np.where(mask > 0, saturated, imageHSVA[:, :, 2])
+
             imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
     
 
-    def contrast_by_range(self, imageBGRA, inRange, outRange):
+    def contrast_by_range(self, imageBGRA, inRange, outRange, mask=None):
         """
         Adjusts the contrast of the given image by applying a linear transformation to the V channel of the image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             inRange (tuple): The input range for the V channel of the image.
             outRange (tuple): The output range for the V channel of the image.
+            mask (numpy.ndarray): A mask to apply the contrast adjustment only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with adjusted contrast in the BGRA format.
         """
@@ -97,56 +105,69 @@ class Processor():
         # calculate params and apply the contrast adjustment to the V channel
         alpha = (outRange[1] - outRange[0]) / (inRange[1] - inRange[0])
         beta = outRange[0] - (alpha * inRange[0])
-        imageHSVA[:, :, 2] = cv2.convertScaleAbs(imageHSVA[:, :, 2], -1, alpha, beta) 
+        enhanced = cv2.convertScaleAbs(imageHSVA[:, :, 2], -1, alpha, beta) 
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
+
 
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
 
 
-    def contrast_by_T(self, imageBGRA, alpha, beta):
+    def contrast_by_T(self, imageBGRA, alpha, beta, mask=None):
         """
         Adjusts the contrast of the given image by applying a linear transformation to the V channel of the image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             alpha (float): The scaling factor for the V channel of the image.
             beta (int): The offset value for the V channel of the image.
+            mask (numpy.ndarray): A mask to apply the contrast adjustment only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with adjusted contrast in the BGRA format.
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
 
         # apply the contrast adjustment to the v channel of the HSVA image
-        imageHSVA[:, :, 2] = cv2.convertScaleAbs(imageHSVA[:, :, 2], -1, alpha, beta) 
+        enhanced = cv2.convertScaleAbs(imageHSVA[:, :, 2], -1, alpha, beta) 
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
 
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
 
 
-    def full_scale_contrast(self, imageBGRA):
+    def full_scale_contrast(self, imageBGRA, mask=None):
         """
         Adjusts the contrast of the given image by applying full scale contrast stretching to the V channel of the image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
+            mask (numpy.ndarray): A mask to apply the contrast adjustment only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with adjusted contrast in the BGRA format.
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
 
         # perform full scale contrast stretching
-        imageHSVA[:, :, 2] = cv2.normalize(imageHSVA[:, :, 2], None, 0, 255, cv2.NORM_MINMAX)
+        enhanced = cv2.normalize(imageHSVA[:, :, 2], None, 0, 255, cv2.NORM_MINMAX)
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
 
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
 
 
-    def log_transform(self, imageBGRA):
+    def log_transform(self, imageBGRA, mask=None):
         """
         Adjusts the contrast of the given image by applying log transformation to the V channel of the image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
+            mask (numpy.ndarray): A mask to apply the contrast adjustment only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with adjusted contrast in the BGRA format.
         """        
@@ -154,25 +175,34 @@ class Processor():
         vChannel = imageHSVA[:, :, 2].astype(np.float32)            # get the V channel of the HSVA image
         vChannel = np.log(1 + vChannel)                             # apply log transformation
         vChannel = cv2.normalize(vChannel, None, 0, 255, cv2.NORM_MINMAX)
-        imageHSVA[:, :, 2] = vChannel.astype(np.uint8)              # update the V channel of the HSVA image
+        enhanced = vChannel.astype(np.uint8)              # update the V channel of the HSVA image
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
+
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
 
 
-    def gamma_transform(self, imageBGRA, gamma):
+    def gamma_transform(self, imageBGRA, gamma, mask=None):
         """
         Adjusts the contrast of the given image by applying gamma transformation to the V channel of the image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             gamma (float): The gamma value for the transformation.
+            mask (numpy.ndarray): A mask to apply the contrast adjustment only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with adjusted contrast in the BGRA format.
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                       # convert the image to HSVA color space
         vChannel = imageHSVA[:, :, 2].astype(np.float32) / 255.0    # get the V channel of the HSVA image
         vChannel = cv2.pow(vChannel, gamma)                         # apply gamma transformation
-        imageHSVA[:, :, 2] = (vChannel*255).astype(np.uint8)        # update the V channel of the HSVA image
+        enhanced = (vChannel*255).astype(np.uint8)        # update the V channel of the HSVA image
+        
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
+
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
@@ -206,10 +236,10 @@ class Processor():
         imageHSVA = self.bgra2hsva(imageBGRA)                               # convert the image to HSVA color space
         gray = imageHSVA[:, :, 2]                                           # get only the V channel of the HSVA image
         imageBW = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)[1] # convert v channel to binary
-        BW_BGR = cv2.cvtColor(imageBW, cv2.COLOR_GRAY2BGR)                  # make the binary image 3 channel
-        BW_BGRA = cv2.merge((BW_BGR, imageBGRA[:, :, 3]))                   # set back the alpha channel of the image
+        bw_BGR = cv2.cvtColor(imageBW, cv2.COLOR_GRAY2BGR)                  # make the binary image 3 channel
+        bw_BGRA = cv2.merge((bw_BGR, imageBGRA[:, :, 3]))                   # set back the alpha channel of the image
 
-        return BW_BGRA
+        return bw_BGRA
 
 
     def complement(self, imageBGRA):
@@ -317,38 +347,48 @@ class Processor():
         return imageBGRA
     
 
-    def histogram_equalization(self, imageBGRA):
+    def histogram_equalization(self, imageBGRA, mask=None):
         """
         Applies histogram equalization to the V channel of the given image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
+            mask (numpy.ndarray): A mask to apply the histogram equalization only to certain pixels.
         Returns 
             imageBGRA (numpy.ndarray): Histogram equalization applied image in the BGRA format.
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                           # convert the image to HSVA color space
-        imageHSVA[:, :, 2] = cv2.equalizeHist(imageHSVA[:, :, 2])       # equalize the V channel of the HSVA image
+        enhanced = cv2.equalizeHist(imageHSVA[:, :, 2])       # equalize the V channel of the HSVA image
+        
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
+        
         imageBGRA = self.hsva2bgra(imageHSVA)                           # convert back to BGRA color space
         return imageBGRA
 
 
-    def clahe(self, imageBGRA, clipLimit, tileGridSize):
+    def clahe(self, imageBGRA, clipLimit, tileGridSize, mask=None):
         """
         Applies CLAHE (Contrast Limited Adaptive Histogram Equalization) to the V channel of the given image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             clipLimit (float): The clip limit for the CLAHE algorithm.
             tileGridSize (int): The size of the grid for the CLAHE algorithm.
+            mask (numpy.ndarray): A mask to apply the CLAHE only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with CLAHE applied in the BGRA format.
         """
         imageHSVA = self.bgra2hsva(imageBGRA)                           # convert the image to HSVA color space
         clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=(tileGridSize, tileGridSize))
-        imageHSVA[:, :, 2] = clahe.apply(imageHSVA[:, :, 2])            # apply CLAHE to the V channel of the HSVA image
+        enhanced = clahe.apply(imageHSVA[:, :, 2])            # apply CLAHE to the V channel of the HSVA image
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
+
         imageBGRA = self.hsva2bgra(imageHSVA)                           # convert back to BGRA color space
         return imageBGRA
     
 
-    def masking(self, imageBGRA, lowerBound, upperBound):
+    def color_masking(self, imageBGRA, lowerBound, upperBound):
         """
         Applies a mask to the given image based on the specified lower and upper bounds.
         Args:
@@ -364,6 +404,64 @@ class Processor():
 
         return imageBGRA
 
+
+    def spatial_masking(self, imageBGRA, width, height, left, top, border_radius, invert=False):
+        """
+        Creates a spatial mask to be used by other image processing functions.
+        Args:
+            imageBGRA (numpy.ndarray): The input image in the BGRA format.
+            width (int): The width of the mask.
+            height (int): The height of the mask.
+            left (int): The x-coordinate of the top-left corner of the mask.
+            top (int): The y-coordinate of the top-left corner of the mask.
+            border_radius (int): The radius of the border for the mask.
+        Returns:
+            imageBGRA (numpy.ndarray): The image with the spatial mask applied in the BGRA format.
+            Inside the mask, the image will be same, outside the mask, the image will be black.
+        """
+        (im_height, im_width) = imageBGRA.shape[:2]                 # get the width and height of the image
+
+        # make sure parameters are not out of bounds
+        left = max(0, min(im_width - width, left))                              
+        top = max(0, min(im_height - height, top))          
+        border_radius = min(border_radius, width // 2, height // 2)     
+
+        mask = np.zeros((im_height, im_width), dtype=np.uint8)
+
+        # Create submask with rounded corners
+        submask = np.zeros((height, width), dtype=np.uint8)
+
+        # --- Super-sampling factor ---
+        scale = 16
+        large_width = width * scale
+        large_height = height * scale
+        large_radius = border_radius * scale
+
+        # Create high-res submask
+        submask_large = np.zeros((large_height, large_width), dtype=np.uint8)
+
+        # Draw rectangles
+        cv2.rectangle(submask_large, (large_radius, 0), (large_width - large_radius, large_height), 255, -1)
+        cv2.rectangle(submask_large, (0, large_radius), (large_width, large_height - large_radius), 255, -1)
+
+        # Draw rounded corners
+        cv2.ellipse(submask_large, (large_radius, large_radius), (large_radius, large_radius), 180, 0, 90, 255, -1)
+        cv2.ellipse(submask_large, (large_width - large_radius, large_radius), (large_radius, large_radius), 270, 0, 90, 255, -1)
+        cv2.ellipse(submask_large, (large_width - large_radius, large_height - large_radius), (large_radius, large_radius), 0, 0, 90, 255, -1)
+        cv2.ellipse(submask_large, (large_radius, large_height - large_radius), (large_radius, large_radius), 90, 0, 90, 255, -1)
+
+        # Downsample to original size (anti-aliasing effect)
+        submask = cv2.resize(submask_large, (width, height), interpolation=cv2.INTER_AREA)
+
+        # Ensure binary mask (0 or 255)
+        _, submask = cv2.threshold(submask, 127, 255, cv2.THRESH_BINARY)
+
+        mask[top:top+height, left:left+width] = submask         # Place on full mask
+
+        mask = cv2.bitwise_not(mask) if invert else mask  # Invert the mask if 
+
+        return mask
+    
 
     def bit_slice(self, imageBGRA, bitPlane):
         """
@@ -382,17 +480,18 @@ class Processor():
         return imageBGRA
     
 
-    def gaussian_noise(self, imageBGRA, mean, std):
+    def gaussian_noise(self, imageBGRA, mean, std, mask=None):
         """
         Adds Gaussian noise to the given image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             mean (float): The mean value for the Gaussian noise.
             std (float): The standard deviation for the Gaussian noise.
+            mask (numpy.ndarray): A mask to apply the noise only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with Gaussian noise added in the BGRA format.
         """
-        imageBGR = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)          # convert the BGRA image to BGR color space
+        imageBGR = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR).astype(np.float32)          # convert the BGRA image to BGR color space
 
         # If the image is grayscale, make the noise channels identical
         if self.is_grayscale(imageBGRA):
@@ -401,19 +500,25 @@ class Processor():
         else:
             noise = np.random.normal(mean, std, imageBGR.shape).astype(np.float32)
 
-        imageBGR = imageBGR.astype(np.float32) + noise              # add noise
+        noised = cv2.add(imageBGR, noise)                                # add noise
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        mask3 = None if mask is None else mask[:, :, np.newaxis]                # expand the mask dimensions to match the noise shape
+        imageBGR = noised if mask3 is None else np.where(mask3 > 0, noised, imageBGR)
+
         imageBGR = np.clip(imageBGR, 0, 255).astype(np.uint8)       # clip the values to the range [0, 255]
         imageBGRA = cv2.merge((imageBGR, imageBGRA[:, :, 3]))       # set back the alpha channel to make it BGRA
         
         return imageBGRA
 
 
-    def salt_pepper_noise(self, imageBGRA, saltPepProb):
+    def salt_pepper_noise(self, imageBGRA, saltPepProb, mask=None):
         """
         Adds salt and pepper noise to the given image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             saltPepProb (float): The probability of salt and pepper noise to be added to the image.
+            mask (numpy.ndarray): A mask to apply the noise only to certain pixels.
         Returns 
             imageBGRA (numpy.ndarray): The image with salt and pepper noise added in the BGRA format.
         """
@@ -427,16 +532,23 @@ class Processor():
         
         imageBGR[saltCoords[0], saltCoords[1]] = [255, 255, 255]    # add salt noise
         imageBGR[pepCoords[0], pepCoords[1]] = [0,0,0]              # add pepper noise
+
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        mask3 = None if mask is None else mask[:, :, np.newaxis]                # Expand the mask dimensions to match the noise shape
+        imageBGR = imageBGR if mask3 is None else np.where(mask3 > 0, imageBGR, imageBGRA[:, :, :3])
+
         imageBGRA = cv2.merge((imageBGR, imageBGRA[:, :, 3]))       # set back the alpha channel to make it BGRA
         
         return imageBGRA    
 
 
-    def poisson_noise(self, imageBGRA):
+    def poisson_noise(self, imageBGRA, mask=None):
         """
         Applies Poisson noise to the input image.
         Args:
             imageBGRA (numpy.ndarray): Input image in BGRA format.
+            mask (numpy.ndarray): A mask to apply the noise only to certain pixels.
         Returns:
             numpy.ndarray: The resulting image with Poisson noise applied, in BGRA format.
         """
@@ -448,6 +560,10 @@ class Processor():
             imageBGR = cv2.merge((imageGray, imageGray, imageGray))
         else:
             imageBGR = np.random.poisson(imageBGR.astype(np.float32))
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        mask3 = None if mask is None else mask[:, :, np.newaxis]                # expand the mask dimensions to match the noise shape
+        imageBGR = imageBGR if mask3 is None else np.where(mask3 > 0, imageBGR, imageBGRA[:, :, :3])
         
         imageBGR = np.clip(imageBGR, 0, 255).astype(np.uint8)       # clip the values to the range [0, 255]
         imageBGRA = cv2.merge((imageBGR, imageBGRA[:, :, 3]))       # set back the alpha channel to make it BGRA
@@ -552,6 +668,7 @@ class Processor():
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             normalize (bool): If True, normalize the filtered image. Default is False.
+            mask (numpy.ndarray): A mask to apply the Sobel filter only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with Sobel filter applied in the BGRA format.
         """
@@ -578,13 +695,14 @@ class Processor():
         return imageBGRA
 
 
-    def order_statistics(self, imageBGRA, kernelSize, order):
+    def order_statistics(self, imageBGRA, kernelSize, order, mask=None):
         """
         Applies order statistics filter to the V channel of the given image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             kernelSize (int): The size of the kernel for the filter.
             order (str): The order statistic to be applied. Options are "max", "min", "median".
+            mask (numpy.ndarray): A mask to apply the filter only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with order statistics filter applied in the BGRA format.
         """
@@ -599,18 +717,21 @@ class Processor():
         elif order == "median":
             vChannel = cv2.medianBlur(vChannel, kernelSize)  
 
-        imageHSVA[:, :, 2] = vChannel                               # update the V channel of the HSVA image
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = vChannel if mask is None else np.where(mask > 0, vChannel, imageHSVA[:, :, 2])
+
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
     
 
-    def box_filter(self, imageBGRA, kernelSize):
+    def box_filter(self, imageBGRA, kernelSize, mask=None):
         """
         Applies box filter to the V channel of the given image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             kernelSize (int): The size of the kernel for the filter.
+            mask (numpy.ndarray): A mask to apply the box filter only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with box filter applied in the BGRA format.
         """
@@ -620,19 +741,22 @@ class Processor():
         # apply the box filter to the V channel
         vChannel = cv2.blur(vChannel, (kernelSize, kernelSize), borderType=cv2.BORDER_REPLICATE)    
 
-        imageHSVA[:, :, 2] = vChannel                               # update the V channel of the HSVA image
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = vChannel if mask is None else np.where(mask > 0, vChannel, imageHSVA[:, :, 2])
+
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
     
 
-    def gaussian_blur(self, imageBGRA, kernelSize, sigma):
+    def gaussian_blur(self, imageBGRA, kernelSize, sigma, mask=None):
         """
         Applies Gaussian blur to the V channel of the given image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             kernelSize (int): The size of the kernel for the filter.
             sigma (float): The standard deviation for the Gaussian kernel.
+            mask (numpy.ndarray): A mask to apply the Gaussian blur only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with Gaussian blur applied in the BGRA format.
         """
@@ -642,19 +766,22 @@ class Processor():
         # apply the gaussian blur to the V channel
         vChannel = cv2.GaussianBlur(vChannel, (kernelSize, kernelSize), sigma, borderType=cv2.BORDER_REPLICATE)  
         
-        imageHSVA[:, :, 2] = vChannel                               # update the V channel of the HSVA image
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = vChannel if mask is None else np.where(mask > 0, vChannel, imageHSVA[:, :, 2])
+
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
 
 
-    def laplacian_sharpening(self, imageBGRA, alpha, extended=False):
+    def laplacian_sharpening(self, imageBGRA, alpha, extended=False, mask=None):
         """
         Applies Laplacian sharpening to the V channel of the given image.   
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             alpha (float): The scaling factor for the V channel of the image.
             extended (bool): If True, use extended Laplacian kernel. Default is False.
+            mask (numpy.ndarray): A mask to apply the Laplacian sharpening only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with Laplacian sharpening applied in the BGRA format.
         """
@@ -672,18 +799,22 @@ class Processor():
         vChannel = vChannel - laplace * alpha                       # sharpen the image using the laplacian filter
         vChannel = np.clip(vChannel, 0, 1)                          # clip the image to 0-1 range
         vChannel = (vChannel * 255).astype(np.uint8)                # convert back to uint8
-        imageHSVA[:, :, 2] = vChannel                               # update the V channel of the HSVA image
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = vChannel if mask is None else np.where(mask > 0, vChannel, imageHSVA[:, :, 2])
+
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
     
 
-    def sobel_sharpening(self, imageBGRA, alpha):
+    def sobel_sharpening(self, imageBGRA, alpha, mask=None):
         """
         Applies Sobel sharpening to the V channel of the given image.
         Args:
             imageBGRA (numpy.ndarray): The input image in the BGRA format.
             alpha (float): The scaling factor for the V channel of the image.
+            mask (numpy.ndarray): A mask to apply the Sobel sharpening only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with Sobel sharpening applied in the BGRA format.
         """
@@ -704,13 +835,16 @@ class Processor():
         vChannel = vChannel + laplace_y * alpha                     # sharpen the image using the sobel filter
         vChannel = np.clip(vChannel, 0, 1)                          # clip the image to 0-1 range
         vChannel = (vChannel * 255).astype(np.uint8)                # convert back to uint8
-        imageHSVA[:, :, 2] = vChannel                               # update the V channel of the HSVA image
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = vChannel if mask is None else np.where(mask > 0, vChannel, imageHSVA[:, :, 2])
+
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
 
 
-    def unsharp_masking(self, imageBGRA, kernelSize, sigma, alpha):
+    def unsharp_masking(self, imageBGRA, kernelSize, sigma, alpha, mask=None):
         """
         Applies unsharp masking to the V channel of the given image.
         Args:
@@ -718,6 +852,7 @@ class Processor():
             kernelSize (int): The size of the kernel for the filter.
             sigma (float): The standard deviation for the Gaussian kernel.
             alpha (float): The scaling factor for the V channel of the image.
+            mask (numpy.ndarray): A mask to apply the unsharp masking only to certain pixels.
         Returns:
             imageBGRA (numpy.ndarray): The image with unsharp masking applied in the BGRA format.
         """
@@ -730,68 +865,12 @@ class Processor():
         vChannel = vChannel + Sharp * alpha                         # sharpen the image
         vChannel = np.clip(vChannel, 0, 1)                          # clip the image to 0-1 range
         vChannel = (vChannel * 255).astype(np.uint8)                # convert back to uint8
-        imageHSVA[:, :, 2] = vChannel                               # update the V channel of the HSVA image
+
+        # If a mask is provided, use it to update only the pixels where mask != 0
+        imageHSVA[:, :, 2] = vChannel if mask is None else np.where(mask > 0, vChannel, imageHSVA[:, :, 2])
+
         imageBGRA = self.hsva2bgra(imageHSVA)                       # convert back to BGRA color space
 
         return imageBGRA
     
 
-
-    def spatial_masking(self, imageBGRA, width, height, left, top, border_radius):
-        """
-        Creates a spatial mask to be used by other image processing functions.
-        Args:
-            imageBGRA (numpy.ndarray): The input image in the BGRA format.
-            width (int): The width of the mask.
-            height (int): The height of the mask.
-            left (int): The x-coordinate of the top-left corner of the mask.
-            top (int): The y-coordinate of the top-left corner of the mask.
-            border_radius (int): The radius of the border for the mask.
-        Returns:
-            imageBGRA (numpy.ndarray): The image with the spatial mask applied in the BGRA format.
-            Inside the mask, the image will be same, outside the mask, the image will be black.
-        """
-        (im_height, im_width) = imageBGRA.shape[:2]                 # get the width and height of the image
-
-        # make sure parameters are not out of bounds
-        left = max(0, min(im_width - width, left))                              
-        top = max(0, min(im_height - height, top))          
-        border_radius = min(border_radius, width // 2, height // 2)     
-
-        mask = np.zeros((im_height, im_width), dtype=np.uint8)
-
-        # Create submask with rounded corners
-        submask = np.zeros((height, width), dtype=np.uint8)
-
-        # --- Super-sampling factor ---
-        scale = 8
-        large_width = width * scale
-        large_height = height * scale
-        large_radius = border_radius * scale
-
-        # Create high-res submask
-        submask_large = np.zeros((large_height, large_width), dtype=np.uint8)
-
-        # Draw rectangles
-        cv2.rectangle(submask_large, (large_radius, 0), (large_width - large_radius, large_height), 255, -1)
-        cv2.rectangle(submask_large, (0, large_radius), (large_width, large_height - large_radius), 255, -1)
-
-        # Draw rounded corners
-        cv2.ellipse(submask_large, (large_radius, large_radius), (large_radius, large_radius), 180, 0, 90, 255, -1)
-        cv2.ellipse(submask_large, (large_width - large_radius, large_radius), (large_radius, large_radius), 270, 0, 90, 255, -1)
-        cv2.ellipse(submask_large, (large_width - large_radius, large_height - large_radius), (large_radius, large_radius), 0, 0, 90, 255, -1)
-        cv2.ellipse(submask_large, (large_radius, large_height - large_radius), (large_radius, large_radius), 90, 0, 90, 255, -1)
-
-        # Downsample to original size (anti-aliasing effect)
-        submask = cv2.resize(submask_large, (width, height), interpolation=cv2.INTER_AREA)
-
-        # Place on full mask
-        mask[top:top+height, left:left+width] = submask
-
-        # Apply the mask
-        mask_norm = mask.astype(np.float32) / 255.0
-        mask_4ch = cv2.merge([mask_norm, mask_norm, mask_norm, mask_norm])
-        imageBGRA = (imageBGRA.astype(np.float32) * mask_4ch).astype(np.uint8)
-
-        return imageBGRA
-    
