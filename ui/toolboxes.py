@@ -262,7 +262,7 @@ class ContrastBox(DraggableToolbox):
         self.alpha = self.insert_slider(heading="Alpha:", minValue=1, maxValue=30, defaultValue=10, rescale=self.slider_rescale)
         self.beta = self.insert_slider(heading="Beta:", minValue=-50, maxValue=50)  
 
-        # connect the combo box to the on_change method 
+         # connect widgets to the appropriate combo lists  
         self.set_combo_adapt_widgets(self.combo, [[self.inMinMax, self.outMinMax], [self.alpha, self.beta]])
 
     def execute(self, imageBGRA, mask):
@@ -455,14 +455,23 @@ class ResizeBox(DraggableToolbox):
     def __init__(self, parent=None):
         super().__init__(constants.RESIZE, parent)
 
-        self.width = 0
-        self.height = 0
+        self.im_width = 0
+        self.im_height = 0
                         
     def execute(self, imageBGRA, mask):
-        # get input and output range values from the text boxes and apply resizing
-        reWidth, reHeight = self.get_component_value(self.newWidthHeight[:2], mins=[0, 0], defaults=[self.width, self.height])
-        imageBGRA = self.resize_image(imageBGRA, reWidth, reHeight, self.interpolation_types[self.combo.currentIndex()])  
 
+        if self.combo.currentText() == "Resize by Absolute Size":
+            # get input and output range values from the text boxes
+            reWidth, reHeight = self.get_component_value(self.newWidthHeight[:2], mins=[0, 0], defaults=[self.im_width, self.im_height])
+        elif self.combo.currentText() == "Resize by Percentage":
+            # get the percentage value from the slider and calculate the new width and height
+            percentage = self.percentage[0].value() / 100
+            reWidth = int(self.im_width * percentage)
+            reHeight = int(self.im_height * percentage)
+            
+        # apply resizing
+        imageBGRA = self.resize_image(imageBGRA, reWidth, reHeight, self.interpolation_types[self.interpolation.currentIndex()])  
+    
         return imageBGRA
 
 
@@ -472,24 +481,34 @@ class ResizeBox(DraggableToolbox):
         """
         super().update_toolbox(imageBGRA)
 
-        if [self.width, self.height] == [0, 0]:
+        if [self.im_width, self.im_height] == [0, 0]:
             
+            # insert a combo list to select between resize by absolute size and by percentage
+            self.combo = self.insert_combo_list(["Resize by Absolute Size", "Resize by Percentage"])
+
+            # insert a slider to select the percentage value
+            self.percentage = self.insert_slider(heading="Percentage:", minValue=1, maxValue=100, defaultValue=100)
+
             # Insert min-max input boxes to select the new size
             self.newWidthHeight  = self.insert_dual_input("Size:", 0, 0)
 
             # order of the interpolation types in this list must be in the same order as in self.interpolation_types
-            self.combo = self.insert_combo_list(["None", "INTER_NEAREST", "INTER_LINEAR", "INTER_AREA", "INTER_CUBIC",
-                                                        "INTER_LANCZOS4", "INTER_LINEAR_EXACT", "INTER_MAX"])
+            self.interpolation = self.insert_combo_list(["None", "INTER_NEAREST", "INTER_LINEAR", "INTER_AREA", "INTER_CUBIC",
+                                                        "INTER_LANCZOS4", "INTER_LINEAR_EXACT"])
             
             self.interpolation_types = [None, cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_AREA, cv2.INTER_CUBIC,
-                                        cv2.INTER_LANCZOS4, cv2.INTER_LINEAR_EXACT, cv2.INTER_MAX]
+                                        cv2.INTER_LANCZOS4, cv2.INTER_LINEAR_EXACT]
+            
+            # connect widgets to the appropriate combo lists
+            self.set_combo_adapt_widgets(self.combo, [[self.newWidthHeight], [self.percentage]])
             
             # get the height and width of the image
-            self.width, self.height = [128, 128] if self.imageBGRA is None else self.imageBGRA.shape[:2]  
+            self.im_width, self.im_height = [128, 128] if self.imageBGRA is None else self.imageBGRA.shape[:2]  
 
             # set the input boxes to the image size as default
-            self.newWidthHeight[0].setText(str(self.height))
-            self.newWidthHeight[1].setText(str(self.width))
+            self.newWidthHeight[0].setText(str(self.im_height))
+            self.newWidthHeight[1].setText(str(self.im_width))
+            
             
 
 class PaddingBox(DraggableToolbox):
@@ -510,7 +529,7 @@ class PaddingBox(DraggableToolbox):
         self.leftRight = self.insert_dual_input("Left-Right:", 0, 0)      
         self.topBottom = self.insert_dual_input("Top-Bottom:", 0, 0)
 
-        # connect the combo box to the on_change method
+         # connect widgets to the appropriate combo lists 
         self.set_combo_adapt_widgets(self.combo, [[self.constant, self.leftRight, self.topBottom], 
                                                                 [self.leftRight, self.topBottom], [self.leftRight, self.topBottom]])
 
@@ -632,8 +651,8 @@ class SpatialMaskBox(DraggableToolbox):
             self.invert = self.insert_switch("Invert the mask")
             
             # insert sliders for width, height, left position, top position and border radius
-            self.slid_width = self.insert_slider(heading="Width:", minValue=0, maxValue=self.im_size[1], defaultValue=self.im_size[1])
-            self.slid_height = self.insert_slider(heading="Height:", minValue=0, maxValue=self.im_size[0], defaultValue=self.im_size[0])
+            self.slid_width = self.insert_slider(heading="Width:", minValue=1, maxValue=self.im_size[1], defaultValue=self.im_size[1])
+            self.slid_height = self.insert_slider(heading="Height:", minValue=1, maxValue=self.im_size[0], defaultValue=self.im_size[0])
             self.slid_left = self.insert_slider(heading="Left:", minValue=0, maxValue=self.im_size[1], defaultValue=0)
             self.slid_top = self.insert_slider(heading="Top:", minValue=0, maxValue=self.im_size[0], defaultValue=0)
             self.slid_bor_radius = self.insert_slider(heading="Border Radius:", minValue=0, maxValue=100, defaultValue=0) 
@@ -678,7 +697,7 @@ class NoiseBox(DraggableToolbox):
         # insert signle input boxes to select the salt and pepper probability
         self.saltPepProb = self.insert_slider(heading="Probability:", minValue=0, maxValue=200, defaultValue=20, rescale=self.saltPepProb_rescale)
 
-        # connect the combo box to the on_change method
+         # connect widgets to the appropriate combo lists 
         self.set_combo_adapt_widgets(self.combo, [[self.mean, self.std], [self.saltPepProb], []])
    
     def execute(self, imageBGRA, mask):
@@ -830,7 +849,7 @@ class OrderStatBox(DraggableToolbox):
         self.combo = self.insert_combo_list(["Median", "Max", "Min"])
         self.kernel = self.insert_mono_input("Kernel Size:", defaultValue=3)
 
-        # connect the combo box to the on_change method
+         # connect widgets to the appropriate combo lists 
         self.set_combo_adapt_widgets(self.combo, [[self.kernel], [self.kernel], [self.kernel]])
 
     def execute(self, imageBGRA, mask):
@@ -866,7 +885,7 @@ class SmoothingBox(DraggableToolbox):
         self.kernel = self.insert_mono_input("Kernel Size:", defaultValue=3)
         self.sigma = self.insert_slider(heading="Std:", minValue=1, maxValue=100, defaultValue=10, rescale=self.sigma_rescale)  
 
-        # connect the combo box to the on_change method
+         # connect widgets to the appropriate combo lists 
         self.set_combo_adapt_widgets(self.combo, [[self.kernel], [self.kernel, self.sigma]])
 
     def execute(self, imageBGRA, mask):
@@ -907,7 +926,7 @@ class SharpeningBox(DraggableToolbox):
         self.extended = self.insert_switch("Extended Laplace")
         self.alpha = self.insert_slider(heading="Alpha:", minValue=1, maxValue=1000, defaultValue=100, rescale=self.alpha_rescale)
 
-        # connect the combo box to the on_change method
+         # connect widgets to the appropriate combo lists 
         self.set_combo_adapt_widgets(self.combo, [[self.extended, self.alpha], [self.alpha],
                                                                  [self.kernel, self.sigma, self.alpha]])
 
