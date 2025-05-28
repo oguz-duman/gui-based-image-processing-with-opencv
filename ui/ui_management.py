@@ -131,71 +131,19 @@ class UiManagement():
     
     
     @Slot(str)
-    def insert_toolbox(self, toolbox):
+    def insert_toolbox(self, toolbox_name):
         """
         Add a new toolbox to the layout and pipeline.
         Args:
-            toolbox (str): The name of the method to be added.
+            toolbox_name (str): The name of the method to be added.
         """
         # Create a new method box based on the selected method name
-        if toolbox == constants.BRIGHTNESS:
-            new_toolbox = toolboxes.BrightnessBox()
-        elif toolbox == constants.SATURATION:
-            new_toolbox = toolboxes.SaturationBox()
-        elif toolbox == constants.CONTRAST:
-            new_toolbox = toolboxes.ContrastBox()
-        elif toolbox == constants.FULL_SCALE_CONTRAST:
-            new_toolbox = toolboxes.FullScaleContrastBox()
-        elif toolbox == constants.LOG:
-            new_toolbox = toolboxes.LogBox()
-        elif toolbox == constants.GAMMA:
-            new_toolbox = toolboxes.GammaBox()
-        elif toolbox == constants.RGB2GRAY:
-            new_toolbox = toolboxes.RGB2GrayBox()
-        elif toolbox == constants.THRESHOLDING:
-            new_toolbox = toolboxes.ThresholdingBox()
-        elif toolbox == constants.COMPLEMENT:
-            new_toolbox = toolboxes.ComplementBox()
-        elif toolbox == constants.CROP:
-            new_toolbox = toolboxes.CropBox()    
-        elif toolbox == constants.FLIP:
-            new_toolbox = toolboxes.FlipBox()
-        elif toolbox == constants.ROTATE:
-            new_toolbox = toolboxes.RotateBox()
-        elif toolbox == constants.RESIZE:
-            new_toolbox = toolboxes.ResizeBox()
-        elif toolbox == constants.PADDING:
-            new_toolbox = toolboxes.PaddingBox()
-        elif toolbox == constants.HISTEQ:
-            new_toolbox = toolboxes.HistEqualizationBox()
-        elif toolbox == constants.HISTCLAHE:
-            new_toolbox = toolboxes.HistCLAHEBox()
-        elif toolbox == constants.COLOR_MASKING:
-            new_toolbox = toolboxes.ColorMaskBox()
-        elif toolbox == constants.SPATIAL_MASKING:
-            new_toolbox = toolboxes.SpatialMaskBox()
-        elif toolbox == constants.BITSLICE:
-            new_toolbox = toolboxes.BitSliceBox()
-        elif toolbox == constants.ADD_NOISE:
-            new_toolbox = toolboxes.NoiseBox()
-        elif toolbox == constants.ARITHMETIC:
-            new_toolbox = toolboxes.ArithmeticBox()
-        elif toolbox == constants.LOGIC:
-            new_toolbox = toolboxes.LogicBox()
-        elif toolbox == constants.LAPLACE:
-            new_toolbox = toolboxes.LaplaceBox()
-        elif toolbox == constants.SOBEL:
-            new_toolbox = toolboxes.SobelBox()
-        elif toolbox == constants.ORDER_STAT:
-            new_toolbox = toolboxes.OrderStatBox()
-        elif toolbox == constants.SMOOTHING:
-            new_toolbox = toolboxes.SmoothingBox()
-        elif toolbox == constants.SHARPENING:
-            new_toolbox = toolboxes.SharpeningBox()
-        else:
-            raise ValueError("Invalid method name. You may have forgotten to add the relevant " \
-            "toolbox to the 'add_new_func' method in the main_window.py.")
-        
+        for toolbox in constants.TOOLBOXES.values():
+            if toolbox_name == toolbox['NAME']:
+                toolbox_class = getattr(toolboxes, toolbox['METHOD'])
+                new_toolbox = toolbox_class()  # create an instance of the toolbox class
+                break
+
         # connect the toolbox signals
         new_toolbox.updateTrigger.connect(self.pipeline_on_change)   
         new_toolbox.removeTrigger.connect(self.remove_toolbox) 

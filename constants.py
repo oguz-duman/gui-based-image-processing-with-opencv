@@ -1,38 +1,113 @@
-# the name which will be displayed in the ui of each toolbox
-BRIGHTNESS = "Brightness"
-SATURATION = "Saturation"
-CONTRAST = "Contrast"
-FULL_SCALE_CONTRAST = "Full Scale Contrast"
-LOG = "Log Transform"
-GAMMA = "Gamma Transform"
-RGB2GRAY = "RGB to Gray"
-THRESHOLDING = "Thresholding"
-COMPLEMENT = "Complement"
-CROP = "Crop"
-FLIP = "Flip"
-ROTATE = "Rotate"
-RESIZE = "Resize"
-PADDING = "Padding"
-HISTEQ = "Histogram Equalization"
-HISTCLAHE = "Local Hist. Equalization"
-COLOR_MASKING = "Color Masking"
-SPATIAL_MASKING = "Spatial Mask"
-BITSLICE = "Bit Plane Slicing"
-ADD_NOISE = "Add Noise"
-ARITHMETIC = "Image Arithmetic"
-LOGIC = "Image Logic"
-LAPLACE = "Laplacian Filter"
-SOBEL = "Sobel Filter"
-ORDER_STAT = "Order Statistic Filter"
-SMOOTHING = "Smoothing Filter"
-SHARPENING = "Sharpening Filter"
+# keys will be displayed in the UI.
+# Values must exactly match the related class names defined in the toolboxes.py file.
+TOOLBOXES = {"BRIGHTNESS":
+                {"NAME": "Brightness",
+                 "METHOD": "BrightnessBox"},
 
+             "SATURATION": 
+                {"NAME": "Saturation",
+                 "METHOD": "SaturationBox"},
 
-# list of toolbox names to use in combo box. They will be listed in the order they are defined here.
-TOOLBOX_NAMES = [BRIGHTNESS, SATURATION, CONTRAST, FULL_SCALE_CONTRAST, LOG, GAMMA, RGB2GRAY, 
-                  THRESHOLDING, COMPLEMENT, CROP, FLIP, ROTATE, RESIZE, PADDING, HISTEQ,
-                  HISTCLAHE, COLOR_MASKING, SPATIAL_MASKING, BITSLICE, ADD_NOISE, ARITHMETIC, LOGIC, LAPLACE, SOBEL,
-                  ORDER_STAT, SMOOTHING, SHARPENING]
+             "CONTRAST":
+                {"NAME": "Contrast",
+                 "METHOD": "ContrastBox"},
+
+             "FULL_SCALE_CONTRAST": 
+                {"NAME": "Full Scale Contrast",
+                 "METHOD": "FullScaleContrastBox"},
+
+             "LOG":
+                {"NAME": "Log Transform",
+                 "METHOD": "LogBox"},
+
+             "GAMMA":
+                {"NAME": "Gamma Transform",
+                 "METHOD": "GammaBox"},
+
+             "RGB2GRAY": 
+                {"NAME": "RGB to Gray",
+                 "METHOD": "RGB2GrayBox"},
+
+             "THRESHOLDING": 
+                {"NAME": "Thresholding",
+                 "METHOD": "ThresholdingBox"},
+
+             "COMPLEMENT":  
+                {"NAME": "Complement",
+                 "METHOD": "ComplementBox"},
+
+             "CROP": 
+                {"NAME": "Crop",
+                 "METHOD": "CropBox"},
+
+             "FLIP":  
+                {"NAME": "Flip",
+                 "METHOD": "FlipBox"},
+
+             "ROTATE": 
+                {"NAME": "Rotate",
+                 "METHOD": "RotateBox"},
+
+             "RESIZE": 
+                {"NAME": "Resize",
+                 "METHOD": "ResizeBox"},
+
+             "PADDING": 
+                {"NAME": "Padding",
+                 "METHOD": "PaddingBox"},
+
+             "HISTEQ": 
+                {"NAME": "Histogram Equalization",
+                 "METHOD": "HistEqualizationBox"},
+
+             "HISTCLAHE": 
+                {"NAME": "Local Hist. Equalization",
+                 "METHOD": "HistCLAHEBox"}, 
+
+             "COLOR_MASKING": 
+                {"NAME": "Color Masking",
+                 "METHOD": "ColorMaskBox"},
+
+             "SPATIAL_MASKING":  
+                {"NAME": "Spatial Masking",
+                 "METHOD": "SpatialMaskBox"},
+
+             "BITSLICE": 
+                {"NAME": "Bit Plane Slicing",
+                 "METHOD": "BitSliceBox"},
+
+             "ADD_NOISE": 
+                {"NAME": "Add Noise",
+                 "METHOD": "NoiseBox"},
+
+             "ARITHMETIC": 
+                {"NAME": "Image Arithmetic",
+                 "METHOD": "ArithmeticBox"},
+
+             "LOGIC": 
+                {"NAME": "Image Logic",
+                 "METHOD": "LogicBox"},
+
+             "LAPLACE": 
+                {"NAME": "Laplacian Filter",
+                 "METHOD": "LaplaceBox"},
+
+             "SOBEL": 
+                {"NAME": "Sobel Filter",
+                 "METHOD": "SobelBox"},
+
+             "ORDER_STAT": 
+                {"NAME": "Order Statistic Filter",
+                 "METHOD": "OrderStatBox"},
+
+             "SMOOTHING": 
+                {"NAME": "Smoothing Filter",
+                 "METHOD": "SmoothingBox"},
+
+             "SHARPENING": 
+                {"NAME": "Sharpening Filter",
+                 "METHOD": "SharpeningBox",}}
+
 
 
 # default channel names for the image.
