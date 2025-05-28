@@ -106,7 +106,11 @@ TOOLBOXES = {"BRIGHTNESS":
 
              "SHARPENING": 
                 {"NAME": "Sharpening Filter",
-                 "CLASS": "SharpeningBox",}}
+                 "CLASS": "SharpeningBox"},
+            
+            "FREQ_FILTER": 
+                {"NAME": "Frequency Filter",
+                 "CLASS": "FrequencyFilterBox"}}
 
 
 

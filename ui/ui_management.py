@@ -339,7 +339,6 @@ class UiManagement():
         return magnitude_spectrums
 
 
-    
 
     def save_image(self):
         """
