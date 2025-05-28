@@ -13,3 +13,10 @@ env/
 
 # tests directory
 tests/
+
+# Build directories
+build/
+dist/
+
+# cmd files
+*.cmd
