@@ -52,14 +52,14 @@ class UiManagement():
             'IMAGE': lambda: self.display_image([self.input_BGRA, self.output_BGRA]),  
             'HISTOGRAM': lambda: self.display_histogram(self.zoomAmount),
             'CHANNELS': lambda: self.display_image(self.get_color_channels()),  
-            'FREQUENCY': None
+            'FREQUENCY': lambda: self.display_image(self.fourier_transform())
         }
         # Declares which widgets will be shown and which widgets will be hidden based on the selected mode
         self.widgets_per_mode = {
             'IMAGE': [],
             'HISTOGRAM': [self.zoomIn, self.zoomOut],
             'CHANNELS': [self.leftTitle, self.rightTitle],
-            'FREQUENCY': []
+            'FREQUENCY': [self.leftTitle, self.rightTitle]
         }
 
 
@@ -211,7 +211,7 @@ class UiManagement():
             self.switch_mode(mode_name)   
             self.mode_handlers[mode_name]()             # call the method corresponding to the mode name             
         else:
-            self.channel_index = self.channel_index + 1 if self.channel_index + 1 < len(CHANNEL_NAMES) else 0  # increment channel index 
+            self.channel_index = self.channel_index + 1 if self.channel_index + 1 < len(CHANNEL_NAMES) else 0  # increment the channel index 
             if self.channel_index == 0:
                 self.switch_mode('IMAGE')  
                 self.display_image([self.input_BGRA, self.output_BGRA])
@@ -230,13 +230,17 @@ class UiManagement():
         self.zoomAmount = 0                         # reset zoom amount
 
         # show or hide the relevant widgets based on the selected mode
+        widgets_to_show = []
         for w in self.widgets_per_mode.keys():
             if w == mode_name:
                 for widget in self.widgets_per_mode[w]:
-                    widget.show()
+                    widgets_to_show.append(widget)
             else:
                 for widget in self.widgets_per_mode[w]:
                     widget.hide()
+
+        for widget in widgets_to_show:
+            widget.show()
            
 
     def display_image(self, images):
@@ -321,6 +325,30 @@ class UiManagement():
             self.output_BGRA[:,:,bgra2rgba[self.channel_index]]
         ]                    
 
+
+    def fourier_transform(self):
+        """
+        Perform a Fourier Transform on the input image and return the magnitude spectrum.
+        Returns:
+            list: A list containing the magnitude spectrum of the Fourier Transform of the input and output images.
+        """
+        bgra2rgba = [2, 1, 0, 3]   
+        magnitude_spectrums = []  
+
+        for image in [self.input_BGRA, self.output_BGRA]:
+            ch_float = np.float32(image[:,:,bgra2rgba[self.channel_index]])
+            dft = cv2.dft(ch_float, flags=cv2.DFT_COMPLEX_OUTPUT)
+            dft_shift = np.fft.fftshift(dft)
+            magnitude = cv2.magnitude(dft_shift[:,:,0], dft_shift[:,:,1])
+            magnitude_log = np.log(magnitude + 1)
+            magnitude_norm = cv2.normalize(magnitude_log, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+            magnitude_bgra = cv2.cvtColor(magnitude_norm, cv2.COLOR_GRAY2BGRA)
+            magnitude_spectrums.append(magnitude_bgra)
+
+        return magnitude_spectrums
+
+
+    
 
     def save_image(self):
         """
