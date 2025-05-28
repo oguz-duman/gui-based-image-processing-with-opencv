@@ -140,7 +140,7 @@ class UiManagement():
         # Create a new method box based on the selected method name
         for toolbox in constants.TOOLBOXES.values():
             if toolbox_name == toolbox['NAME']:
-                toolbox_class = getattr(toolboxes, toolbox['METHOD'])
+                toolbox_class = getattr(toolboxes, toolbox['CLASS'])
                 new_toolbox = toolbox_class()  # create an instance of the toolbox class
                 break
 

@@ -2,111 +2,111 @@
 # Values must exactly match the related class names defined in the toolboxes.py file.
 TOOLBOXES = {"BRIGHTNESS":
                 {"NAME": "Brightness",
-                 "METHOD": "BrightnessBox"},
+                 "CLASS": "BrightnessBox"},
 
              "SATURATION": 
                 {"NAME": "Saturation",
-                 "METHOD": "SaturationBox"},
+                 "CLASS": "SaturationBox"},
 
              "CONTRAST":
                 {"NAME": "Contrast",
-                 "METHOD": "ContrastBox"},
+                 "CLASS": "ContrastBox"},
 
              "FULL_SCALE_CONTRAST": 
                 {"NAME": "Full Scale Contrast",
-                 "METHOD": "FullScaleContrastBox"},
+                 "CLASS": "FullScaleContrastBox"},
 
              "LOG":
                 {"NAME": "Log Transform",
-                 "METHOD": "LogBox"},
+                 "CLASS": "LogBox"},
 
              "GAMMA":
                 {"NAME": "Gamma Transform",
-                 "METHOD": "GammaBox"},
+                 "CLASS": "GammaBox"},
 
              "RGB2GRAY": 
                 {"NAME": "RGB to Gray",
-                 "METHOD": "RGB2GrayBox"},
+                 "CLASS": "RGB2GrayBox"},
 
              "THRESHOLDING": 
                 {"NAME": "Thresholding",
-                 "METHOD": "ThresholdingBox"},
+                 "CLASS": "ThresholdingBox"},
 
              "COMPLEMENT":  
                 {"NAME": "Complement",
-                 "METHOD": "ComplementBox"},
+                 "CLASS": "ComplementBox"},
 
              "CROP": 
                 {"NAME": "Crop",
-                 "METHOD": "CropBox"},
+                 "CLASS": "CropBox"},
 
              "FLIP":  
                 {"NAME": "Flip",
-                 "METHOD": "FlipBox"},
+                 "CLASS": "FlipBox"},
 
              "ROTATE": 
                 {"NAME": "Rotate",
-                 "METHOD": "RotateBox"},
+                 "CLASS": "RotateBox"},
 
              "RESIZE": 
                 {"NAME": "Resize",
-                 "METHOD": "ResizeBox"},
+                 "CLASS": "ResizeBox"},
 
              "PADDING": 
                 {"NAME": "Padding",
-                 "METHOD": "PaddingBox"},
+                 "CLASS": "PaddingBox"},
 
              "HISTEQ": 
                 {"NAME": "Histogram Equalization",
-                 "METHOD": "HistEqualizationBox"},
+                 "CLASS": "HistEqualizationBox"},
 
              "HISTCLAHE": 
                 {"NAME": "Local Hist. Equalization",
-                 "METHOD": "HistCLAHEBox"}, 
+                 "CLASS": "HistCLAHEBox"}, 
 
              "COLOR_MASKING": 
                 {"NAME": "Color Masking",
-                 "METHOD": "ColorMaskBox"},
+                 "CLASS": "ColorMaskBox"},
 
              "SPATIAL_MASKING":  
                 {"NAME": "Spatial Masking",
-                 "METHOD": "SpatialMaskBox"},
+                 "CLASS": "SpatialMaskBox"},
 
              "BITSLICE": 
                 {"NAME": "Bit Plane Slicing",
-                 "METHOD": "BitSliceBox"},
+                 "CLASS": "BitSliceBox"},
 
              "ADD_NOISE": 
                 {"NAME": "Add Noise",
-                 "METHOD": "NoiseBox"},
+                 "CLASS": "NoiseBox"},
 
              "ARITHMETIC": 
                 {"NAME": "Image Arithmetic",
-                 "METHOD": "ArithmeticBox"},
+                 "CLASS": "ArithmeticBox"},
 
              "LOGIC": 
                 {"NAME": "Image Logic",
-                 "METHOD": "LogicBox"},
+                 "CLASS": "LogicBox"},
 
              "LAPLACE": 
                 {"NAME": "Laplacian Filter",
-                 "METHOD": "LaplaceBox"},
+                 "CLASS": "LaplaceBox"},
 
              "SOBEL": 
                 {"NAME": "Sobel Filter",
-                 "METHOD": "SobelBox"},
+                 "CLASS": "SobelBox"},
 
              "ORDER_STAT": 
                 {"NAME": "Order Statistic Filter",
-                 "METHOD": "OrderStatBox"},
+                 "CLASS": "OrderStatBox"},
 
              "SMOOTHING": 
                 {"NAME": "Smoothing Filter",
-                 "METHOD": "SmoothingBox"},
+                 "CLASS": "SmoothingBox"},
 
              "SHARPENING": 
                 {"NAME": "Sharpening Filter",
-                 "METHOD": "SharpeningBox",}}
+                 "CLASS": "SharpeningBox",}}
 
 
 
