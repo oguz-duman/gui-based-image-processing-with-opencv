@@ -185,19 +185,10 @@ class UiManagement():
         It runs the pipeline on the input image and updates the ui based on the current mode.
         """
         if self.input_BGRA is not None:
-            self.output_BGRA = self.pipeline.run(self.input_BGRA)              # run the pipeline on the input image
+            self.output_BGRA = self.pipeline.run(self.input_BGRA)               # run the pipeline on the input image
+            self.mode_handlers[self.active_mode]()                              # update the ui based on the current mode
 
-            # update the ui based on the current mode
-            if self.active_mode == 'IMAGE':
-                self.display_image([self.input_BGRA, self.output_BGRA])
-            elif self.active_mode == 'HISTOGRAM':
-                self.display_histogram()
-            elif self.active_mode == 'CHANNELS':
-                self.display_image(self.get_color_channels())
-            elif self.active_mode == 'FREQUENCY':
-                self.display_image(self.get_color_channels())
-       
-
+          
     def mode_buttons(self, mode_name):
         """
         Handles mode button clicks: switches to a new mode if needed,
