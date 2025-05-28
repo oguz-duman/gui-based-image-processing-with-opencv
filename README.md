@@ -31,24 +31,24 @@ pip install -r requirements.txt
 
 ## Code Structure
 
-The application is organized around six main classes, each with a specific role:
+* The application is organized around six main classes, each with a specific role:
 
-MainWindow: Initializes the GUI and manages the main layout of the application.
+* `MainWindow`: Initializes the GUI and manages the main layout of the application.
 
-UIManagement: Handles user interactions such as drag-and-drop, switching between multiple views (e.g., histogram or color layers), file selection etc.
+* `UIManagement`: Handles user interactions such as drag-and-drop, switching between multiple views (e.g., histogram or color layers), file selection etc.
 
-Pipeline: Manages operations like adding, removing, reordering, and executing toolboxes in the order they are applied.
+* `Pipeline`: Manages operations like adding, removing, reordering, and executing toolboxes in the order they are applied.
 
-Toolboxes: Each image processing method is represented as an independent toolbox (e.g., BrightnessBox, ContrastBox). These toolboxes are the core interactive modules that users can add to the processing pipeline.
+* `Toolboxes`: Each image processing method is represented as an independent toolbox (e.g., BrightnessBox, ContrastBox). These toolboxes are the core interactive modules that users can add to the processing pipeline.
 
-To avoid repetitive code and speed up toolbox development, all toolboxes inherit from two base classes:
+* To avoid repetitive code and speed up toolbox development, all toolboxes inherit from two base classes:
 
-UIComponents: Provides reusable GUI elements like buttons, sliders, and input fields.
+* `UIComponents`: Provides reusable GUI elements like buttons, sliders, and input fields.
 
-Processor: Contains the actual image processing functions, built using OpenCV.
+* `Processor`: Contains the actual image processing functions, built using OpenCV.
 
 
-## How to Your Own Image Processing Methods
+## How to Add Your Own Image Processing Methods
 
 This project is designed to be modular and easily extensible. To add a new image processing method, follow these steps:
 
