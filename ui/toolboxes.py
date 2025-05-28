@@ -81,15 +81,14 @@ class Toolbox(QWidget, UiComponents, Processor):
     A base class for all toolboxes. It provides a common interface.
     Parameters:
         title (str): The title of the toolbox.
-        parent (QWidget): The parent widget where the toolbox will be added.
     """
     # Signals to communicate with the main application
     updateTrigger = Signal()
     removeTrigger = Signal(str)
    
 
-    def __init__(self, title="Toolbox", parent=None):
-        super().__init__(parent)
+    def __init__(self, title="Toolbox"):
+        super().__init__()
 
         self.contentLayout = QVBoxLayout()              # create a layout to hold the content of the toolbox
 
@@ -210,8 +209,8 @@ class BrightnessBox(DraggableToolbox):
     A class to create a brightness adjustment toolbox.
     Adjusts the brightness of an image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.BRIGHTNESS, parent)
+    def __init__(self):
+        super().__init__(constants.BRIGHTNESS)
 
         # Create a slider to adjust brightness
         self.brightness = self.insert_slider(heading="Brightness", minValue=-50, maxValue=50)  
@@ -228,8 +227,8 @@ class SaturationBox(DraggableToolbox):
     A class to create a saturation adjustment toolbox.
     Adjusts the saturation of an image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.SATURATION, parent)
+    def __init__(self):
+        super().__init__(constants.SATURATION)
 
         # Create a slider to adjust saturation
         self.saturation = self.insert_slider(heading="Saturation", minValue=-50, maxValue=50)
@@ -246,8 +245,8 @@ class ContrastBox(DraggableToolbox):
     A class to create a contrast adjustment toolbox.
     Adjusts the contrast of an image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.CONTRAST, parent)
+    def __init__(self):
+        super().__init__(constants.CONTRAST)
 
         self.slider_rescale = 10    # set a rescale factor for the slider
 
@@ -293,8 +292,8 @@ class FullScaleContrastBox(DraggableToolbox):
     A class to create a full scale contrast adjustment toolbox.
     Adjusts the contrast of an image to full scale.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.FULL_SCALE_CONTRAST, parent)
+    def __init__(self):
+        super().__init__(constants.FULL_SCALE_CONTRAST)
   
     def execute(self, imageBGRA, mask):
         # apply full scale contrast stretching
@@ -308,8 +307,8 @@ class LogBox(DraggableToolbox):
     A class to create a log transformation toolbox.
     Applies a logarithmic transformation to an image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.LOG, parent)
+    def __init__(self):
+        super().__init__(constants.LOG)
   
     def execute(self, imageBGRA, mask):
         # apply log transformation
@@ -323,8 +322,8 @@ class GammaBox(DraggableToolbox):
     A class to create a gamma transformation toolbox.
     Applies a gamma transformation to an image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.GAMMA, parent)
+    def __init__(self):
+        super().__init__(constants.GAMMA)
 
         self.slider_rescale = 10        # set a rescale factor for the slider
 
@@ -344,8 +343,8 @@ class RGB2GrayBox(DraggableToolbox):
     Converts the input image to grayscale.
     Works even if the input image is already grayscale.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.RGB2GRAY, parent)
+    def __init__(self):
+        super().__init__(constants.RGB2GRAY)
 
     def execute(self, imageBGRA, mask):
         # apply RGB to grayscale conversion
@@ -359,8 +358,8 @@ class ThresholdingBox(DraggableToolbox):
     A class to create a thresholding toolbox.
     Applies a thresholding operation to the input image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.THRESHOLDING, parent)
+    def __init__(self):
+        super().__init__(constants.THRESHOLDING)
 
         # insert slider to select the threshold value
         self.threshold = self.insert_slider(heading="Threshold:", minValue=0, maxValue=255, defaultValue=128)
@@ -377,8 +376,8 @@ class ComplementBox(DraggableToolbox):
     A class to create a complement toolbox.
     Applies a complement operation to the input image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.COMPLEMENT, parent)
+    def __init__(self):
+        super().__init__(constants.COMPLEMENT)
   
     def execute(self, imageBGRA, mask):
         imageBGRA = self.get_image_complement(imageBGRA)    # apply complement operation
@@ -391,8 +390,8 @@ class CropBox(DraggableToolbox):
     A class to create a cropping toolbox.
     Crops the input image based on the specified values.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.CROP, parent)
+    def __init__(self):
+        super().__init__(constants.CROP)
 
         # Insert input boxes to select the crop values
         self.leftRight  = self.insert_dual_input("Left-Right:", 0, 0)      
@@ -416,8 +415,8 @@ class FlipBox(DraggableToolbox):
     A class to create a flipping toolbox.
     Flips the input image based on the selected direction.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.FLIP, parent)
+    def __init__(self):
+        super().__init__(constants.FLIP)
 
         # Insert a radio button group to select the flip direction
         self.buttonGroup = self.insert_radio_buttons(["Horizontal", "Vertical", "Both"])
@@ -434,8 +433,8 @@ class RotateBox(DraggableToolbox):
     A class to create a rotation toolbox.
     Rotates the input image based on the selected angle.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.ROTATE, parent)
+    def __init__(self):
+        super().__init__(constants.ROTATE)
 
         # Insert a slider to adjust the rotate angle
         self.angle = self.insert_slider(heading="Angle: ", minValue=-180, maxValue=180)  
@@ -452,8 +451,8 @@ class ResizeBox(DraggableToolbox):
     A class to create a resizing toolbox.
     Resizes the input image based on the specified width and height.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.RESIZE, parent)
+    def __init__(self):
+        super().__init__(constants.RESIZE)
 
         self.im_width = 0
         self.im_height = 0
@@ -516,8 +515,8 @@ class PaddingBox(DraggableToolbox):
     A class to create a padding toolbox.
     Applies padding to the input image based on the selected type and values.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.PADDING, parent)
+    def __init__(self):
+        super().__init__(constants.PADDING)
 
         # Insert a combo list to select the padding type
         self.combo = self.insert_combo_list(["Constant", "Reflect", "Replicate"])
@@ -555,8 +554,8 @@ class HistEqualizationBox(DraggableToolbox):
     A class to create a histogram equalization toolbox.
     Applies histogram equalization to the input image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.HISTEQ, parent)
+    def __init__(self):
+        super().__init__(constants.HISTEQ)
   
     def execute(self, imageBGRA, mask):
         # apply histogram equalization
@@ -570,8 +569,8 @@ class HistCLAHEBox(DraggableToolbox):
     A class to create a histogram CLAHE toolbox.
     Applies CLAHE (Contrast Limited Adaptive Histogram Equalization) to the input image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.HISTCLAHE, parent)
+    def __init__(self):
+        super().__init__(constants.HISTCLAHE)
 
         self.clipLimit_rescale = 10     # set a rescale factor for the slider
 
@@ -596,8 +595,8 @@ class ColorMaskBox(DraggableToolbox):
     A class to create a masking toolbox.
     This toolbox allows the user to select a range of HSV values to create a mask.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.COLOR_MASKING, parent)
+    def __init__(self):
+        super().__init__(constants.COLOR_MASKING)
 
         # Insert a switch to invert the mask
         self.invert = self.insert_switch("Invert the mask")
@@ -623,8 +622,8 @@ class SpatialMaskBox(DraggableToolbox):
     This toolbox allows the user to select a rectangular area of the image and apply spatial masking.
     This mask only affects the next toolbox in the pipeline not all 
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.SPATIAL_MASKING, parent)
+    def __init__(self):
+        super().__init__(constants.SPATIAL_MASKING)
 
         self.im_size = [0, 0]
 
@@ -663,8 +662,8 @@ class BitSliceBox(DraggableToolbox):
     A class to create a bit plane slicing toolbox.
     Applies bit plane slicing to the input image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.BITSLICE, parent)
+    def __init__(self):
+        super().__init__(constants.BITSLICE)
 
         # Insert a combo list to select a bit plane
         self.combo = self.insert_combo_list(["0", "1", "2", "3", "4", "5", "6", "7"])
@@ -682,8 +681,8 @@ class NoiseBox(DraggableToolbox):
     Applies different types of noises to the input image.
     Available noise types are Gaussian, Salt & Pepper, and Poisson.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.ADD_NOISE, parent)
+    def __init__(self):
+        super().__init__(constants.ADD_NOISE)
 
         self.saltPepProb_rescale = 1000         # set a rescale factor for the slider
 
@@ -728,8 +727,8 @@ class ArithmeticBox(DraggableToolbox):
     A class to create an arithmetic operation toolbox.
     Applies arithmetic operations with the input image and a selected second image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.ARITHMETIC, parent)
+    def __init__(self):
+        super().__init__(constants.ARITHMETIC)
 
         self.secondImage = None         # set a variable to store the second image
         self.alpha_rescale = 100        # set a rescale factor for the slider
@@ -768,8 +767,8 @@ class LogicBox(DraggableToolbox):
     A class to create a logic operation toolbox.
     Applies logic operations with the input image and a selected second image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.LOGIC, parent)
+    def __init__(self):
+        super().__init__(constants.LOGIC)
 
         self.secondImage = None         # set a variable to store the second image
 
@@ -804,8 +803,8 @@ class LaplaceBox(DraggableToolbox):
     A class to create a laplace transformation toolbox.
     Applies a laplace transformation to the input image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.LAPLACE, parent)
+    def __init__(self):
+        super().__init__(constants.LAPLACE)
 
         # insert switch to select extended laplace and normalize options
         self.extended = self.insert_switch("Extended Laplace")
@@ -823,8 +822,8 @@ class SobelBox(DraggableToolbox):
     A class to create a sobel transformation toolbox.
     Applies a sobel transformation to the input image.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.LAPLACE, parent)
+    def __init__(self):
+        super().__init__(constants.LAPLACE)
 
         # insert a switch to select the normalize option
         self.norm = self.insert_switch("Normalize")
@@ -842,8 +841,8 @@ class OrderStatBox(DraggableToolbox):
     Applies order statistics filtering to the input image.
     Available methods are Median, Max, and Min.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.ORDER_STAT, parent)
+    def __init__(self):
+        super().__init__(constants.ORDER_STAT)
 
         # insert nedded input widgets
         self.combo = self.insert_combo_list(["Median", "Max", "Min"])
@@ -874,8 +873,8 @@ class SmoothingBox(DraggableToolbox):
     Applies smoothing to the input image.
     Available methods are Mean and Gaussian.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.SMOOTHING, parent)
+    def __init__(self):
+        super().__init__(constants.SMOOTHING)
 
         # set rescale factor for sigma slider
         self.sigma_rescale = 10
@@ -912,8 +911,8 @@ class SharpeningBox(DraggableToolbox):
     Applies sharpening to the input image.
     Available methods are Laplace, Sobel, and Unsharp Masking.
     """
-    def __init__(self, parent=None):
-        super().__init__(constants.SHARPENING, parent)
+    def __init__(self):
+        super().__init__(constants.SHARPENING)
 
         # set rescale factors for sliders
         self.alpha_rescale = 100
