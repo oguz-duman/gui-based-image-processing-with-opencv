@@ -17,6 +17,7 @@ tests/
 # Build directories
 build/
 dist/
+*.spec
 
 # cmd files
 *.cmd
