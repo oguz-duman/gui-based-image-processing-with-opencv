@@ -82,7 +82,7 @@ class Processor():
             saturated = cv2.add(imageHSVA[:, :, 1], value)     # adjust the S channel of the HSVA image
 
             # If a mask is provided, use it to update only the pixels where mask != 0
-            imageHSVA[:, :, 2] = saturated if mask is None else np.where(mask > 0, saturated, imageHSVA[:, :, 2])
+            imageHSVA[:, :, 1] = saturated if mask is None else np.where(mask > 0, saturated, imageHSVA[:, :, 1])
 
             imageBGRA = self.hsva2bgra_transform(imageHSVA)                       # convert back to BGRA color space
 
