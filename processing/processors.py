@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 
-class Processor():
+class Processors():
     """
     This class provides various image processing methods for images in BGRA format.
     It includes helper methods for color space conversion, brightness, contrast, and other image manipulations.

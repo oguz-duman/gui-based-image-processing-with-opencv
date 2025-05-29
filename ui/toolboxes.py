@@ -9,8 +9,8 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxL
 
 import constants
 from ui.ui_management import UiManagement
-from processing.processor import Processor
-from ui.components import UiComponents 
+from processing.processors import Processors
+from ui.ui_components import UiComponents 
 
 
 class AddNewBox(QWidget):
@@ -76,7 +76,7 @@ class AddNewBox(QWidget):
 
 
 
-class Toolbox(QWidget, UiComponents, Processor):
+class Toolbox(QWidget, UiComponents, Processors):
     """
     A base class for all toolboxes. It provides a common interface.
     Parameters:
