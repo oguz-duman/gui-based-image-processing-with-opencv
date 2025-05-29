@@ -20,7 +20,6 @@ This project is a PySide6-based graphical user interface (GUI) application built
 1. Make sure you have Python 3.7+ installed.  
 2. Clone this repository:  
 git clone https://github.com/ouzdu-s/gui-based-image-processing-with-opencv.git
-
 3. Navigate to the project directory:  
 cd gui-based-image-processing-with-opencv
 4. Install required packages:  
@@ -132,4 +131,8 @@ This project is built to be modular and easy to extend. To add a new image proce
 
         return imageBGRA
     ```
+
+## Contributing
+Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
+
 
