@@ -16,13 +16,21 @@ This project is a PySide6-based graphical user interface (GUI) application built
 
 1. Make sure you have Python 3.7+ installed.  
 2. Clone this repository:  
+```bash
 git clone https://github.com/ouzdu-s/gui-based-image-processing-with-opencv.git
+```
 3. Navigate to the project directory:  
+```bash
 cd gui-based-image-processing-with-opencv
+```
 4. Install required packages:  
+```bash
 pip install -r requirements.txt
+```
 5. Run the main Python script `main.py` to launch the GUI:  
+```bash
 python main.py
+```
 ---
 
 ## How to Use
