@@ -631,7 +631,7 @@ class SpatialMaskBox(DraggableToolbox):
     def execute(self, imageBGRA, mask):
 
         # get the slider values and apply spatial masking
-        mask = self.create_spatial_mask(imageBGRA, self.slid_width[0].value(), self.slid_height[0].value(),
+        mask = self.generate_spatial_mask(imageBGRA, self.slid_width[0].value(), self.slid_height[0].value(),
                                                     self.slid_left[0].value(), self.slid_top[0].value(), 
                                                     self.slid_bor_radius[0].value(), self.invert[0].isChecked()) 
 
