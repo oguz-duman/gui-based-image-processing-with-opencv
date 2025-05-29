@@ -2,12 +2,9 @@
 
 This project is a PySide6-based graphical user interface (GUI) application built on OpenCV that provides an interactive platform for image processing. It currently includes common techniques such as histogram equalization, filtering, and thresholding, but is designed with a modular architecture to allow easy addition of new image processing methods. Users can apply various operations on input images and observe the results in real time, making it both a practical tool and a flexible framework for experimentation and extension.
 
-
-
 ![Screenshot](images/app.png)
-
-
 ---
+
 ## How to Install
 
 ### Option 1: Download the Executable
@@ -26,8 +23,8 @@ cd gui-based-image-processing-with-opencv
 pip install -r requirements.txt
 5. Run the main Python script `main.py` to launch the GUI:  
 python main.py
-
 ---
+
 ## How to Use
 
 1. Launch the application. 
@@ -35,8 +32,8 @@ python main.py
 3. Select desired image processing methods from the bottom menu.  
 4. Observe the processed image in real-time.  
 5. Export the resulting images as needed.
-
 ---
+
 ## Code Structure
 
 * The application is organized around six main classes, each with a specific role:
@@ -54,8 +51,8 @@ python main.py
 * `UIComponents`: Provides reusable GUI elements like buttons, sliders, and input fields.
 
 * `Processor`: Contains the actual image processing functions, built using OpenCV.
-
 ---
+
 ## How to Add Your Own Image Processing Methods
 
 This project is built to be modular and easy to extend. To add a new image processing method, follow these steps:
@@ -131,6 +128,7 @@ This project is built to be modular and easy to extend. To add a new image proce
 
         return imageBGRA
     ```
+---
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
