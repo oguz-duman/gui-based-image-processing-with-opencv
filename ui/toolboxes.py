@@ -214,7 +214,7 @@ class BrightnessBox(DraggableToolbox):
         super().__init__(constants.TOOLBOXES['BRIGHTNESS']['NAME'])
 
         # Create a slider to adjust brightness
-        self.brightness = self.insert_slider(heading="Brightness", minValue=-50, maxValue=50)  
+        self.brightness = self.insert_slider(heading="Brightness", minValue=-100, maxValue=100)  
 
     def execute(self, imageBGRA, mask):
         # apply brightness adjustment

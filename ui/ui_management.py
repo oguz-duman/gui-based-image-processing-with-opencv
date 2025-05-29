@@ -265,20 +265,25 @@ class UiManagement():
         self.zoomAmount += zoom                         # update the zoom amount if a zoom amount value is passed
         zoom_factor = 1 / (1 + self.zoomAmount * 0.3)   
 
+        y_lims = []   
+        # Calculate the y-axis limit for both histograms
+        for image, label in zip(self.get_color_channels(), [self.leftLabel, self.rightLabel]):
+
+            histNums = plt.hist(image.ravel(), bins=100, color='black')     # get histogram data
+            y_lim = np.max(histNums[0]) * 1.1               # set y-axis limit to 10% more than the max value
+            y_lims.append(round(y_lim * zoom_factor))       # apply the zoom effect to the y-axis limit
+            
+        # Select the larger y_lim for both histograms
+        y_lim = np.max(y_lims)                          
+        yStep = y_lim / 5                             
+        
         # display the histogram for both input and output images
-        y_lims = []             
         for image, label in zip(self.get_color_channels(), [self.leftLabel, self.rightLabel]):
 
             # create a new figure and plot the histogram
             fig, ax = plt.subplots()                                        
             histNums = ax.hist(image.ravel(), bins=100, color='black')   
 
-            y_lim = np.max(histNums[0]) * 1.1               # set y-axis limit to 10% more than the max value
-            y_lims.append(round(y_lim * zoom_factor))       # apply the zoom effect to the y-axis limit
-            
-            y_lim = np.max(y_lims)                          # Select the larger y_lim between the input and output histograms
-            yStep = y_lim / 5                               # set the y-axis step size to 1/5 of the y-axis limit
-                
             # Set style and labels
             ax.grid(True)
             ax.set_xlim(0, 255)
