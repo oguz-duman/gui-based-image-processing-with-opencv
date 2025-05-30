@@ -1,10 +1,7 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-from io import BytesIO
 
-from PySide6.QtCore import Qt, Slot
-from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QFileDialog
 
 import constants
@@ -180,25 +177,17 @@ class UiManagement():
         if self.input_BGRA is None:
             return
         elif not self.active_mode == mode_name:
-            self.switch_mode(mode_name)   
+            self.active_mode = mode_name                # active mode name
+            self.channel_index = 0                      # reset channel index
             self.mode_handlers[mode_name]()             # call the method corresponding to the mode name             
         else:
             self.channel_index = self.channel_index + 1 if self.channel_index + 1 < len(CHANNEL_NAMES) else 0  # increment the channel index 
             if self.channel_index == 0:
-                self.switch_mode('IMAGE')  
+                self.active_mode = 'IMAGE'                  # active mode name
+                self.channel_index = 0                      # reset channel index
                 self.display_images([self.input_BGRA, self.output_BGRA])
             else:
                 self.mode_handlers[mode_name]()          # call the method corresponding to the mode name             
-
-
-    def switch_mode(self, mode_name):
-        """
-        Updates the active mode and toggles visibility of related UI widgets.
-        Args:
-            mode_name (str): The name of the mode to switch to.
-        """
-        self.active_mode = mode_name                # active mode name
-        self.channel_index = 0                      # reset channel index
 
 
     def display_images(self, images):
