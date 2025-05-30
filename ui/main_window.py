@@ -2,6 +2,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QFont
 from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea
 
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+
 from ui import toolboxes
 import constants
 from ui.ui_management import UiManagement
@@ -29,7 +32,7 @@ class MainWindow(QWidget, UiManagement):
         # Initialize UI variables in UiManagement
         self.init_ui_variables(self.contentLayout, self.add_new_box, self.leftLabel,
                                               self.rightLabel, self.leftTitle, self.rightTitle,
-                                              self.zoomIn, self.zoomOut)  
+                                              self.zoomIn, self.zoomOut, self.out_im_canvas)  
                
 
     def resizeEvent(self, event):
@@ -111,6 +114,22 @@ class MainWindow(QWidget, UiManagement):
         self.rightTitle = QLabel("")
         rightLayout.addWidget(self.rightTitle, 0.5, alignment=Qt.AlignCenter)
         self.rightTitle.hide()
+
+        self.out_im_canvas = InteractiveCanvas()
+        rightLayout.addWidget(self.out_im_canvas)
+
+        # Create right figure 
+        """
+        self.out_im_figure = Figure(figsize=(5, 4), dpi=100)
+        self.out_im_canvas = FigureCanvas(self.out_im_figure)
+        rightLayout.addWidget(self.out_im_canvas, 12)
+        """
+
+        # Create NavigationToolbar 
+        """
+        self.out_im_toolbar = NavigationToolbar(self.out_im_canvas, self)
+        rightLayout.addWidget(self.out_im_toolbar)
+        """
 
         # Create rightLabel for displaying the output image
         self.rightLabel = QLabel(self)
@@ -252,3 +271,93 @@ class MainWindow(QWidget, UiManagement):
         # If no suitable position is found, return the last index (before add_new_box)
         return self.contentLayout.count() - 1
 
+
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from PySide6.QtCore import Qt
+
+
+class InteractiveCanvas(FigureCanvas):
+    def __init__(self, parent=None):
+        self.figure = Figure()
+        super().__init__(self.figure)
+        self.setParent(parent)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocus()
+
+        self._axes = self.figure.add_subplot(111)
+        self._is_panning = False
+        self._pan_start = None
+
+    def wheelEvent(self, event):
+        if self._axes is None:
+            return
+
+        pos = event.position()
+        x, y = pos.x(), pos.y()
+        xdata, ydata = self._axes.transData.inverted().transform((x, y))
+
+        step = event.angleDelta().y()
+        
+        # TERSLEME: Scroll yönü ters çevrildi
+        factor = 1.2 if step < 0 else 0.8
+
+        xlim = self._axes.get_xlim()
+        ylim = self._axes.get_ylim()
+
+        self._axes.set_xlim([
+            xdata - (xdata - xlim[0]) * factor,
+            xdata + (xlim[1] - xdata) * factor
+        ])
+        self._axes.set_ylim([
+            ydata - (ydata - ylim[0]) * factor,
+            ydata + (ylim[1] - ydata) * factor
+        ])
+        self.draw()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._is_panning = True
+            self._pan_start = event.position()
+
+    def mouseMoveEvent(self, event):
+        if self._is_panning and self._pan_start:
+            dx = event.position().x() - self._pan_start.x()
+            dy = event.position().y() - self._pan_start.y()
+
+            dx_data = dx / self.width() * (self._axes.get_xlim()[1] - self._axes.get_xlim()[0])
+            dy_data = dy / self.height() * (self._axes.get_ylim()[1] - self._axes.get_ylim()[0])
+
+            self._axes.set_xlim([
+                self._axes.get_xlim()[0] - dx_data,
+                self._axes.get_xlim()[1] - dx_data
+            ])
+            self._axes.set_ylim([
+                self._axes.get_ylim()[0] + dy_data,
+                self._axes.get_ylim()[1] + dy_data
+            ])
+
+            self._pan_start = event.position()
+            self.draw()
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._is_panning = False
+            self._pan_start = None
+
+    def plot_histogram(self, image):
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+
+        if len(image.shape) == 2:
+            ax.hist(image.ravel(), bins=256, color='black')
+        else:
+            colors = ('r', 'g', 'b')
+            for i, color in enumerate(colors):
+                ax.hist(image[:, :, i].ravel(), bins=256, color=color, alpha=0.5)
+
+        ax.set_title('Histogram')
+        ax.set_xlim(left=0, right=256)
+        self._axes = ax
+        self.draw()

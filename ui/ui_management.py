@@ -22,7 +22,7 @@ class UiManagement():
         self.init_variables()
 
     def init_ui_variables(self, toolbox_wrapper, footer_toolbox, leftLabel, 
-                          rightLabel, leftTitle, rightTitle, zoomIn, zoomOut):
+                          rightLabel, leftTitle, rightTitle, zoomIn, zoomOut, out_im_canvas):
         """
         Gets the necessary widgets and layout from the 'main_window' and sets up the pipeline.
         Args:
@@ -43,6 +43,7 @@ class UiManagement():
         self.rightTitle = rightTitle
         self.zoomIn = zoomIn
         self.zoomOut = zoomOut
+        self.out_im_canvas = out_im_canvas
 
         # Initialize the pipeline
         self.pipeline = Pipeline()  
@@ -240,6 +241,8 @@ class UiManagement():
         Args:
             images (list): A list of images to be displayed in the left and right labels respectively.
         """
+        self.out_im_canvas.plot_histogram(images[0])
+
         # set the title to current color channel
         self.leftTitle.setText(f"{CHANNEL_NAMES[self.channel_index]} Channel")
         self.rightTitle.setText(f"{CHANNEL_NAMES[self.channel_index]} Channel")
@@ -342,7 +345,6 @@ class UiManagement():
             magnitude_spectrums.append(magnitude_bgra)
 
         return magnitude_spectrums
-
 
 
     def save_image(self):
