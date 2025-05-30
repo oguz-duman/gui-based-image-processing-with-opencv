@@ -1,3 +1,5 @@
+import cv2
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QFont
 from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea
@@ -31,6 +33,10 @@ class MainWindow(QWidget, UiManagement):
 
         # Initialize UI variables in UiManagement
         self.init_ui_variables(self.contentLayout, self.add_new_box, self.in_im_canvas, self.out_im_canvas)  
+
+        # read and display initial images
+        initial_im = cv2.imread('images/no_image.jpg')
+        self.display_images([initial_im, initial_im])
                
 
     def resizeEvent(self, event):
@@ -46,16 +52,15 @@ class MainWindow(QWidget, UiManagement):
         """
         # Create top layout and add it to the main layout
         topLayout = QHBoxLayout()
-        topLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addLayout(topLayout, 55)  
 
         # Create input image canvas
-        self.in_im_canvas = InteractiveCanvas()
-        topLayout.addWidget(self.in_im_canvas)
+        self.in_im_canvas = InteractiveCanvas()  
+        topLayout.addWidget(self.in_im_canvas, 48)
 
         # create spacer layout to separate the two labels
         spacer = QVBoxLayout()
-        topLayout.addLayout(spacer, 1)
+        topLayout.addLayout(spacer, 4)
   
         # create spacer label
         arrow = QLabel(">")
@@ -63,11 +68,11 @@ class MainWindow(QWidget, UiManagement):
         font.setPointSize(35)       
         arrow.setFont(font) 
         arrow.setAlignment(Qt.AlignCenter)  
-        spacer.addWidget(arrow, 1, alignment=Qt.AlignTop)
+        spacer.addWidget(arrow, 1, alignment=Qt.AlignCenter)
 
         # Create output image canvas
         self.out_im_canvas = InteractiveCanvas()
-        topLayout.addWidget(self.out_im_canvas)
+        topLayout.addWidget(self.out_im_canvas, 48)
 
 
     def init_midLayout(self):
@@ -210,15 +215,27 @@ class InteractiveCanvas(FigureCanvas):
     This canvas supports panning and zooming using mouse events and the scroll wheel.
     """
     def __init__(self, parent=None):
-        self.figure = Figure()
+        self.figure = Figure(facecolor=(0,0,0,0))
+    
         super().__init__(self.figure)
         self.setParent(parent)
         self.setFocusPolicy(Qt.StrongFocus)
         self.setFocus()
 
         self._axes = self.figure.add_subplot(111)
+        self.figure.subplots_adjust(left=0, right=1, top=1, bottom=0)       # Adjust the subplot to fill the canvas
+        self._axes.axis('off')  
+
+        # Initialize panning variables 
         self._is_panning = False
         self._pan_start = None
+
+        # Store original x and y limits for resetting
+        self._orig_xlim = None
+        self._orig_ylim = None
+
+        # Set the canvas to be transparent
+        self.setStyleSheet("background: transparent;")  
 
 
     def wheelEvent(self, event):
@@ -227,33 +244,39 @@ class InteractiveCanvas(FigureCanvas):
         Args:
             event (QWheelEvent): The wheel event containing information about the scroll direction.
         """
-        # Check if the axes are set, if not, do nothing
         if self._axes is None:
             return
 
-        # Get the mouse position in data coordinates
         pos = event.position()
         x, y = pos.x(), pos.y()
         xdata, ydata = self._axes.transData.inverted().transform((x, y))
 
-        # Determine the zoom factor based on the scroll direction
-        step = event.angleDelta().y()
-        factor = 1.2 if step < 0 else 0.8
-
-        # Adjust the x and y limits based on the zoom factor
         xlim = self._axes.get_xlim()
         ylim = self._axes.get_ylim()
 
-        # Calculate new limits based on the zoom factor and the mouse position
-        self._axes.set_xlim([
+        step = event.angleDelta().y()
+        factor = 1.05 if step < 0 else 0.95
+
+        # calculate new limits
+        new_xlim = [
             xdata - (xdata - xlim[0]) * factor,
             xdata + (xlim[1] - xdata) * factor
-        ])
-        self._axes.set_ylim([
+        ]
+        new_ylim = [
             ydata - (ydata - ylim[0]) * factor,
             ydata + (ylim[1] - ydata) * factor
-        ])
-        self.draw()     
+        ]
+
+        # ensure the new limits do not go below 0 or exceed original limits
+        new_xlim[0] = max(0, new_xlim[0])  
+        new_ylim[1] = max(0, new_ylim[1])  
+        new_xlim[1] = min(self._orig_xlim[1], new_xlim[1]) 
+        new_ylim[0] = min(self._orig_ylim[0], new_ylim[0])  
+
+        # Update the axes limits and redraw the canvas
+        self._axes.set_xlim(new_xlim)
+        self._axes.set_ylim(new_ylim)
+        self.draw()
 
 
     def mousePressEvent(self, event):
@@ -286,14 +309,21 @@ class InteractiveCanvas(FigureCanvas):
             dy_data = dy / self.height() * (self._axes.get_ylim()[1] - self._axes.get_ylim()[0])
 
             # Update the x and y limits based on the pan distance
-            self._axes.set_xlim([
+            new_xlim = [
                 self._axes.get_xlim()[0] - dx_data,
                 self._axes.get_xlim()[1] - dx_data
-            ])
-            self._axes.set_ylim([
+            ]
+            new_ylim = [
                 self._axes.get_ylim()[0] + dy_data,
                 self._axes.get_ylim()[1] + dy_data
-            ])
+            ]
+
+            # ensure the new limits do not go below 0 or exceed original limits
+            if not (new_xlim[0] < 0 or new_xlim[1] > self._orig_xlim[1]):
+                self._axes.set_xlim(new_xlim)
+            
+            if not (new_ylim[1] < 0 or new_ylim[0] > self._orig_ylim[0]):
+                self._axes.set_ylim(new_ylim)
 
             self._pan_start = event.position()
             self.draw()

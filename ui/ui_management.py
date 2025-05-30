@@ -27,12 +27,8 @@ class UiManagement():
         Args:
             toolbox_wrapper (QVBoxLayout): The layout where the toolboxes are added.
             footer_toolbox (QWidget): The footer widget for the toolbox layout.
-            leftLabel (QLabel): The label for displaying the input image.
-            rightLabel (QLabel): The label for displaying the output image.
-            leftTitle (QLabel): The label for displaying the title of the input image.
-            rightTitle (QLabel): The label for displaying the title of the output image.
-            zoomIn (QPushButton): The button for zooming in on the histogram.
-            zoomOut (QPushButton): The button for zooming out on the histogram.
+            in_im_canvas (MatplotlibCanvas): The canvas for displaying the input image.
+            out_im_canvas (MatplotlibCanvas): The canvas for displaying the output image.
         """
         self.toolbox_wrapper = toolbox_wrapper
         self.footer_toolbox = footer_toolbox
@@ -45,7 +41,7 @@ class UiManagement():
         # Modes and their corresponding methods which are called when the mode is activated
         self.mode_handlers = {      
             'IMAGE': lambda: self.display_images([self.input_BGRA, self.output_BGRA]),  
-            'HISTOGRAM': lambda: self.display_histogram(self.zoomAmount),
+            'HISTOGRAM': lambda: self.display_histogram(),
             'CHANNELS': lambda: self.display_images(self.get_color_channels()),  
             'FREQUENCY': lambda: self.display_images(self.fourier_transform())
         }
@@ -214,27 +210,34 @@ class UiManagement():
         """
         for image, canvas in zip(images, [self.in_im_canvas, self.out_im_canvas]):
             
-            canvas._axes.clear()                                            # clear current axes
-
-            canvas._axes.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))     # plot the image
+            # clear the current canvas and plot the new image
+            canvas._axes.clear()                             
+            canvas._axes.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
             # Set the axes properties
-            canvas._axes.set_xticks([])
-            canvas._axes.set_yticks([])
             canvas._axes.set_title("Image View", fontsize=10)
             canvas._axes.axis('off')  
             canvas.draw()
 
+            canvas._orig_xlim = canvas._axes.get_xlim()
+            canvas._orig_ylim = canvas._axes.get_ylim()
 
  
-    def display_histogram(self, zoom=0):
+    def display_histogram(self):
         """
-        Display the histogram of the input and output images in the respective labels.
-        Can make a zoom effect on the histogram by changing the y-axis limit.
+        Plot the histogram of the given image on the canvas.
         Args:
-            zoom (int): The zoom amount for the histogram. Default is 0.
+            image (numpy.ndarray): The image data for which the histogram is to be plotted.
         """
-        pass
+        for image, canvas in zip([self.input_BGRA, self.output_BGRA], [self.in_im_canvas, self.out_im_canvas]):
+
+            canvas._axes.clear()                    # clear the current canvas                         
+            bgra2rgba = [2, 1, 0, 3]                # OpenCV uses BGRA format, convert to RGBA for display
+            canvas._axes.hist(self.output_BGRA[:, :, bgra2rgba[self.channel_index]].ravel(), bins=256, alpha=0.5)
+
+            canvas._axes.set_title('Histogram')
+            canvas._axes.set_xlim(left=0, right=256)
+            canvas.draw()
 
 
     def get_color_channels(self):
