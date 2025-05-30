@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QFont
 from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from ui import toolboxes
@@ -30,9 +30,7 @@ class MainWindow(QWidget, UiManagement):
         self.init_bottomLayout()
 
         # Initialize UI variables in UiManagement
-        self.init_ui_variables(self.contentLayout, self.add_new_box, self.leftLabel,
-                                              self.rightLabel, self.leftTitle, self.rightTitle,
-                                              self.zoomIn, self.zoomOut, self.out_im_canvas)  
+        self.init_ui_variables(self.contentLayout, self.add_new_box, self.in_im_canvas, self.out_im_canvas)  
                
 
     def resizeEvent(self, event):
@@ -48,54 +46,17 @@ class MainWindow(QWidget, UiManagement):
         """
         # Create top layout and add it to the main layout
         topLayout = QHBoxLayout()
+        topLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addLayout(topLayout, 55)  
 
-        # create leftLayout to hold the left image and title
-        leftLayout = QVBoxLayout()
-        leftLayout.setContentsMargins(0, 0, 0, 0)
-        leftLayout.setSpacing(0)
-        topLayout.addLayout(leftLayout, 6)
-
-        # create leftTitle label for displaying the input image title
-        self.leftTitle = QLabel("")
-        leftLayout.addWidget(self.leftTitle, 0.5, alignment=Qt.AlignCenter)
-        self.leftTitle.hide()
-
-        # Create leftLabel for displaying the input image
-        self.leftLabel = QLabel(self)
-        pixmap = QPixmap("images/no_image.jpg")
-        self.leftLabel.setPixmap(pixmap)
-        self.leftLabel.setAlignment(Qt.AlignCenter)
-        leftLayout.addWidget(self.leftLabel, 12)
+        # Create input image canvas
+        self.in_im_canvas = InteractiveCanvas()
+        topLayout.addWidget(self.in_im_canvas)
 
         # create spacer layout to separate the two labels
         spacer = QVBoxLayout()
         topLayout.addLayout(spacer, 1)
-
-        # create zoom layout
-        zoomLayout = QHBoxLayout()
-        spacer.addLayout(zoomLayout, 1)
-        font = QFont()              
-        font.setPointSize(12)  
-
-        # create zoom out button
-        self.zoomOut = QPushButton("-")
-        self.zoomOut.setFixedWidth(40)
-        self.zoomOut.setFont(font) 
-        self.zoomOut.setStyleSheet("padding-bottom: 2px;")
-        self.zoomOut.clicked.connect(lambda: self.display_histogram(zoom=-1)) 
-        zoomLayout.addWidget(self.zoomOut, 1, alignment=Qt.AlignBottom)
-        self.zoomOut.hide()
-        
-        # create zoom in button
-        self.zoomIn = QPushButton("+")
-        self.zoomIn.setFixedWidth(40)
-        self.zoomIn.setFont(font) 
-        self.zoomIn.setStyleSheet("padding-bottom: 2px;")
-        self.zoomIn.clicked.connect(lambda: self.display_histogram(zoom=1))
-        zoomLayout.addWidget(self.zoomIn, 1, alignment=Qt.AlignBottom)
-        self.zoomIn.hide()
-        
+  
         # create spacer label
         arrow = QLabel(">")
         font = QFont()              
@@ -104,39 +65,9 @@ class MainWindow(QWidget, UiManagement):
         arrow.setAlignment(Qt.AlignCenter)  
         spacer.addWidget(arrow, 1, alignment=Qt.AlignTop)
 
-        # create rightLayout to hold the right image and title
-        rightLayout = QVBoxLayout()
-        rightLayout.setContentsMargins(0, 0, 0, 0)
-        rightLayout.setSpacing(0)
-        topLayout.addLayout(rightLayout, 6)
-
-        # create rightTitle label for displaying the output image title
-        self.rightTitle = QLabel("")
-        rightLayout.addWidget(self.rightTitle, 0.5, alignment=Qt.AlignCenter)
-        self.rightTitle.hide()
-
+        # Create output image canvas
         self.out_im_canvas = InteractiveCanvas()
-        rightLayout.addWidget(self.out_im_canvas)
-
-        # Create right figure 
-        """
-        self.out_im_figure = Figure(figsize=(5, 4), dpi=100)
-        self.out_im_canvas = FigureCanvas(self.out_im_figure)
-        rightLayout.addWidget(self.out_im_canvas, 12)
-        """
-
-        # Create NavigationToolbar 
-        """
-        self.out_im_toolbar = NavigationToolbar(self.out_im_canvas, self)
-        rightLayout.addWidget(self.out_im_toolbar)
-        """
-
-        # Create rightLabel for displaying the output image
-        self.rightLabel = QLabel(self)
-        pixmap = QPixmap("images/no_image.jpg")
-        self.rightLabel.setPixmap(pixmap)
-        self.rightLabel.setAlignment(Qt.AlignCenter)
-        rightLayout.addWidget(self.rightLabel, 12)
+        topLayout.addWidget(self.out_im_canvas)
 
 
     def init_midLayout(self):
@@ -273,12 +204,11 @@ class MainWindow(QWidget, UiManagement):
 
 
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-from PySide6.QtCore import Qt
-
-
 class InteractiveCanvas(FigureCanvas):
+    """
+    A custom canvas for displaying and interacting with matplotlib figures.
+    This canvas supports panning and zooming using mouse events and the scroll wheel.
+    """
     def __init__(self, parent=None):
         self.figure = Figure()
         super().__init__(self.figure)
@@ -290,22 +220,31 @@ class InteractiveCanvas(FigureCanvas):
         self._is_panning = False
         self._pan_start = None
 
+
     def wheelEvent(self, event):
+        """
+        Handle the mouse wheel event for zooming in and out of the plot.
+        Args:
+            event (QWheelEvent): The wheel event containing information about the scroll direction.
+        """
+        # Check if the axes are set, if not, do nothing
         if self._axes is None:
             return
 
+        # Get the mouse position in data coordinates
         pos = event.position()
         x, y = pos.x(), pos.y()
         xdata, ydata = self._axes.transData.inverted().transform((x, y))
 
+        # Determine the zoom factor based on the scroll direction
         step = event.angleDelta().y()
-        
-        # TERSLEME: Scroll yönü ters çevrildi
         factor = 1.2 if step < 0 else 0.8
 
+        # Adjust the x and y limits based on the zoom factor
         xlim = self._axes.get_xlim()
         ylim = self._axes.get_ylim()
 
+        # Calculate new limits based on the zoom factor and the mouse position
         self._axes.set_xlim([
             xdata - (xdata - xlim[0]) * factor,
             xdata + (xlim[1] - xdata) * factor
@@ -314,21 +253,39 @@ class InteractiveCanvas(FigureCanvas):
             ydata - (ydata - ylim[0]) * factor,
             ydata + (ylim[1] - ydata) * factor
         ])
-        self.draw()
+        self.draw()     
+
 
     def mousePressEvent(self, event):
+        """
+        Handle the mouse press event to initiate panning.
+        Args:
+            event (QMouseEvent): The mouse event containing information about the button pressed.
+        """
+        # Check if the left mouse button is pressed to start panning
         if event.button() == Qt.LeftButton:
             self._is_panning = True
             self._pan_start = event.position()
 
+
     def mouseMoveEvent(self, event):
+        """
+        Handle the mouse move event to update the plot during panning.
+        Args:
+            event (QMouseEvent): The mouse event containing information about the current position.
+        """
+        # Check if panning is active and the pan start position is set
         if self._is_panning and self._pan_start:
+
+            # Calculate the distance moved in pixels
             dx = event.position().x() - self._pan_start.x()
             dy = event.position().y() - self._pan_start.y()
 
+            # Convert the pixel movement to data coordinates
             dx_data = dx / self.width() * (self._axes.get_xlim()[1] - self._axes.get_xlim()[0])
             dy_data = dy / self.height() * (self._axes.get_ylim()[1] - self._axes.get_ylim()[0])
 
+            # Update the x and y limits based on the pan distance
             self._axes.set_xlim([
                 self._axes.get_xlim()[0] - dx_data,
                 self._axes.get_xlim()[1] - dx_data
@@ -341,23 +298,15 @@ class InteractiveCanvas(FigureCanvas):
             self._pan_start = event.position()
             self.draw()
 
+
     def mouseReleaseEvent(self, event):
+        """
+        Handle the mouse release event to stop panning.
+        Args:
+            event (QMouseEvent): The mouse event containing information about the button released.
+        """
+        # Check if the left mouse button is released to stop panning
         if event.button() == Qt.LeftButton:
             self._is_panning = False
             self._pan_start = None
 
-    def plot_histogram(self, image):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-
-        if len(image.shape) == 2:
-            ax.hist(image.ravel(), bins=256, color='black')
-        else:
-            colors = ('r', 'g', 'b')
-            for i, color in enumerate(colors):
-                ax.hist(image[:, :, i].ravel(), bins=256, color=color, alpha=0.5)
-
-        ax.set_title('Histogram')
-        ax.set_xlim(left=0, right=256)
-        self._axes = ax
-        self.draw()

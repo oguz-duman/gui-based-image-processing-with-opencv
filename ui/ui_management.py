@@ -21,8 +21,7 @@ class UiManagement():
     def __init__(self):
         self.init_variables()
 
-    def init_ui_variables(self, toolbox_wrapper, footer_toolbox, leftLabel, 
-                          rightLabel, leftTitle, rightTitle, zoomIn, zoomOut, out_im_canvas):
+    def init_ui_variables(self, toolbox_wrapper, footer_toolbox, in_im_canvas, out_im_canvas):
         """
         Gets the necessary widgets and layout from the 'main_window' and sets up the pipeline.
         Args:
@@ -37,12 +36,7 @@ class UiManagement():
         """
         self.toolbox_wrapper = toolbox_wrapper
         self.footer_toolbox = footer_toolbox
-        self.leftLabel = leftLabel
-        self.rightLabel = rightLabel
-        self.leftTitle = leftTitle
-        self.rightTitle = rightTitle
-        self.zoomIn = zoomIn
-        self.zoomOut = zoomOut
+        self.in_im_canvas = in_im_canvas
         self.out_im_canvas = out_im_canvas
 
         # Initialize the pipeline
@@ -50,17 +44,10 @@ class UiManagement():
 
         # Modes and their corresponding methods which are called when the mode is activated
         self.mode_handlers = {      
-            'IMAGE': lambda: self.display_image([self.input_BGRA, self.output_BGRA]),  
+            'IMAGE': lambda: self.display_images([self.input_BGRA, self.output_BGRA]),  
             'HISTOGRAM': lambda: self.display_histogram(self.zoomAmount),
-            'CHANNELS': lambda: self.display_image(self.get_color_channels()),  
-            'FREQUENCY': lambda: self.display_image(self.fourier_transform())
-        }
-        # Declares which widgets will be shown and which widgets will be hidden based on the selected mode
-        self.widgets_per_mode = {
-            'IMAGE': [],
-            'HISTOGRAM': [self.zoomIn, self.zoomOut],
-            'CHANNELS': [self.leftTitle, self.rightTitle],
-            'FREQUENCY': [self.leftTitle, self.rightTitle]
+            'CHANNELS': lambda: self.display_images(self.get_color_channels()),  
+            'FREQUENCY': lambda: self.display_images(self.fourier_transform())
         }
 
 
@@ -73,9 +60,6 @@ class UiManagement():
         
         self.active_mode = 'IMAGE'                  # current mode mode variable
         self.channel_index = 0                      # current color layer variable
-        
-        self.y_lim = 0                              # y-axis limit variable for histogram
-        self.zoomAmount = 0                         # zoom amount variable for histogram
         
         
     def open_new_image(self):
@@ -92,7 +76,7 @@ class UiManagement():
             self.output_BGRA = image.copy()      # make a copy of the input image for output
 
             # display the input and output images in the labels
-            self.display_image([self.input_BGRA, self.output_BGRA])  
+            self.display_images([self.input_BGRA, self.output_BGRA])  
 
             self.pipeline_on_change()            # process the image through the pipeline
 
@@ -206,7 +190,7 @@ class UiManagement():
             self.channel_index = self.channel_index + 1 if self.channel_index + 1 < len(CHANNEL_NAMES) else 0  # increment the channel index 
             if self.channel_index == 0:
                 self.switch_mode('IMAGE')  
-                self.display_image([self.input_BGRA, self.output_BGRA])
+                self.display_images([self.input_BGRA, self.output_BGRA])
             else:
                 self.mode_handlers[mode_name]()          # call the method corresponding to the mode name             
 
@@ -219,43 +203,28 @@ class UiManagement():
         """
         self.active_mode = mode_name                # active mode name
         self.channel_index = 0                      # reset channel index
-        self.zoomAmount = 0                         # reset zoom amount
 
-        # show or hide the relevant widgets based on the selected mode
-        widgets_to_show = []
-        for w in self.widgets_per_mode.keys():
-            if w == mode_name:
-                for widget in self.widgets_per_mode[w]:
-                    widgets_to_show.append(widget)
-            else:
-                for widget in self.widgets_per_mode[w]:
-                    widget.hide()
 
-        for widget in widgets_to_show:
-            widget.show()
-           
-
-    def display_image(self, images):
+    def display_images(self, images):
         """
-        Display the input and output images in the respective labels.
-        Args:
-            images (list): A list of images to be displayed in the left and right labels respectively.
+        Display input and output images on the embedded matplotlib canvas.
+
+        Parameters:
+            images (list): A list containing the images to be displayed. 
         """
-        self.out_im_canvas.plot_histogram(images[0])
+        for image, canvas in zip(images, [self.in_im_canvas, self.out_im_canvas]):
+            
+            canvas._axes.clear()                                            # clear current axes
 
-        # set the title to current color channel
-        self.leftTitle.setText(f"{CHANNEL_NAMES[self.channel_index]} Channel")
-        self.rightTitle.setText(f"{CHANNEL_NAMES[self.channel_index]} Channel")
+            canvas._axes.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))     # plot the image
 
-        for image, label in zip(images, [self.leftLabel, self.rightLabel]):
-            # Convert BGRA to RGBA
-            image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
-            qimg = QImage(image.data, image.shape[1], image.shape[0], image.strides[0], QImage.Format_RGBA8888)
+            # Set the axes properties
+            canvas._axes.set_xticks([])
+            canvas._axes.set_yticks([])
+            canvas._axes.set_title("Image View", fontsize=10)
+            canvas._axes.axis('off')  
+            canvas.draw()
 
-            # Set the QImage to the QLabel
-            pixmap = QPixmap.fromImage(qimg) 
-            scaled = pixmap.scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            label.setPixmap(scaled)
 
  
     def display_histogram(self, zoom=0):
@@ -265,49 +234,7 @@ class UiManagement():
         Args:
             zoom (int): The zoom amount for the histogram. Default is 0.
         """
-        self.zoomAmount += zoom                         # update the zoom amount if a zoom amount value is passed
-        zoom_factor = 1 / (1 + self.zoomAmount * 0.3)   
-
-        y_lims = []   
-        # Calculate the y-axis limit for both histograms
-        for image, label in zip(self.get_color_channels(), [self.leftLabel, self.rightLabel]):
-
-            histNums = plt.hist(image.ravel(), bins=100, color='black')     # get histogram data
-            y_lim = np.max(histNums[0]) * 1.1               # set y-axis limit to 10% more than the max value
-            y_lims.append(round(y_lim * zoom_factor))       # apply the zoom effect to the y-axis limit
-            
-        # Select the larger y_lim for both histograms
-        y_lim = np.max(y_lims)                          
-        yStep = y_lim / 5                             
-        
-        # display the histogram for both input and output images
-        for image, label in zip(self.get_color_channels(), [self.leftLabel, self.rightLabel]):
-
-            # create a new figure and plot the histogram
-            fig, ax = plt.subplots()                                        
-            histNums = ax.hist(image.ravel(), bins=100, color='black')   
-
-            # Set style and labels
-            ax.grid(True)
-            ax.set_xlim(0, 255)
-            ax.set_ylim(0, y_lim)
-            ax.set_xticks(np.append(np.arange(0, 250, 25), 255))
-            ax.set_yticks(np.uint32(np.arange(0, y_lim+1, yStep)))
-            
-            # set title based on the currently active color channel
-            ax.set_title(f"{CHANNEL_NAMES[self.channel_index]} Channel")
-
-            # Save the figure to a BytesIO buffer
-            buf = BytesIO()
-            fig.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
-            plt.close(fig)
-
-            # Convert the buffer to QImage and set it to the QLabel
-            buf.seek(0)
-            qimg = QImage.fromData(buf.getvalue())
-            pixmap = QPixmap.fromImage(qimg)
-            pixmap = pixmap.scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            label.setPixmap(pixmap)
+        pass
 
 
     def get_color_channels(self):
