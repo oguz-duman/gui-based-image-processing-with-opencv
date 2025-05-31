@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QFileDialog
@@ -18,7 +19,7 @@ class UiManagement():
     def __init__(self):
         self.init_variables()
 
-    def init_ui_variables(self, toolbox_wrapper, footer_toolbox, in_im_canvas, out_im_canvas):
+    def init_ui_variables(self, toolbox_wrapper, footer_toolbox, in_im_canvas, out_im_canvas, left_title, right_title):
         """
         Gets the necessary widgets and layout from the 'main_window' and sets up the pipeline.
         Args:
@@ -26,11 +27,15 @@ class UiManagement():
             footer_toolbox (QWidget): The footer widget for the toolbox layout.
             in_im_canvas (MatplotlibCanvas): The canvas for displaying the input image.
             out_im_canvas (MatplotlibCanvas): The canvas for displaying the output image.
+            left_title (QLabel): The label for the left title.
+            right_title (QLabel): The label for the right title.
         """
         self.toolbox_wrapper = toolbox_wrapper
         self.footer_toolbox = footer_toolbox
         self.in_im_canvas = in_im_canvas
         self.out_im_canvas = out_im_canvas
+        self.left_title = left_title
+        self.right_title = right_title
 
         # Initialize the pipeline
         self.pipeline = Pipeline()  
@@ -41,6 +46,14 @@ class UiManagement():
             'HISTOGRAM': lambda: self.display_histogram(),
             'CHANNELS': lambda: self.display_images(self.get_color_channels()),  
             'FREQUENCY': lambda: self.display_images(self.fourier_transform())
+        }
+
+        # Declares which widgets will be shown and which widgets will be hidden based on the selected mode
+        self.widgets_per_mode = {
+            'IMAGE': [],
+            'HISTOGRAM': [],
+            'CHANNELS': [self.left_title, self.right_title],
+            'FREQUENCY': [self.left_title, self.right_title]
         }
 
 
@@ -177,18 +190,39 @@ class UiManagement():
         if self.input_BGRA is None:
             return
         elif not self.active_mode == mode_name:
-            self.active_mode = mode_name                # active mode name
-            self.channel_index = 0                      # reset channel index
+            self.switch_mode(mode_name)
             self.mode_handlers[mode_name]()             # call the method corresponding to the mode name             
         else:
             self.channel_index = self.channel_index + 1 if self.channel_index + 1 < len(CHANNEL_NAMES) else 0  # increment the channel index 
             if self.channel_index == 0:
-                self.active_mode = 'IMAGE'                  # active mode name
-                self.channel_index = 0                      # reset channel index
+                self.switch_mode('IMAGE')
                 self.display_images([self.input_BGRA, self.output_BGRA])
             else:
                 self.mode_handlers[mode_name]()          # call the method corresponding to the mode name             
 
+
+    def switch_mode(self, mode_name):
+        """
+        Updates the active mode and toggles visibility of related UI widgets.
+        Args:
+            mode_name (str): The name of the mode to switch to.
+        """
+        self.active_mode = mode_name                # active mode name
+        self.channel_index = 0                      # reset channel index
+
+        # show or hide the relevant widgets based on the selected mode
+        widgets_to_show = []
+        for w in self.widgets_per_mode.keys():
+            if w == mode_name:
+                for widget in self.widgets_per_mode[w]:
+                    widgets_to_show.append(widget)
+            else:
+                for widget in self.widgets_per_mode[w]:
+                    widget.hide()
+
+        for widget in widgets_to_show:
+            widget.show()
+        
 
     def display_images(self, images):
         """
@@ -197,15 +231,15 @@ class UiManagement():
         Parameters:
             images (list): A list containing the images to be displayed. 
         """
+        self.left_title.setText(f"{CHANNEL_NAMES[self.channel_index]} Channel")
+        self.right_title.setText(f"{CHANNEL_NAMES[self.channel_index]} Channel")
+
         for image, canvas in zip(images, [self.in_im_canvas, self.out_im_canvas]):
             
             # clear the current canvas and plot the new image
             canvas._axes.clear()                             
-            canvas._axes.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-
-            # Set the axes properties
-            canvas._axes.set_title("Image View", fontsize=10)
-            canvas._axes.axis('off')  
+            canvas._axes.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), interpolation="none")
+            canvas.configuration_types("image")
             canvas.draw()
 
             canvas._orig_xlim = canvas._axes.get_xlim()
@@ -215,17 +249,33 @@ class UiManagement():
     def display_histogram(self):
         """
         Plot the histogram of the given image on the canvas.
-        Args:
-            image (numpy.ndarray): The image data for which the histogram is to be plotted.
         """
-        for image, canvas in zip([self.input_BGRA, self.output_BGRA], [self.in_im_canvas, self.out_im_canvas]):
+        y_lims = []   
+        # Calculate the y-axis limit for both histograms
+        for image in self.get_color_channels():
+            histNums = plt.hist(image.ravel(), bins=100, color='black')   
+            y_lims.append(np.max(histNums[0]) * 1.1)               # set y-axis limit to 10% more than the max value
+            
+        # Select the larger y_lim for both histograms
+        y_lim = np.max(y_lims)                          
+        yStep = y_lim / 5     
 
-            canvas._axes.clear()                    # clear the current canvas                         
-            bgra2rgba = [2, 1, 0, 3]                # OpenCV uses BGRA format, convert to RGBA for display
-            canvas._axes.hist(self.output_BGRA[:, :, bgra2rgba[self.channel_index]].ravel(), bins=256, alpha=0.5)
+        for image, canvas in zip(self.get_color_channels(), [self.in_im_canvas, self.out_im_canvas]):
+            
+            # clear the canvas and plot the histogram                         
+            canvas._axes.clear()                    
+            canvas._axes.hist(image.ravel(), bins=100, color='black')   
 
-            canvas._axes.set_title('Histogram')
-            canvas._axes.set_xlim(left=0, right=256)
+            # Set style and labels
+            canvas._axes.set_xlim(0, 255)
+            canvas._axes.set_ylim(0, y_lim)
+            canvas._axes.set_xticks(np.append(np.arange(0, 250, 25), 255))
+            canvas._axes.set_yticks(np.uint32(np.arange(0, y_lim+1, yStep)))
+            canvas.configuration_types("histogram")
+
+            # set title based on the currently active color channel
+            canvas._axes.set_title(f"{CHANNEL_NAMES[self.channel_index]} Channel")
+           
             canvas.draw()
 
 

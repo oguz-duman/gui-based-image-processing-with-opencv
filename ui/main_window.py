@@ -22,9 +22,9 @@ class MainWindow(QWidget, UiManagement):
         super().__init__()  
 
         # Create main layout and set it to the widget
-        self.mainLayout = QVBoxLayout(self) 
-        self.mainLayout.setContentsMargins(20, 5, 20, 5) 
-        self.mainLayout.setSpacing(15)
+        self.main_layout = QVBoxLayout(self) 
+        self.main_layout.setContentsMargins(20, 5, 20, 5) 
+        self.main_layout.setSpacing(15)
 
         # init top, mid and bottom layouts
         self.init_top_layout()
@@ -32,7 +32,7 @@ class MainWindow(QWidget, UiManagement):
         self.init_bottomLayout()
 
         # Initialize UI variables in UiManagement
-        self.init_ui_variables(self.contentLayout, self.add_new_box, self.in_im_canvas, self.out_im_canvas)  
+        self.init_ui_variables(self.contentLayout, self.add_new_box, self.in_im_canvas, self.out_im_canvas, self.left_title, self.right_title)  
 
         # read and display initial images
         initial_im = cv2.imread('images/no_image.jpg')
@@ -51,16 +51,28 @@ class MainWindow(QWidget, UiManagement):
         Initialize the top layout with two labels for displaying images.
         """
         # Create top layout and add it to the main layout
-        topLayout = QHBoxLayout()
-        self.mainLayout.addLayout(topLayout, 55)  
+        top_layout = QHBoxLayout()
+        self.main_layout.addLayout(top_layout, 55)  
+
+        # create leftLayout to hold the left image and title
+        left_layout = QVBoxLayout()
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(0)
+        top_layout.addLayout(left_layout, 48)
+
+        # create leftTitle label for displaying the input image title
+        self.left_title = QLabel("")
+        self.left_title.setText("Channel")
+        left_layout.addWidget(self.left_title, alignment=Qt.AlignCenter)
+        self.left_title.hide()
 
         # Create input image canvas
         self.in_im_canvas = InteractiveCanvas()  
-        topLayout.addWidget(self.in_im_canvas, 48)
+        left_layout.addWidget(self.in_im_canvas)
 
         # create spacer layout to separate the two labels
         spacer = QVBoxLayout()
-        topLayout.addLayout(spacer, 4)
+        top_layout.addLayout(spacer, 4)
   
         # create spacer label
         arrow = QLabel(">")
@@ -70,9 +82,20 @@ class MainWindow(QWidget, UiManagement):
         arrow.setAlignment(Qt.AlignCenter)  
         spacer.addWidget(arrow, 1, alignment=Qt.AlignCenter)
 
+        # create rightLayout to hold the right image and title
+        right_layout = QVBoxLayout()
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(0)
+        top_layout.addLayout(right_layout, 48)
+
+        # create rightTitle label for displaying the output image title
+        self.right_title = QLabel("")
+        right_layout.addWidget(self.right_title, alignment=Qt.AlignCenter)
+        self.right_title.hide()
+
         # Create output image canvas
         self.out_im_canvas = InteractiveCanvas()
-        topLayout.addWidget(self.out_im_canvas, 48)
+        right_layout.addWidget(self.out_im_canvas)
 
 
     def init_midLayout(self):
@@ -81,7 +104,7 @@ class MainWindow(QWidget, UiManagement):
         """
         # Create mid layout and add it to the main layout
         midLayout = QHBoxLayout()
-        self.mainLayout.addLayout(midLayout, 10) 
+        self.main_layout.addLayout(midLayout, 10) 
 
         # Create mid layout widgets and add them to the mid layout
         font = QFont()              
@@ -129,7 +152,7 @@ class MainWindow(QWidget, UiManagement):
         """
         # Create bottom layout and add it to the main layout
         bottomLayout = QHBoxLayout()
-        self.mainLayout.addLayout(bottomLayout, 35)
+        self.main_layout.addLayout(bottomLayout, 35)
           
         # create scroll area widget and add it to the bottom layout
         scrollArea = QScrollArea()         
@@ -215,16 +238,15 @@ class InteractiveCanvas(FigureCanvas):
     This canvas supports panning and zooming using mouse events and the scroll wheel.
     """
     def __init__(self, parent=None):
-        self.figure = Figure(facecolor=(0,0,0,0))
-    
+        self.figure = Figure(facecolor=(1,1,1,0))
+
         super().__init__(self.figure)
         self.setParent(parent)
         self.setFocusPolicy(Qt.StrongFocus)
         self.setFocus()
 
-        self._axes = self.figure.add_subplot(111)
-        self.figure.subplots_adjust(left=0, right=1, top=1, bottom=0)       # Adjust the subplot to fill the canvas
-        self._axes.axis('off')  
+        self._axes = self.figure.add_subplot(111)               # Create a single axes 
+        self.configuration_types()                              # Set the initial configuration for the canvas
 
         # Initialize panning variables 
         self._is_panning = False
@@ -340,3 +362,23 @@ class InteractiveCanvas(FigureCanvas):
             self._is_panning = False
             self._pan_start = None
 
+
+    def configuration_types(self, type="image"):
+        """
+        Configure the canvas based on the type of content to be displayed.
+        Args:
+            type (str): The type of content to be displayed. Can be "image" or "histogram".
+        """
+        if type == "image":
+            self._axes.axis('off')  
+            self._axes.grid(False)
+            self.figure.set_facecolor((1,1,1,0))  
+            self.figure.subplots_adjust(left=0, right=1, top=1, bottom=0)       # Adjust the subplot to fill the canvas
+
+        elif type == "histogram":
+            self._axes.axis('on')  
+            self._axes.grid(True)
+            self.figure.set_facecolor((1,1,1,1)) 
+            #self.figure.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.15)
+            self.figure.tight_layout(pad=1.5)
+            self._axes.set_aspect('auto')  
