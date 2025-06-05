@@ -252,7 +252,11 @@ class InteractiveCanvas(FigureCanvas):
         self._is_panning = False
         self._pan_start = None
 
-        # Store original x and y limits for resetting
+        # Variables to store x a nd y limits for zooming and panning
+        self._xlim = None
+        self._ylim = None
+
+        # Variables to store original x and y limits for zooming and panning limits
         self._orig_xlim = None
         self._orig_ylim = None
 
@@ -280,24 +284,24 @@ class InteractiveCanvas(FigureCanvas):
         factor = 1.05 if step < 0 else 0.95
 
         # calculate new limits
-        new_xlim = [
+        self._xlim = [
             xdata - (xdata - xlim[0]) * factor,
             xdata + (xlim[1] - xdata) * factor
         ]
-        new_ylim = [
+        self._ylim = [
             ydata - (ydata - ylim[0]) * factor,
             ydata + (ylim[1] - ydata) * factor
         ]
 
         # ensure the new limits do not go below 0 or exceed original limits
-        new_xlim[0] = max(0, new_xlim[0])  
-        new_ylim[1] = max(0, new_ylim[1])  
-        new_xlim[1] = min(self._orig_xlim[1], new_xlim[1]) 
-        new_ylim[0] = min(self._orig_ylim[0], new_ylim[0])  
+        self._xlim[0] = max(0, self._xlim[0])  
+        self._ylim[1] = max(0, self._ylim[1])  
+        self._xlim[1] = min(self._orig_xlim[1], self._xlim[1]) 
+        self._ylim[0] = min(self._orig_ylim[0], self._ylim[0])  
 
         # Update the axes limits and redraw the canvas
-        self._axes.set_xlim(new_xlim)
-        self._axes.set_ylim(new_ylim)
+        self._axes.set_xlim(self._xlim)
+        self._axes.set_ylim(self._ylim)
         self.draw()
 
 
@@ -331,21 +335,21 @@ class InteractiveCanvas(FigureCanvas):
             dy_data = dy / self.height() * (self._axes.get_ylim()[1] - self._axes.get_ylim()[0])
 
             # Update the x and y limits based on the pan distance
-            new_xlim = [
+            self._xlim = [
                 self._axes.get_xlim()[0] - dx_data,
                 self._axes.get_xlim()[1] - dx_data
             ]
-            new_ylim = [
+            self._ylim = [
                 self._axes.get_ylim()[0] + dy_data,
                 self._axes.get_ylim()[1] + dy_data
             ]
 
             # ensure the new limits do not go below 0 or exceed original limits
-            if not (new_xlim[0] < 0 or new_xlim[1] > self._orig_xlim[1]):
-                self._axes.set_xlim(new_xlim)
+            if not (self._xlim[0] < 0 or self._xlim[1] > self._orig_xlim[1]):
+                self._axes.set_xlim(self._xlim)
             
-            if not (new_ylim[1] < 0 or new_ylim[0] > self._orig_ylim[0]):
-                self._axes.set_ylim(new_ylim)
+            if not (self._ylim[1] < 0 or self._ylim[0] > self._orig_ylim[0]):
+                self._axes.set_ylim(self._ylim)
 
             self._pan_start = event.position()
             self.draw()
@@ -379,6 +383,5 @@ class InteractiveCanvas(FigureCanvas):
             self._axes.axis('on')  
             self._axes.grid(True)
             self.figure.set_facecolor((1,1,1,1)) 
-            #self.figure.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.15)
             self.figure.tight_layout(pad=1.5)
             self._axes.set_aspect('auto')  

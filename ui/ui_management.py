@@ -66,8 +66,8 @@ class UiManagement():
         
         self.active_mode = 'IMAGE'                  # current mode mode variable
         self.channel_index = 0                      # current color layer variable
-        
-        
+                
+
     def open_new_image(self):
         """
         This method is called when the 'Open Image' button is clicked.
@@ -77,6 +77,11 @@ class UiManagement():
 
         if image is not None:
             self.init_variables()                # reinitialize variables since a new image is opened
+            
+            # Reset the x and y limits (zooming) for the input and output image canvases
+            for canvas in [self.in_im_canvas, self.out_im_canvas]:
+                canvas._xlim = 0
+                canvas._ylim = 0
 
             self.input_BGRA = image.copy()       # make a copy of the input image for input
             self.output_BGRA = image.copy()      # make a copy of the input image for output
@@ -242,10 +247,17 @@ class UiManagement():
             canvas.configuration_types("image")
             canvas.draw()
 
+            # get original x and y limits to limit zooming and panning
             canvas._orig_xlim = canvas._axes.get_xlim()
             canvas._orig_ylim = canvas._axes.get_ylim()
 
+            # set the x and y limits to the previous values if any
+            if canvas._xlim and canvas._ylim:
+                canvas._axes.set_xlim(canvas._xlim)
+                canvas._axes.set_ylim(canvas._ylim)
+                canvas.draw()
  
+
     def display_histogram(self):
         """
         Plot the histogram of the given image on the canvas.
