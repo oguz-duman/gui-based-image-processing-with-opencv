@@ -333,7 +333,7 @@ class UiManagement():
         Open a file dialog to select a file path to save the output image.
         """
         # Open file dialog to select a file path to save the image
-        filePath, _ = QFileDialog.getSaveFileName(None, "Save the image", "", "Image Files (*.jpg *.jpeg *.png *.bmp *.gif *.tif *.tiff *.webp)")
+        filePath, _ = QFileDialog.getSaveFileName(None, "Save the image", "", "Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp)")
         
         # Check if a file path was selected
         if filePath:
