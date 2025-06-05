@@ -34,8 +34,8 @@ class MainWindow(QWidget, UiManagement):
         # Initialize UI variables in UiManagement
         self.init_ui_variables(self.contentLayout, self.add_new_box, self.in_im_canvas, self.out_im_canvas, self.left_title, self.right_title)  
 
-        # read and display initial images
-        initial_im = cv2.imread('images/no_image.jpg')
+        # read and display a placeholder image
+        initial_im = cv2.imread('images/no_image.png', cv2.IMREAD_UNCHANGED)  
         self.display_images([initial_im, initial_im])
                
 

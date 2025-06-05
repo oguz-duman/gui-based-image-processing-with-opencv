@@ -238,7 +238,7 @@ class UiManagement():
             
             # clear the current canvas and plot the new image
             canvas._axes.clear()                             
-            canvas._axes.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), interpolation="none")
+            canvas._axes.imshow(image[:, :, [2, 1, 0, 3]], interpolation="none")    # convert BGRA to RGBA and display it
             canvas.configuration_types("image")
             canvas.draw()
 
