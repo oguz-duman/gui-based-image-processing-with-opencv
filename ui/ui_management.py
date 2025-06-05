@@ -306,8 +306,8 @@ class UiManagement():
         bgra2rgba = [2, 1, 0, 3]    
 
         return [
-            self.input_BGRA[:,:,bgra2rgba[self.channel_index]], 
-            self.output_BGRA[:,:,bgra2rgba[self.channel_index]]
+            cv2.cvtColor(self.input_BGRA[:,:,bgra2rgba[self.channel_index]], cv2.COLOR_GRAY2BGRA), 
+            cv2.cvtColor(self.output_BGRA[:,:,bgra2rgba[self.channel_index]], cv2.COLOR_GRAY2BGRA)
         ]                    
 
 
