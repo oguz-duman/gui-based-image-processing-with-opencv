@@ -215,6 +215,11 @@ class UiManagement():
         self.active_mode = mode_name                # active mode name
         self.channel_index = 0                      # reset channel index
 
+        # Reset the x and y limits (zooming) for the input and output image canvases
+        for canvas in [self.in_im_canvas, self.out_im_canvas]:
+            canvas._xlim = 0
+            canvas._ylim = 0
+
         # show or hide the relevant widgets based on the selected mode
         widgets_to_show = []
         for w in self.widgets_per_mode.keys():
