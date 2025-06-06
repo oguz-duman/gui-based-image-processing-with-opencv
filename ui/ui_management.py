@@ -266,36 +266,44 @@ class UiManagement():
     def display_histogram(self):
         """
         Plot the histogram of the given image on the canvas.
-        """
-        y_lims = []   
-        # Calculate the y-axis limit for both histograms
-        for image in self.get_color_channels():
-            histNums = plt.hist(image.ravel(), bins=100, color='black')   
-            y_lims.append(np.max(histNums[0]) * 1.1)               # set y-axis limit to 10% more than the max value
-            
-        # Select the larger y_lim for both histograms
-        y_lim = np.max(y_lims)                          
-        yStep = y_lim / 5     
-
+        """ 
+        y_lims = []  
+        canvases = [self.in_im_canvas, self.out_im_canvas] 
         for image, canvas in zip(self.get_color_channels(), [self.in_im_canvas, self.out_im_canvas]):
-            
-            # clear the canvas and plot the histogram                         
-            canvas._axes.clear()                    
-            canvas._axes.hist(image.ravel(), bins=100, color='black')   
+            canvas._axes.clear()
 
+            # Calculate histogram values and bin edges
+            hist_vals, bin_edges = np.histogram(image, bins=100, range=(0, 255))
+
+            # Use midpoints for x-axis
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+            
+            # Plot as a line
+            color = constants.CHANNEL_NAMES[self.channel_index]
+            canvas._axes.plot(bin_centers, hist_vals, color=color if color != 'Alpha' else 'black')
+            
+            # Get the maximum y value for setting the y-axis limit 
+            y_lims.append(np.max(hist_vals) * 1.1)               
+            
             # Set style and labels
             canvas._axes.set_xlim(0, 255)
-            canvas._axes.set_ylim(0, y_lim)
             canvas._axes.set_xticks(np.append(np.arange(0, 250, 25), 255))
-            canvas._axes.set_yticks(np.uint32(np.arange(0, y_lim+1, yStep)))
             canvas.configuration_types("histogram")
-
-            # set title based on the currently active color channel
             canvas._axes.set_title(f"{CHANNEL_NAMES[self.channel_index]} Channel")
-           
-            canvas.draw()
+            canvas.figure.tight_layout()  
 
+            # Calculate the y-axis limit for both histograms
+            y_lim = np.max(y_lims)                          
+            yStep = y_lim / 5     
 
+        # Set the y-axis limits and ticks for both histograms and draw the canvases
+        for _canvas in canvases:
+            _canvas._axes.set_ylim(0, y_lim)                   
+            _canvas._axes.set_yticks(np.uint32(np.arange(0, y_lim+1, yStep)))
+    
+            _canvas.draw()
+
+    
     def get_color_channels(self):
         """
         Get the currently active color channel from the input and output images.
