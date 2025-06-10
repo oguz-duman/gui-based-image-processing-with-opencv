@@ -11,9 +11,6 @@ venv/
 env/
 .env
 
-# tests directory
-tests/
-
 # Build directories
 build/
 dist/
