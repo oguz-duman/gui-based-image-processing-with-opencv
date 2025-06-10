@@ -7,9 +7,9 @@ from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLa
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from ui import toolboxes
+from app import toolboxes
 import constants
-from ui.ui_management import UiManagement
+from gui.ui_management import UiManagement
 
 
 class MainWindow(QWidget, UiManagement):

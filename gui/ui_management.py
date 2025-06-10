@@ -6,9 +6,9 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QFileDialog
 
 import constants
-from ui import toolboxes
+from app import toolboxes
 from constants import CHANNEL_NAMES
-from processing.pipeline import Pipeline
+from app.pipeline import Pipeline
 
 
 class UiManagement():

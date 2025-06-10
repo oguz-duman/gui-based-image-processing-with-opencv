@@ -8,9 +8,9 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxL
                                QSizePolicy, QFrame, QCheckBox, QComboBox)
 
 import constants
-from ui.ui_management import UiManagement
-from processing.processors import Processors
-from ui.ui_components import UiComponents 
+from gui.ui_management import UiManagement
+from app.processors import Processors
+from gui.ui_components import UiComponents 
 
 
 class AddNewBox(QWidget):
