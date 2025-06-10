@@ -1,4 +1,4 @@
-from app import utils
+from app import processor_utils
 import numpy as np
 import cv2
 
@@ -12,7 +12,7 @@ def apply_gamma_transform(imageBGRA, gamma, mask=None):
     Returns:
         imageBGRA (numpy.ndarray): The image with adjusted contrast in the BGRA format.
     """
-    imageHSVA = utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
+    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
     vChannel = imageHSVA[:, :, 2].astype(np.float32) / 255.0    # get the V channel of the HSVA image
     vChannel = cv2.pow(vChannel, gamma)                         # apply gamma transformation
     enhanced = (vChannel*255).astype(np.uint8)        # update the V channel of the HSVA image
@@ -20,6 +20,6 @@ def apply_gamma_transform(imageBGRA, gamma, mask=None):
     # If a mask is provided, use it to update only the pixels where mask != 0
     imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
 
-    imageBGRA = utils.hsva2bgra_transform(imageHSVA)                       # convert back to BGRA color space
+    imageBGRA = processor_utils.hsva2bgra_transform(imageHSVA)                       # convert back to BGRA color space
 
     return imageBGRA

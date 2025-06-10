@@ -7,12 +7,12 @@ from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLa
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from app import toolboxes
+from app import toolbox_bases
 import constants
-from gui.ui_management import UiManagement
+from gui.gui_management import GUiManagement
 
 
-class MainWindow(QWidget, UiManagement):
+class MainWindow(QWidget, GUiManagement):
     """
     Main window class for the image processing application.
     This class initializes the UI components and manages drop events for reordering toolboxes.
@@ -170,7 +170,7 @@ class MainWindow(QWidget, UiManagement):
         self.contentLayout.setAlignment(Qt.AlignLeft)
                 
         # insert 'new function' box
-        self.add_new_box = toolboxes.AddNewBox()
+        self.add_new_box = toolbox_bases.AddNewBox()
         self.contentLayout.addWidget(self.add_new_box)
         self.add_new_box.trigger.connect(self.insert_toolbox)  # connect click event to 'add_new_toolbox' method
 
@@ -202,7 +202,7 @@ class MainWindow(QWidget, UiManagement):
         index = self.find_insert_index(pos)             # Find the index where the item should be inserted
 
         # Check if the source is a valid FunctionBox
-        if source and isinstance(source, toolboxes.Toolbox):
+        if source and isinstance(source, toolbox_bases.Toolbox):
             self.pipeline.move_step(source, index)              # move the function box in the pipeline
             self.contentLayout.removeWidget(source)             # Remove the widget from its current position in the layout
             self.contentLayout.insertWidget(index, source)      # Insert the widget at the new index in the layout

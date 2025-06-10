@@ -1,8 +1,3 @@
-from app import utils
-import numpy as np
-import cv2
-
-
 def crop_image(imageBGRA, leftCut, rightCut, topCut, bottomCut):
     """
     Crops the given image by the specified values.

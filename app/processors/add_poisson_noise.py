@@ -1,4 +1,4 @@
-from app import utils
+from app import processor_utils
 import numpy as np
 import cv2
 
@@ -14,7 +14,7 @@ def add_poisson_noise(imageBGRA, mask=None):
     imageBGR = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)      # convert the BGRA image to BGR color space
 
     # If the image is grayscale, make the noise channels identical
-    if utils.is_image_grayscale(imageBGRA):
+    if processor_utils.is_image_grayscale(imageBGRA):
         imageGray = np.random.poisson(imageBGR[:, :, 0].astype(np.float32))
         imageBGR = cv2.merge((imageGray, imageGray, imageGray))
     else:

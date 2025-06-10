@@ -1,4 +1,4 @@
-from app import utils
+from app import processor_utils
 import numpy as np
 import cv2
 
@@ -12,12 +12,12 @@ def adjust_brightness(imageBGRA, value, mask=None):
     Returns:
         imageBGRA (numpy.ndarray): The brightened image in the BGRA format.
     """
-    imageHSVA = utils.bgra2hsva_transform(imageBGRA)                           # convert the image to HSVA color space
+    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                           # convert the image to HSVA color space
     brightened = cv2.add(imageHSVA[:, :, 2], value)                 # brighten the V channel of the HSVA image
 
     # If a mask is provided, use it to update only the pixels where mask != 0
     imageHSVA[:, :, 2] = brightened if mask is None else np.where(mask > 0, brightened, imageHSVA[:, :, 2])
     
-    imageBGRA = utils.hsva2bgra_transform(imageHSVA)                           # convert back to BGRA color space
+    imageBGRA = processor_utils.hsva2bgra_transform(imageHSVA)                           # convert back to BGRA color space
 
     return imageBGRA

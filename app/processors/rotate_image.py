@@ -1,4 +1,5 @@
-from app import utils
+from app.processors.apply_padding import apply_padding
+from app.processors.crop_image import crop_image
 import numpy as np
 import cv2
 
@@ -30,7 +31,7 @@ def rotate_image(imageBGRA, angle):
     pad_h = 0 if pad_h < 0 else pad_h
 
     # apply padding to the image before rotation
-    imageBGRA = utils.apply_padding(imageBGRA, cv2.BORDER_CONSTANT, pad_w//2, pad_w//2, pad_h//2, pad_h//2, (0, 0, 0, 0))  
+    imageBGRA = apply_padding(imageBGRA, cv2.BORDER_CONSTANT, pad_w//2, pad_w//2, pad_h//2, pad_h//2, (0, 0, 0, 0))  
     
     # recalculate the shape and center after padding
     (h, w) = imageBGRA.shape[:2]
@@ -41,6 +42,6 @@ def rotate_image(imageBGRA, angle):
     imageBGRA = cv2.warpAffine(imageBGRA, M, (w, h))
 
     # crop the image to remove the unnecessary paddings
-    imageBGRA = utils.crop_image(imageBGRA, cut_x//2, cut_x//2, cut_y//2, cut_y//2)
+    imageBGRA = crop_image(imageBGRA, cut_x//2, cut_x//2, cut_y//2, cut_y//2)
 
     return imageBGRA

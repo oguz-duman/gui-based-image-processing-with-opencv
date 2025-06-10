@@ -1,4 +1,4 @@
-from app import utils
+from app import processor_utils
 import numpy as np
 import cv2
 
@@ -16,7 +16,7 @@ def add_gaussian_noise(imageBGRA, mean, std, mask=None):
     imageBGR = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR).astype(np.float32)          # convert the BGRA image to BGR color space
 
     # If the image is grayscale, make the noise channels identical
-    if utils.is_image_grayscale(imageBGRA):
+    if processor_utils.is_image_grayscale(imageBGRA):
         noise = np.random.normal(mean, std, imageBGR[:, :, 0].shape).astype(np.float32) 
         noise = cv2.merge((noise, noise, noise))
     else:

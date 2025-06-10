@@ -1,4 +1,4 @@
-from app import utils
+from app import processor_utils
 import numpy as np
 import cv2
 
@@ -14,7 +14,7 @@ def apply_order_stat_filter(imageBGRA, kernelSize, order, mask=None):
     Returns:
         imageBGRA (numpy.ndarray): The image with order statistics filter applied in the BGRA format.
     """
-    imageHSVA = utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
+    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
     vChannel = imageHSVA[:, :, 2]                               # get the V channel of the HSVA image
 
     # apply the order statistics filter to the V channel
@@ -28,6 +28,6 @@ def apply_order_stat_filter(imageBGRA, kernelSize, order, mask=None):
     # If a mask is provided, use it to update only the pixels where mask != 0
     imageHSVA[:, :, 2] = vChannel if mask is None else np.where(mask > 0, vChannel, imageHSVA[:, :, 2])
 
-    imageBGRA = utils.hsva2bgra_transform(imageHSVA)                       # convert back to BGRA color space
+    imageBGRA = processor_utils.hsva2bgra_transform(imageHSVA)                       # convert back to BGRA color space
 
     return imageBGRA

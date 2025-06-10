@@ -1,4 +1,4 @@
-from app import utils
+from app import processor_utils
 import numpy as np
 import cv2
 
@@ -13,7 +13,7 @@ def adjust_contrast_by_T(imageBGRA, alpha, beta, mask=None):
     Returns:
         imageBGRA (numpy.ndarray): The image with adjusted contrast in the BGRA format.
     """
-    imageHSVA = utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
+    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
 
     # apply the contrast adjustment to the v channel of the HSVA image
     enhanced = cv2.convertScaleAbs(imageHSVA[:, :, 2], -1, alpha, beta) 
@@ -21,6 +21,6 @@ def adjust_contrast_by_T(imageBGRA, alpha, beta, mask=None):
     # If a mask is provided, use it to update only the pixels where mask != 0
     imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
 
-    imageBGRA = utils.hsva2bgra_transform(imageHSVA)                       # convert back to BGRA color space
+    imageBGRA = processor_utils.hsva2bgra_transform(imageHSVA)                       # convert back to BGRA color space
 
     return imageBGRA

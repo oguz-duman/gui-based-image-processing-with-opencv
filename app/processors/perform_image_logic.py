@@ -1,5 +1,3 @@
-from app import utils
-import numpy as np
 import cv2
 
 def perform_image_logic(imageBGRA, secondImage, operation):

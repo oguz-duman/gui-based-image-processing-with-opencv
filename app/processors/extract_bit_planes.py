@@ -1,4 +1,4 @@
-from app import utils
+from app import processor_utils
 import numpy as np
 import cv2
 
@@ -11,7 +11,7 @@ def extract_bit_planes(imageBGRA, bitPlane):
     Returns:
         imageBGRA (numpy.ndarray): The image with the specified bit plane extracted in the BGRA format.
     """
-    imageHSVA = utils.bgra2hsva_transform(imageBGRA)                             # convert the image to HSVA color space
+    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                             # convert the image to HSVA color space
     imageGray = cv2.bitwise_and(imageHSVA[:, :, 2], 1 << bitPlane)    # get the selected bit plane using V channel
     imageBinary = np.where(imageGray > 0, 255, 0).astype(np.uint8)    # convert the bit plane to binary image
     imageBGR = cv2.cvtColor(imageBinary, cv2.COLOR_GRAY2BGR)          # make the binary image 3 channel

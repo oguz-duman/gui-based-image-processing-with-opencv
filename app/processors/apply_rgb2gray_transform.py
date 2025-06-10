@@ -1,5 +1,4 @@
-from app import utils
-import numpy as np
+from app import processor_utils
 import cv2
 
 def apply_rgb2gray_transform(imageBGRA):
@@ -10,7 +9,7 @@ def apply_rgb2gray_transform(imageBGRA):
     Returns:
         imageBGRA (numpy.ndarray): The converted image in the BGRA format.
     """
-    imageHSVA = utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
+    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
     gray = imageHSVA[:, :, 2]                                   # get only the V channel of the HSVA image
     grayBGR = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)            # make the binary image 3 channel
     grayBGRA = cv2.merge((grayBGR, imageBGRA[:, :, 3]))         # set back the alpha channel of the image

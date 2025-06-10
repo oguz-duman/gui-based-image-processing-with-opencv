@@ -1,17 +1,18 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+import importlib
+
 
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QFileDialog
 
 import constants
-from app import toolboxes
 from constants import CHANNEL_NAMES
 from app.pipeline import Pipeline
+from app import toolboxes
 
 
-class UiManagement():
+class GUiManagement():
     """
     This class manages the UI elements and interactions for the image processing application.
     It handles image loading, toolbox insertion and deletion, histogram display, color layer switching, image saving and displaying.
@@ -136,7 +137,7 @@ class UiManagement():
         # Create a new method box based on the selected method name
         for toolbox in constants.TOOLBOXES.values():
             if toolbox_name == toolbox['NAME']:
-                toolbox_class = getattr(toolboxes, toolbox['CLASS'])
+                toolbox_class = getattr(toolboxes, toolbox['CLASS'])  
                 new_toolbox = toolbox_class()  # create an instance of the toolbox class
                 break
 
