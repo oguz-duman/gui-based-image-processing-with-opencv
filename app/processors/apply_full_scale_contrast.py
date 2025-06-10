@@ -1,4 +1,3 @@
-from app import processor_utils
 import numpy as np
 import cv2
 
@@ -11,14 +10,15 @@ def apply_full_scale_contrast(imageBGRA, mask=None):
     Returns:
         imageBGRA (numpy.ndarray): The image with adjusted contrast in the BGRA format.
     """
-    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
+    imageHSV = cv2.cvtColor(imageBGRA[:, :, :3], cv2.COLOR_BGR2HSV)      # convert the image to HSV color space
 
     # perform full scale contrast stretching
-    enhanced = cv2.normalize(imageHSVA[:, :, 2], None, 0, 255, cv2.NORM_MINMAX)
+    enhanced = cv2.normalize(imageHSV[:, :, 2], None, 0, 255, cv2.NORM_MINMAX)
 
     # If a mask is provided, use it to update only the pixels where mask != 0
-    imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
+    imageHSV[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSV[:, :, 2])
 
-    imageBGRA = processor_utils.hsva2bgra_transform(imageHSVA)                       # convert back to BGRA color space
+    imageBGRA[:, :, :3] = cv2.cvtColor(imageHSV, cv2.COLOR_HSV2BGR)               # convert back to BGRA color space
+
 
     return imageBGRA

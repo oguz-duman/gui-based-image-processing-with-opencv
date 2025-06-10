@@ -1,4 +1,3 @@
-from app import processor_utils
 import numpy as np
 import cv2
 
@@ -18,8 +17,8 @@ def get_laplacian_filter(imageBGRA, extended=False, normalize=False):
     else:
         w = np.array([[0, 1, 0], [0, -4, 0], [0, 1, 0]], dtype=np.float32)
 
-    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                                       # convert the image to HSVA color space
-    vChannel = imageHSVA[:, :, 2].astype(np.float32) / 255.0                    # get the V channel of the HSVA image
+    imageHSV = cv2.cvtColor(imageBGRA[:, :, :3], cv2.COLOR_BGR2HSV)             # convert the image to HSV color space
+    vChannel = imageHSV[:, :, 2].astype(np.float32) / 255.0                    # get and normalize the V channel of the HSVA image
     laplace = cv2.filter2D(vChannel, -1, w, borderType=cv2.BORDER_REPLICATE)    # apply the laplace filter to the V channel
 
     # normalize the filtered image if the normalize switch is checked

@@ -17,7 +17,7 @@ class Pipeline():
         self.steps.append(step)
 
 
-    def run(self, image):
+    def run(self, input_image):
         """
         Run the pipeline on the input image.
         Args:
@@ -25,20 +25,21 @@ class Pipeline():
         Returns:
             image (numpy array): The processed image in the BGRA format.
         """
+        output_image = input_image.copy()          
         mask = None                                  # initialize mask to None, it will be used to store the mask produced by steps
         for step in self.steps:
             if step.switch.isChecked():                     # check if the function box is activated
-                result = step.execute(image, mask)      
+                result = step.execute(output_image, mask)      
                 if isinstance(result, tuple):               # check if the result is a tuple (image, mask)
-                    image = result[0]
+                    output_image = result[0]
                     mask = result[1]
                 else:
-                    image = result
+                    output_image = result
                     mask = None         # this way mask will affect only the following step after the one that produced it
             else:
                 mask = None             # if the step is not activated, reset the mask to None in case the previous step produced a mask
 
-        return image              
+        return output_image              
 
 
     def clear(self):

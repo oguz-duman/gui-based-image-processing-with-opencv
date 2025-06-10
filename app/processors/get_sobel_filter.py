@@ -1,4 +1,3 @@
-from app import processor_utils
 import numpy as np
 import cv2
 
@@ -17,8 +16,8 @@ def get_sobel_filter(imageBGRA, normalize=False):
     w_x = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
     w_y = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
 
-    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                       # convert the image to HSVA color space
-    vChannel = imageHSVA[:, :, 2].astype(np.float32) / 255.0    # get the V channel of the HSVA image
+    imageHSV = cv2.cvtColor(imageBGRA[:, :, :3], cv2.COLOR_BGR2HSV)     # convert the image to HSV color space
+    vChannel = imageHSV[:, :, 2].astype(np.float32) / 255.0             # get and normalize the V channel of the HSVA image
 
     # get the sobel filters
     sobel_x = cv2.filter2D(vChannel, -1, w_x, borderType=cv2.BORDER_REPLICATE)

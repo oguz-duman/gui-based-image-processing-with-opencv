@@ -1,4 +1,3 @@
-from app import processor_utils
 import cv2
 
 def apply_threshold_filter(imageBGRA, threshold):
@@ -10,8 +9,8 @@ def apply_threshold_filter(imageBGRA, threshold):
     Returns:
         imageBGRA (numpy.ndarray): The converted image in the BGRA format.
     """
-    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                               # convert the image to HSVA color space
-    gray = imageHSVA[:, :, 2]                                           # get only the V channel of the HSVA image
+    imageHSV = cv2.cvtColor(imageBGRA[:, :, :3], cv2.COLOR_BGR2HSV)     # convert the image to HSV color space
+    gray = imageHSV[:, :, 2]                                            # get only the V channel of the HSVA image
     imageBW = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)[1] # convert v channel to binary
     bw_BGR = cv2.cvtColor(imageBW, cv2.COLOR_GRAY2BGR)                  # make the binary image 3 channel
     bw_BGRA = cv2.merge((bw_BGR, imageBGRA[:, :, 3]))                   # set back the alpha channel of the image

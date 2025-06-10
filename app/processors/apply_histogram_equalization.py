@@ -1,4 +1,3 @@
-from app import processor_utils
 import numpy as np
 import cv2
 
@@ -11,12 +10,14 @@ def apply_histogram_equalization(imageBGRA, mask=None):
     Returns 
         imageBGRA (numpy.ndarray): Histogram equalization applied image in the BGRA format.
     """
-    imageHSVA = processor_utils.bgra2hsva_transform(imageBGRA)                           # convert the image to HSVA color space
-    enhanced = cv2.equalizeHist(imageHSVA[:, :, 2])       # equalize the V channel of the HSVA image
+    imageHSV = cv2.cvtColor(imageBGRA[:, :, :3], cv2.COLOR_BGR2HSV)      # convert the image to HSV color space
+
+    enhanced = cv2.equalizeHist(imageHSV[:, :, 2])       # equalize the V channel of the HSVA image
     
     # If a mask is provided, use it to update only the pixels where mask != 0
-    imageHSVA[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSVA[:, :, 2])
+    imageHSV[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSV[:, :, 2])
     
-    imageBGRA = processor_utils.hsva2bgra_transform(imageHSVA)                           # convert back to BGRA color space
+    imageBGRA[:, :, :3] = cv2.cvtColor(imageHSV, cv2.COLOR_HSV2BGR)               # convert back to BGRA color space
+
     
     return imageBGRA
