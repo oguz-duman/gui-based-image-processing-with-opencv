@@ -4,7 +4,7 @@ import cv2
 from PySide6.QtCore import Qt, Signal, QMimeData
 from PySide6.QtGui import QFont, QDrag
 from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, 
-                               QSizePolicy, QFrame, QCheckBox, QComboBox, QFileDialog)
+                               QSizePolicy, QFrame, QCheckBox, QFileDialog)
 
 import constants
 from gui.gui_components import GUiComponents 

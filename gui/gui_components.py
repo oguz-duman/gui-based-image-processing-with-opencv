@@ -3,6 +3,8 @@ from PySide6.QtWidgets import (QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QS
                                QCheckBox, QComboBox, QLineEdit, QRadioButton, QButtonGroup, QStyledItemDelegate)
 from PySide6.QtGui import QFont
 
+import colors
+
 
 class CenteredDelegate(QStyledItemDelegate):
     """
@@ -33,31 +35,31 @@ class NoArrowComboBox(QComboBox):
         view = self.view()
         view.setMouseTracking(True)  
         view.setAutoScroll(False) 
-        view.setStyleSheet("""
-            QAbstractItemView {
+        view.setStyleSheet(f"""
+            QAbstractItemView {{
                 show-decoration-selected: 1; 
                 outline: 0;
-            }
-            QAbstractItemView::item {
+            }}
+            QAbstractItemView::item {{
                 padding: 2px;
                 border-left: 1px solid transparent; 
-            }
-            QAbstractItemView::item:selected {
-                background-color: #383938;  
-                border-left: 1px solid #0078d7; 
-            }
+            }}
+            QAbstractItemView::item:selected {{
+                background-color: {colors.COMBO_ITEM_HOVER};  
+                border-left: 1px solid {colors.COMBO_SELECTED}; 
+            }}
         """)
 
         self.setItemDelegate(CenteredDelegate(self))
-        self.setStyleSheet("""
-            QComboBox {
-                background-color: #3c3c3c;
+        self.setStyleSheet(F"""
+            QComboBox {{
+                background-color: {colors.COMBO_BACKGROUND};
                 padding-top: 8px;
                 padding-bottom: 8px;
-            }
-            QComboBox:hover {
-                background-color: #8c8d8d;
-            }                                         
+            }}
+            QComboBox:hover {{
+                background-color: {colors.COMBO_HOVER};
+            }}                                         
         """)
 
         self.currentIndexChanged.connect(self.line_edit_style)
@@ -125,30 +127,29 @@ class ArrowComboBox(QComboBox):
         view = self.view()
         view.setMouseTracking(True)  
         view.setAutoScroll(False) 
-        view.setStyleSheet("""
-            QAbstractItemView {
+        view.setStyleSheet(F"""
+            QAbstractItemView {{
                 show-decoration-selected: 1; 
                 outline: 0;
-            }
-            QAbstractItemView::item {
+            }}
+            QAbstractItemView::item {{
                 padding: 2px;
                 border-left: 1px solid transparent; 
-            }
-            QAbstractItemView::item:selected {
-                background-color: #383938;  
-                border-left: 1px solid #0078d7; 
-            }
+            }}
+            QAbstractItemView::item:selected {{
+                background-color: {colors.COMBO_ITEM_HOVER};  
+                border-left: 1px solid {colors.COMBO_SELECTED}; 
+            }}
         """)
 
-        self.setStyleSheet("""
-            QComboBox {
+        self.setStyleSheet(F"""
+            QComboBox {{
                 padding: 5px;
                 padding: 5px; 
                 padding-left: 10px; 
-                background-color: #3c3c3c;
-            }
+                background-color: {colors.COMBO_BACKGROUND};
+            }}
         """)
-
 
          
             

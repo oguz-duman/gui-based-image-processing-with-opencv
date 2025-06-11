@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 
 from app import toolbox_bases
 import constants
+import colors
 from gui.gui_management import GUiManagement
 from gui.gui_components import NoArrowComboBox
 
@@ -117,14 +118,14 @@ class MainWindow(QWidget, GUiManagement):
         btn.clicked.connect(self.open_new_image)   
         btn.setFlat(True)
         btn.setFont(font) 
-        btn.setStyleSheet("""
-            QPushButton {
+        btn.setStyleSheet(f"""
+            QPushButton {{
                 padding-top: 10px;
                 padding-bottom: 10px;
-            }
-            QPushButton:hover {
-                background-color: #8c8d8d;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {colors.COMBO_HOVER};
+            }}
         """)
 
         # List 1 - Visualization type
@@ -145,14 +146,14 @@ class MainWindow(QWidget, GUiManagement):
         btn.clicked.connect(lambda: self.save_image())   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
-        btn.setStyleSheet("""
-            QPushButton {
+        btn.setStyleSheet(f"""
+            QPushButton {{
                 padding-top: 10px;
                 padding-bottom: 10px;
-            }
-            QPushButton:hover {
-                background-color: #8c8d8d;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {colors.COMBO_HOVER};
+            }}
         """)
 
 
