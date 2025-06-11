@@ -10,7 +10,7 @@ from matplotlib.figure import Figure
 from app import toolbox_bases
 import constants
 from gui.gui_management import GUiManagement
-from gui.gui_components import AdaptedComboBox, CenteredDelegate
+from gui.gui_components import NoArrowComboBox
 
 
 class MainWindow(QWidget, GUiManagement):
@@ -128,40 +128,16 @@ class MainWindow(QWidget, GUiManagement):
         """)
 
         # List 1 - Visualization type
-        visualization_type = AdaptedComboBox(items=constants.VISUALIZATION_TYPES)
+        visualization_type = NoArrowComboBox(items=constants.VISUALIZATION_TYPES)
         midLayout.addWidget(visualization_type, 1)
         visualization_type.setFont(font)
-        visualization_type.setStyleSheet("padding-top: 8px; padding-bottom: 8px;")
         visualization_type.currentTextChanged.connect(lambda: self.switch_view(visualization_type.currentText()))  
-        visualization_type.setItemDelegate(CenteredDelegate(visualization_type))
-        visualization_type.setStyleSheet("""
-            QComboBox {
-                background-color: #3c3c3c;
-                padding-top: 8px;
-                padding-bottom: 8px;
-            }
-            QComboBox:hover {
-                background-color: #8c8d8d;
-            }                                         
-        """)
 
         # List 2 - Color Channel
-        color_chan = AdaptedComboBox(items=constants.COLOR_CHANNELS)
+        color_chan = NoArrowComboBox(items=constants.COLOR_CHANNELS)
         midLayout.addWidget(color_chan, 1)
         color_chan.setFont(font)
-        color_chan.setStyleSheet("padding-top: 8px; padding-bottom: 8px;")
         color_chan.currentTextChanged.connect(lambda: self.switch_color_chan(color_chan.currentText())) 
-        color_chan.setItemDelegate(CenteredDelegate(color_chan))
-        color_chan.setStyleSheet("""
-            QComboBox {
-                background-color: #3c3c3c;
-                padding-top: 8px;
-                padding-bottom: 8px;
-            }
-            QComboBox:hover {
-                background-color: #8c8d8d;
-            }
-        """)
 
         # Button 2 - save image
         btn = QPushButton(constants.SAVE_BUTTON)

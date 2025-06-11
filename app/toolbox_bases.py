@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxL
 
 import constants
 from gui.gui_components import GUiComponents 
+from gui.gui_components import ArrowComboBox
 
 
 def select_image():
@@ -84,39 +85,10 @@ class AddNewBox(QWidget):
         self.frameLayout.addWidget(label)
         
         # Create a combo box to select the toolbox
-        self.combo = QComboBox()
-        self.combo.addItems([toolbox['NAME'] for toolbox in constants.TOOLBOXES.values()])
+        self.combo = ArrowComboBox([toolbox['NAME'] for toolbox in constants.TOOLBOXES.values()])
         self.combo.setFont(self.font)
         self.frameLayout.addWidget(self.combo, alignment=Qt.AlignVCenter)
-        view = self.combo.view()
-        view.setMouseTracking(True)  
-        view.setAutoScroll(False) 
-        view.setStyleSheet("""
-            QAbstractItemView {
-                show-decoration-selected: 1; 
-                outline: 0;
-            }
-            QAbstractItemView::item {
-                padding: 2px;
-                border-left: 1px solid transparent; 
-            }
-            QAbstractItemView::item:selected {
-                background-color: #383938;  
-                border-left: 1px solid #0078d7; 
-            }
-        """)
 
-        self.combo.setStyleSheet("""
-            QComboBox {
-                padding: 5px;
-                padding: 5px; 
-                padding-left: 10px; 
-                background-color: #3c3c3c;
-            }
-        """)
-
-
-    
         # Create a button to add a new method
         newBtn = QPushButton("+")
         font = QFont()              

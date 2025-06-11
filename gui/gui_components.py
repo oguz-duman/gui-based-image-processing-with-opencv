@@ -13,7 +13,7 @@ class CenteredDelegate(QStyledItemDelegate):
         option.displayAlignment = Qt.AlignCenter
 
 
-class AdaptedComboBox(QComboBox):
+class NoArrowComboBox(QComboBox):
     """
     This class extends QComboBox to create a combo box that can adapt its behavior based on user interaction.
     It allows the combo box to be editable and shows the popup when the user clicks on the line edit.
@@ -31,8 +31,34 @@ class AdaptedComboBox(QComboBox):
         self.lineEdit().installEventFilter(self)
 
         view = self.view()
-        view.setMouseTracking(False)  
+        view.setMouseTracking(True)  
         view.setAutoScroll(False) 
+        view.setStyleSheet("""
+            QAbstractItemView {
+                show-decoration-selected: 1; 
+                outline: 0;
+            }
+            QAbstractItemView::item {
+                padding: 2px;
+                border-left: 1px solid transparent; 
+            }
+            QAbstractItemView::item:selected {
+                background-color: #383938;  
+                border-left: 1px solid #0078d7; 
+            }
+        """)
+
+        self.setItemDelegate(CenteredDelegate(self))
+        self.setStyleSheet("""
+            QComboBox {
+                background-color: #3c3c3c;
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
+            QComboBox:hover {
+                background-color: #8c8d8d;
+            }                                         
+        """)
 
         self.currentIndexChanged.connect(self.line_edit_style)
 
@@ -81,6 +107,47 @@ class AdaptedComboBox(QComboBox):
         self.lineEdit().move(0, 0)
         self.lineEdit().setStyleSheet("background-color: #3c3d3d;")
 
+
+
+
+class ArrowComboBox(QComboBox):
+    """
+    This class extends QComboBox to create a combo box that can adapt its behavior based on user interaction.
+    It allows the combo box to be editable and shows the popup when the user clicks on the line edit.
+    Args:
+        items (list): A list of items to be added to the combo box.
+    """
+    def __init__(self, items):
+        super().__init__()
+
+        self.addItems(items)
+        
+        view = self.view()
+        view.setMouseTracking(True)  
+        view.setAutoScroll(False) 
+        view.setStyleSheet("""
+            QAbstractItemView {
+                show-decoration-selected: 1; 
+                outline: 0;
+            }
+            QAbstractItemView::item {
+                padding: 2px;
+                border-left: 1px solid transparent; 
+            }
+            QAbstractItemView::item:selected {
+                background-color: #383938;  
+                border-left: 1px solid #0078d7; 
+            }
+        """)
+
+        self.setStyleSheet("""
+            QComboBox {
+                padding: 5px;
+                padding: 5px; 
+                padding-left: 10px; 
+                background-color: #3c3c3c;
+            }
+        """)
 
 
          
@@ -392,8 +459,7 @@ class GUiComponents():
         # if a parent widget is provided, use it; otherwise, use the main parent widget
         parent = self.parent_widget if parent is None else parent
 
-        combo = QComboBox()
-        combo.addItems(headings)
+        combo = ArrowComboBox(headings)
         combo.setFont(self.font)
         combo.currentIndexChanged.connect(self.on_change)       # onchange event to emit the signal indicating the value has changed
         parent.addWidget(combo)                            # add the combo box to the content layout
