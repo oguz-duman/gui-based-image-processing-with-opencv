@@ -1,0 +1,22 @@
+{
+    "AlternateBase": "#ffffff",
+    "Base": "#2d2d2d",
+    "BrightText": "#99ebff",
+    "Button": "#3c3c3c",
+    "ButtonText": "#ffffff",
+    "Dark": "#1e1e1e",
+    "Highlight": "#0078d4",
+    "HighlightedText": "#ffffff",
+    "Light": "#787878",
+    "Link": "#99ebff",
+    "LinkVisited": "#4cc2ff",
+    "Mid": "#282828",
+    "Midlight": "#5a5a5a",
+    "PlaceholderText": "#ffffff",
+    "Shadow": "#000000",
+    "Text": "#ffffff",
+    "ToolTipBase": "#3c3c3c",
+    "ToolTipText": "#d4d4d4",
+    "Window": "#1e1e1e",
+    "WindowText": "#ffffff"
+}

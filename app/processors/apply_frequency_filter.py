@@ -36,7 +36,6 @@ def apply_frequency_filter(imageBGRA, filter_radius1, filter_type='Low Pass'):
         dft = cv2.dft(ch_float, flags=cv2.DFT_COMPLEX_OUTPUT)
         dft_shift = np.fft.fftshift(dft)
 
-        print(np.unique(mask))
         # Apply mask in frequency domain
         fshift_filtered = dft_shift * mask
 

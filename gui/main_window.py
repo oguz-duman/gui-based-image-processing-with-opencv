@@ -1,8 +1,8 @@
 import cv2
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap, QFont, QFontMetrics
-from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea, QComboBox
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -10,7 +10,7 @@ from matplotlib.figure import Figure
 from app import toolbox_bases
 import constants
 from gui.gui_management import GUiManagement
-from gui.gui_components import AdaptedComboBox
+from gui.gui_components import AdaptedComboBox, CenteredDelegate
 
 
 class MainWindow(QWidget, GUiManagement):
@@ -115,8 +115,17 @@ class MainWindow(QWidget, GUiManagement):
         btn = QPushButton(constants.OPEN_BUTTON)
         midLayout.addWidget(btn, 1)      
         btn.clicked.connect(self.open_new_image)   
-        btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
+        btn.setFlat(True)
         btn.setFont(font) 
+        btn.setStyleSheet("""
+            QPushButton {
+                padding-top: 10px;
+                padding-bottom: 10px;
+            }
+            QPushButton:hover {
+                background-color: #8c8d8d;
+            }
+        """)
 
         # List 1 - Visualization type
         visualization_type = AdaptedComboBox(items=constants.VISUALIZATION_TYPES)
@@ -124,6 +133,17 @@ class MainWindow(QWidget, GUiManagement):
         visualization_type.setFont(font)
         visualization_type.setStyleSheet("padding-top: 8px; padding-bottom: 8px;")
         visualization_type.currentTextChanged.connect(lambda: self.switch_view(visualization_type.currentText()))  
+        visualization_type.setItemDelegate(CenteredDelegate(visualization_type))
+        visualization_type.setStyleSheet("""
+            QComboBox {
+                background-color: #3c3c3c;
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
+            QComboBox:hover {
+                background-color: #8c8d8d;
+            }
+        """)
 
         # List 2 - Color Channel
         color_chan = AdaptedComboBox(items=constants.COLOR_CHANNELS)
@@ -131,6 +151,18 @@ class MainWindow(QWidget, GUiManagement):
         color_chan.setFont(font)
         color_chan.setStyleSheet("padding-top: 8px; padding-bottom: 8px;")
         color_chan.currentTextChanged.connect(lambda: self.switch_color_chan(color_chan.currentText())) 
+        color_chan.setItemDelegate(CenteredDelegate(color_chan))
+        color_chan.setStyleSheet("""
+            QComboBox {
+                background-color: #3c3c3c;
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
+            QComboBox:hover {
+                background-color: #8c8d8d;
+            }
+        """)
+
 
         # Button 2 - save image
         btn = QPushButton(constants.SAVE_BUTTON)
@@ -138,6 +170,15 @@ class MainWindow(QWidget, GUiManagement):
         btn.clicked.connect(lambda: self.save_image())   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
+        btn.setStyleSheet("""
+            QPushButton {
+                padding-top: 10px;
+                padding-bottom: 10px;
+            }
+            QPushButton:hover {
+                background-color: #8c8d8d;
+            }
+        """)
 
 
     def init_bottomLayout(self):

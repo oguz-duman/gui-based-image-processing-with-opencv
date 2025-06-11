@@ -1,7 +1,16 @@
 from PySide6.QtCore import Qt, QEvent
 from PySide6.QtWidgets import (QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QSlider,
-                               QCheckBox, QComboBox, QLineEdit, QRadioButton, QButtonGroup)
+                               QCheckBox, QComboBox, QLineEdit, QRadioButton, QButtonGroup, QStyledItemDelegate)
 from PySide6.QtGui import QFont
+
+
+class CenteredDelegate(QStyledItemDelegate):
+    """
+    This class extends QStyledItemDelegate to center the text in the items of a combo box.
+    """
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+        option.displayAlignment = Qt.AlignCenter
 
 
 class AdaptedComboBox(QComboBox):
@@ -10,48 +19,72 @@ class AdaptedComboBox(QComboBox):
     It allows the combo box to be editable and shows the popup when the user clicks on the line edit.
     Args:
         items (list): A list of items to be added to the combo box.
-        font (QFont): The font to be used for the combo box.
-        style (str): The style sheet to be applied to the combo box.
-        onchange_method (function): A method to be called when the current text changes.
-        parent_layout (QLayout): The layout to which the combo box will be added.
-        strech (int): The stretch factor for the combo box in the layout.
     """
     def __init__(self, items):
         super().__init__()
-        self.setEditable(True)
+        self.popup_open = False
 
         self.addItems(items)
         self.setEditable(True)
         self.lineEdit().setAlignment(Qt.AlignCenter)
         self.lineEdit().setReadOnly(True)
         self.lineEdit().installEventFilter(self)
-        self.lineEdit().setStyleSheet("""
-            QLineEdit {
-                background: transparent;
-                border: none;
-                padding-top: 0px;
-                padding-bottom: 0px;
-                margin: 0px;
-            }
-            QLineEdit:hover {
-                background: transparent;
-                border: none;
-            }
-            QComboBox:hover {
-                background: transparent;
-                border: none;
-            }
-        """)
+
+        view = self.view()
+        view.setMouseTracking(False)  
+        view.setAutoScroll(False) 
+
+        self.currentIndexChanged.connect(self.line_edit_style)
+
 
     def eventFilter(self, obj, event):
-        if obj == self.lineEdit() and event.type() == QEvent.MouseButtonPress:
-            if not self.view().isVisible():
-                self.showPopup()  
-            return False  
+        if obj == self.lineEdit() and event.type() in [QEvent.MouseButtonPress, QEvent.MouseButtonDblClick]:
+            if self.popup_open:
+                self.hidePopup()
+                self.popup_open = False
+            else:
+                self.showPopup()
+                self.popup_open = True
+            return True
+        
+        elif event.type() in [QEvent.MouseMove, QEvent.ContextMenu, QEvent.MouseButtonRelease]:
+            return True     # ignore these events to prevent unwanted behavior  
+                
         return super().eventFilter(obj, event)
+        
+
+    def paintEvent(self, event):
+        from PySide6.QtWidgets import QComboBox, QStyleOptionComboBox, QStyle, QApplication
+        from PySide6.QtWidgets import QStylePainter
+
+        opt = QStyleOptionComboBox()
+        self.initStyleOption(opt)
+
+        opt.subControls = QStyle.SC_ComboBoxFrame | QStyle.SC_ComboBoxEditField
+
+        opt.rect.setRight(opt.rect.right())  
+
+        painter = QStylePainter(self)
+        painter.drawComplexControl(QStyle.CC_ComboBox, opt)
+        painter.drawControl(QStyle.CE_ComboBoxLabel, opt)
+
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        
+        if self.lineEdit():
+            self.line_edit_style()
+
+
+    def line_edit_style(self):
+        self.lineEdit().resize(self.width(), self.height())
+        self.lineEdit().move(0, 0)
+        self.lineEdit().setStyleSheet("background-color: #3c3d3d;")
 
 
 
+         
+            
 class GUiComponents():
     """
     This class contains the UI components for the application.

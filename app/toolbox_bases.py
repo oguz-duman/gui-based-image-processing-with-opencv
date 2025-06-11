@@ -87,11 +87,10 @@ class AddNewBox(QWidget):
         self.combo = QComboBox()
         self.combo.addItems([toolbox['NAME'] for toolbox in constants.TOOLBOXES.values()])
         self.combo.setFont(self.font)
-        self.combo.setStyleSheet("padding: 5px;")  
         self.frameLayout.addWidget(self.combo, alignment=Qt.AlignVCenter)
         view = self.combo.view()
         view.setMouseTracking(False)  
-        view.setAutoScroll(False)     
+        view.setAutoScroll(False)   
     
         # Create a button to add a new method
         newBtn = QPushButton("+")
