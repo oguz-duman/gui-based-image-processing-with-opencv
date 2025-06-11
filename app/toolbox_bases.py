@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxL
                                QSizePolicy, QFrame, QCheckBox, QComboBox, QFileDialog)
 
 import constants
-from gui.gui_components import UiComponents 
+from gui.gui_components import GUiComponents 
 
 
 def select_image(self):
@@ -104,7 +104,7 @@ class AddNewBox(QWidget):
 
 
 
-class Toolbox(QWidget, UiComponents):
+class Toolbox(QWidget, GUiComponents):
     """
     A base class for all toolboxes. It provides a common interface.
     Parameters:

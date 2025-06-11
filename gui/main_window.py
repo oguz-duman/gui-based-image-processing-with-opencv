@@ -2,7 +2,7 @@ import cv2
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QFont
-from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea
+from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea, QComboBox
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -117,28 +117,23 @@ class MainWindow(QWidget, GUiManagement):
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
-        # Button 2 - switch to histogram
-        btn = QPushButton(constants.HISTOGRAM_BUTTON)
-        midLayout.addWidget(btn)   
-        btn.clicked.connect(lambda: self.mode_buttons('HISTOGRAM'))   
-        btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
-        btn.setFont(font) 
+        #• List 1 - Visualization type
+        visualization_type = QComboBox()
+        visualization_type.addItems(constants.VISUALIZATION_TYPES)
+        midLayout.addWidget(visualization_type)
+        visualization_type.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
+        visualization_type.setFont(font)
+        visualization_type.currentTextChanged.connect(lambda: self.switch_view(visualization_type.currentText()))  
 
-        # Button 3 - See Layers
-        btn = QPushButton(constants.CHANNELS_BUTTON)
-        midLayout.addWidget(btn)    
-        btn.clicked.connect(lambda: self.mode_buttons('CHANNELS'))   
-        btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
-        btn.setFont(font) 
+        # List 2 - Color Channel
+        color_chan = QComboBox()
+        color_chan.addItems(constants.COLOR_CHANNELS)
+        midLayout.addWidget(color_chan)
+        color_chan.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
+        color_chan.setFont(font)
+        color_chan.currentTextChanged.connect(lambda: self.switch_color_chan(color_chan.currentText()))  
 
-        # Button 4 - switch to frequency domain
-        btn = QPushButton(constants.FREQUENCY_BUTTON)
-        midLayout.addWidget(btn)    
-        btn.clicked.connect(lambda: self.mode_buttons('FREQUENCY'))   
-        btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
-        btn.setFont(font) 
-
-        # Button 5 - save image
+        # Button 2 - save image
         btn = QPushButton(constants.SAVE_BUTTON)
         midLayout.addWidget(btn)   
         btn.clicked.connect(lambda: self.save_image())   

@@ -1,13 +1,10 @@
 import cv2
 import numpy as np
-import importlib
-
 
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QFileDialog
 
 import constants
-from constants import CHANNEL_NAMES
 from app.pipeline import Pipeline
 from app import toolboxes
 
@@ -41,20 +38,20 @@ class GUiManagement():
         # Initialize the pipeline
         self.pipeline = Pipeline()  
 
-        # Modes and their corresponding methods which are called when the mode is activated
-        self.mode_handlers = {      
-            'IMAGE': lambda: self.display_images([self.input_BGRA, self.output_BGRA]),  
-            'HISTOGRAM': lambda: self.display_histogram(),
-            'CHANNELS': lambda: self.display_images(self.get_color_channels()),  
-            'FREQUENCY': lambda: self.display_images(self.fourier_transform())
+        # Modes and their corresponding methods which are called when the mode is activated. Watch the order of the methods in the list.
+        self.view_handlers = {      
+            constants.VISUALIZATION_TYPES[0]: lambda: self.display_images([self.input_BGRA, self.output_BGRA]),  
+            constants.VISUALIZATION_TYPES[1]: lambda: self.display_histogram(),
+            constants.VISUALIZATION_TYPES[2]: lambda: self.display_images(self.get_color_channels()),  
+            constants.VISUALIZATION_TYPES[3]: lambda: self.display_images(self.fourier_transform())
         }
 
-        # Declares which widgets will be shown and which widgets will be hidden based on the selected mode
+        # Declares which widgets will be shown and which widgets will be hidden based on the selected mode. Watch the order of the methods in the list.
         self.widgets_per_mode = {
-            'IMAGE': [],
-            'HISTOGRAM': [],
-            'CHANNELS': [self.left_title, self.right_title],
-            'FREQUENCY': [self.left_title, self.right_title]
+            constants.VISUALIZATION_TYPES[0]: [],
+            constants.VISUALIZATION_TYPES[1]: [],
+            constants.VISUALIZATION_TYPES[2]: [self.left_title, self.right_title],
+            constants.VISUALIZATION_TYPES[3]: [self.left_title, self.right_title]
         }
 
 
@@ -64,10 +61,8 @@ class GUiManagement():
         """
         self.input_BGRA = None                      # input image variable
         self.output_BGRA = None                     # output image variable
-        
-        self.active_mode = 'IMAGE'                  # current mode mode variable
-        self.channel_index = 0                      # current color layer variable
-                
+        self.view_mode = "Image"                    # name of the currently active view mode
+        self.color_channel = "Red"            # name of the currently active color channel   
 
     def open_new_image(self):
         """
@@ -183,39 +178,19 @@ class GUiManagement():
         """
         if self.input_BGRA is not None:
             self.output_BGRA = self.pipeline.run(self.input_BGRA)               # run the pipeline on the input image
-            self.mode_handlers[self.active_mode]()                              # update the ui based on the current mode
-
-          
-    def mode_buttons(self, mode_name):
-        """
-        Handles mode button clicks: switches to a new mode if needed,
-        or cycles within the current mode if applicable.
-        Args:
-            mode_name (str): The name of the mode that was selected.
-        """
-        if self.input_BGRA is None:
-            return
-        elif not self.active_mode == mode_name:
-            self.switch_mode(mode_name)
-            self.mode_handlers[mode_name]()             # call the method corresponding to the mode name             
-        else:
-            self.channel_index = self.channel_index + 1 if self.channel_index + 1 < len(CHANNEL_NAMES) else 0  # increment the channel index 
-            if self.channel_index == 0:
-                self.switch_mode('IMAGE')
-                self.display_images([self.input_BGRA, self.output_BGRA])
-            else:
-                self.mode_handlers[mode_name]()          # call the method corresponding to the mode name             
+            self.view_handlers[self.view_mode]()                              # update the ui based on the current mode
 
 
-    def switch_mode(self, mode_name):
+
+    def switch_view(self, mode_name):
         """
-        Updates the active mode and toggles visibility of related UI widgets.
+        Switch the view mode to the specified mode and update the UI accordingly.
         Args:
             mode_name (str): The name of the mode to switch to.
         """
-        self.active_mode = mode_name                # active mode name
-        self.channel_index = 0                      # reset channel index
-
+        if self.input_BGRA is None:
+            return
+        
         # Reset the x and y limits (zooming) for the input and output image canvases
         for canvas in [self.in_im_canvas, self.out_im_canvas]:
             canvas._xlim = 0
@@ -233,7 +208,23 @@ class GUiManagement():
 
         for widget in widgets_to_show:
             widget.show()
+
+        self.view_mode = mode_name                  # update the current view mode
+        self.view_handlers[mode_name]()             # call the handler for the current view mode
+
+
+    def switch_color_chan(self, channel_name):
+        """
+        Switch the color channel to the specified channel and update the UI accordingly.
+        Args:
+            channel_name (str): The name of the color channel to switch to.
+        """
+        if self.input_BGRA is None:
+            return
         
+        self.color_channel = channel_name.split(" ")[0]     # get the color channel name from the button text
+        self.view_handlers[self.view_mode]()                # update the view based on the current view mode
+
 
     def display_images(self, images):
         """
@@ -242,8 +233,8 @@ class GUiManagement():
         Parameters:
             images (list): A list containing the images to be displayed. 
         """
-        self.left_title.setText(f"{CHANNEL_NAMES[self.channel_index]} Channel")
-        self.right_title.setText(f"{CHANNEL_NAMES[self.channel_index]} Channel")
+        self.left_title.setText(f"{self.color_channel} Channel")
+        self.right_title.setText(f"{self.color_channel} Channel")
 
         for image, canvas in zip(images, [self.in_im_canvas, self.out_im_canvas]):
             
@@ -273,7 +264,6 @@ class GUiManagement():
         for image, canvas in zip(self.get_color_channels(), [self.in_im_canvas, self.out_im_canvas]):
             canvas._axes.clear()
             
-
             # Calculate histogram values and bin edges of the V channel in HSV color space
             imageHSV = cv2.cvtColor(image[:, :, :3], cv2.COLOR_BGR2HSV)  
             hist_vals, bin_edges = np.histogram(imageHSV[:,:,2], bins=255, range=(0, 256))
@@ -281,9 +271,14 @@ class GUiManagement():
             # Use midpoints for x-axis
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
             
+            # Set the color for the histogram
+            if self.color_channel == "Red" or self.color_channel == "Green" or self.color_channel == "Blue":
+                color = self.color_channel
+            else:
+                color = 'black'
+
             # Plot as step plot
-            color = constants.CHANNEL_NAMES[self.channel_index]
-            canvas._axes.step(bin_centers, hist_vals, color=color if color != 'Alpha' else 'black', where='mid', linewidth=1)
+            canvas._axes.step(bin_centers, hist_vals, color=color, where='mid', linewidth=1)
             
             # Get the maximum y value for setting the y-axis limit 
             y_lims.append(np.max(hist_vals) * 1.1)               
@@ -292,7 +287,7 @@ class GUiManagement():
             canvas._axes.set_xlim(-1, 256)
             canvas._axes.set_xticks(np.append(np.arange(0, 250, 25), 255))
             canvas.configuration_types("histogram")
-            canvas._axes.set_title(f"{CHANNEL_NAMES[self.channel_index]} Channel")
+            canvas._axes.set_title(f"{self.color_channel} Channel")
             canvas.figure.tight_layout()  
 
             # Calculate the y-axis limit for both histograms
@@ -306,20 +301,42 @@ class GUiManagement():
     
             _canvas.draw()
 
-    
+
     def get_color_channels(self):
         """
-        Get the currently active color channel from the input and output images.
+        Extracts the specified color channel from the input and output images.
         Returns:
-            list: A list containing the currently active color channel from the input and output images.
+            list: A list containing the extracted color channels from the input and output images.
         """
-        # OpenCV handles images in BGRA format. Convert RGBA indeces to BGRA.
-        bgra2rgba = [2, 1, 0, 3]    
+        channel_maps = {
+            "Red":       ("BGR", 2),
+            "Green":     ("BGR", 1),
+            "Blue":      ("BGR", 0),
+            "Hue":       ("HSV", 0),
+            "Saturation":("HSV", 1),
+            "Value":     ("HSV", 2),
+            "Lightness": ("LAB", 0),
+            "Green-Red": ("LAB", 1),
+            "Blue-Yellow":("LAB", 2)
+        }
+
+        if self.color_channel not in channel_maps:
+            return [self.input_BGRA, self.output_BGRA]
+
+        space, index = channel_maps[self.color_channel]
+
+        def extract_channel(image, space, index):
+            if space == "BGR":
+                channel = image[:, :, index]
+            else:
+                converted = cv2.cvtColor(image[:, :, :3], getattr(cv2, f'COLOR_BGR2{space}'))
+                channel = converted[:, :, index]
+            return cv2.cvtColor(channel, cv2.COLOR_GRAY2BGRA)
 
         return [
-            cv2.cvtColor(self.input_BGRA[:,:,bgra2rgba[self.channel_index]], cv2.COLOR_GRAY2BGRA), 
-            cv2.cvtColor(self.output_BGRA[:,:,bgra2rgba[self.channel_index]], cv2.COLOR_GRAY2BGRA)
-        ]                    
+            extract_channel(self.input_BGRA, space, index),
+            extract_channel(self.output_BGRA, space, index)
+        ]
 
 
     def fourier_transform(self):
@@ -331,8 +348,11 @@ class GUiManagement():
         bgra2rgba = [2, 1, 0, 3]   
         magnitude_spectrums = []  
 
-        for image in [self.input_BGRA, self.output_BGRA]:
-            ch_float = np.float32(image[:,:,bgra2rgba[self.channel_index]])
+        for image in self.get_color_channels():
+            
+            # since get_color_channel returns grayscale image as BGRA, we can get any of the first three channels. We used [:,:,0]
+            ch_float = np.float32(image[:,:,0])         # convert the channel to float32   
+            
             dft = cv2.dft(ch_float, flags=cv2.DFT_COMPLEX_OUTPUT)
             dft_shift = np.fft.fftshift(dft)
             magnitude = cv2.magnitude(dft_shift[:,:,0], dft_shift[:,:,1])

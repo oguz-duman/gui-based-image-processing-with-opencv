@@ -1,4 +1,4 @@
-# keys will be displayed in the UI.
+# keys will be displayed in the GUI.
 # Values must exactly match the related class names defined in the toolboxes.py file.
 TOOLBOXES = {"BRIGHTNESS":
                 {"NAME": "Brightness",
@@ -113,11 +113,6 @@ TOOLBOXES = {"BRIGHTNESS":
                  "CLASS": "FrequencyFilterBox"}}
 
 
-
-# default channel names for the image.
-CHANNEL_NAMES = ["Red", "Green", "Blue", "Alpha"]
-
-
 # main button names
 OPEN_BUTTON = "Open"
 HISTOGRAM_BUTTON = "Histogram"
@@ -128,3 +123,11 @@ SAVE_BUTTON = "Save"
 
 # title of the 'add new' toolbox
 ADD_TOOLBOX_TITLE = "Add New"
+
+# types of visualizations available in the application.
+VISUALIZATION_TYPES = ["Image", "Histogram", "Color Channels", "Frequency Spectrum"]
+
+# names of the color channels available in the application.
+COLOR_CHANNELS = ["Red (BGRA)", "Green (BGRA)", "Blue (BGRA)", "Alpha (BGRA)", 
+                  "Hue (HSV)", "Saturation (HSV)", "Value (HSV)", 
+                  "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"]

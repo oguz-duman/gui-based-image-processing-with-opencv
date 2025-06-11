@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QS
 from PySide6.QtGui import QFont
 
 
-class UiComponents():
+class GUiComponents():
     """
     This class contains the UI components for the application.
     It provides methods to create and manage various UI elements such as input boxes, sliders, radio buttons, etc.
