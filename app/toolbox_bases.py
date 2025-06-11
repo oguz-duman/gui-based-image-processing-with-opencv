@@ -89,8 +89,33 @@ class AddNewBox(QWidget):
         self.combo.setFont(self.font)
         self.frameLayout.addWidget(self.combo, alignment=Qt.AlignVCenter)
         view = self.combo.view()
-        view.setMouseTracking(False)  
-        view.setAutoScroll(False)   
+        view.setMouseTracking(True)  
+        view.setAutoScroll(False) 
+        view.setStyleSheet("""
+            QAbstractItemView {
+                show-decoration-selected: 1; 
+                outline: 0;
+            }
+            QAbstractItemView::item {
+                padding: 2px;
+                border-left: 1px solid transparent; 
+            }
+            QAbstractItemView::item:selected {
+                background-color: #383938;  
+                border-left: 1px solid #0078d7; 
+            }
+        """)
+
+        self.combo.setStyleSheet("""
+            QComboBox {
+                padding: 5px;
+                padding: 5px; 
+                padding-left: 10px; 
+                background-color: #3c3c3c;
+            }
+        """)
+
+
     
         # Create a button to add a new method
         newBtn = QPushButton("+")

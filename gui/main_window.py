@@ -142,7 +142,7 @@ class MainWindow(QWidget, GUiManagement):
             }
             QComboBox:hover {
                 background-color: #8c8d8d;
-            }
+            }                                         
         """)
 
         # List 2 - Color Channel
@@ -162,7 +162,6 @@ class MainWindow(QWidget, GUiManagement):
                 background-color: #8c8d8d;
             }
         """)
-
 
         # Button 2 - save image
         btn = QPushButton(constants.SAVE_BUTTON)
