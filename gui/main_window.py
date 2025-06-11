@@ -1,7 +1,7 @@
 import cv2
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap, QFont
+from PySide6.QtGui import QPixmap, QFont, QFontMetrics
 from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea, QComboBox
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 from app import toolbox_bases
 import constants
 from gui.gui_management import GUiManagement
+from gui.gui_components import AdaptedComboBox
 
 
 class MainWindow(QWidget, GUiManagement):
@@ -37,14 +38,14 @@ class MainWindow(QWidget, GUiManagement):
         # read and display a placeholder image
         initial_im = cv2.imread('images/no_image.png', cv2.IMREAD_UNCHANGED)  
         self.display_images([initial_im, initial_im])
-               
+
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
 
         # Recall the pipeline to update the output image when the window is resized
         self.pipeline_on_change()
-
+        
 
     def init_top_layout(self):
         """
@@ -112,30 +113,28 @@ class MainWindow(QWidget, GUiManagement):
         
         # Button 1 - open image
         btn = QPushButton(constants.OPEN_BUTTON)
-        midLayout.addWidget(btn)      
+        midLayout.addWidget(btn, 1)      
         btn.clicked.connect(self.open_new_image)   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 
 
-        #• List 1 - Visualization type
-        visualization_type = QComboBox()
-        visualization_type.addItems(constants.VISUALIZATION_TYPES)
-        midLayout.addWidget(visualization_type)
-        visualization_type.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
+        # List 1 - Visualization type
+        visualization_type = AdaptedComboBox(items=constants.VISUALIZATION_TYPES)
+        midLayout.addWidget(visualization_type, 1)
         visualization_type.setFont(font)
+        visualization_type.setStyleSheet("padding-top: 8px; padding-bottom: 8px;")
         visualization_type.currentTextChanged.connect(lambda: self.switch_view(visualization_type.currentText()))  
 
         # List 2 - Color Channel
-        color_chan = QComboBox()
-        color_chan.addItems(constants.COLOR_CHANNELS)
-        midLayout.addWidget(color_chan)
-        color_chan.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
+        color_chan = AdaptedComboBox(items=constants.COLOR_CHANNELS)
+        midLayout.addWidget(color_chan, 1)
         color_chan.setFont(font)
-        color_chan.currentTextChanged.connect(lambda: self.switch_color_chan(color_chan.currentText()))  
+        color_chan.setStyleSheet("padding-top: 8px; padding-bottom: 8px;")
+        color_chan.currentTextChanged.connect(lambda: self.switch_color_chan(color_chan.currentText())) 
 
         # Button 2 - save image
         btn = QPushButton(constants.SAVE_BUTTON)
-        midLayout.addWidget(btn)   
+        midLayout.addWidget(btn, 1)   
         btn.clicked.connect(lambda: self.save_image())   
         btn.setStyleSheet("padding-top: 10px; padding-bottom: 10px;")
         btn.setFont(font) 

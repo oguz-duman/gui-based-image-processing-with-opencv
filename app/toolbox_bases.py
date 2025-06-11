@@ -10,7 +10,7 @@ import constants
 from gui.gui_components import GUiComponents 
 
 
-def select_image(self):
+def select_image():
     """
     Open a file dialog to select an image file and read it using OpenCV.
     Returns:

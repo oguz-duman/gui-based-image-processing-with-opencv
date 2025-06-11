@@ -37,7 +37,7 @@ class ArithmeticBox(DraggableToolbox):
         """
         Open a file dialog to select the second image.
         """
-        imageBGRA = select_image(None)     # read the image
+        imageBGRA = select_image()     # read the image
 
         if imageBGRA is not None:
             self.secondImage = cv2.cvtColor(imageBGRA, cv2.COLOR_BGRA2BGR)  # convert the image to BGR format

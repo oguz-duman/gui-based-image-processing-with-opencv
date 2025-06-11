@@ -1,7 +1,55 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QEvent
 from PySide6.QtWidgets import (QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QSlider,
                                QCheckBox, QComboBox, QLineEdit, QRadioButton, QButtonGroup)
 from PySide6.QtGui import QFont
+
+
+class AdaptedComboBox(QComboBox):
+    """
+    This class extends QComboBox to create a combo box that can adapt its behavior based on user interaction.
+    It allows the combo box to be editable and shows the popup when the user clicks on the line edit.
+    Args:
+        items (list): A list of items to be added to the combo box.
+        font (QFont): The font to be used for the combo box.
+        style (str): The style sheet to be applied to the combo box.
+        onchange_method (function): A method to be called when the current text changes.
+        parent_layout (QLayout): The layout to which the combo box will be added.
+        strech (int): The stretch factor for the combo box in the layout.
+    """
+    def __init__(self, items):
+        super().__init__()
+        self.setEditable(True)
+
+        self.addItems(items)
+        self.setEditable(True)
+        self.lineEdit().setAlignment(Qt.AlignCenter)
+        self.lineEdit().setReadOnly(True)
+        self.lineEdit().installEventFilter(self)
+        self.lineEdit().setStyleSheet("""
+            QLineEdit {
+                background: transparent;
+                border: none;
+                padding-top: 0px;
+                padding-bottom: 0px;
+                margin: 0px;
+            }
+            QLineEdit:hover {
+                background: transparent;
+                border: none;
+            }
+            QComboBox:hover {
+                background: transparent;
+                border: none;
+            }
+        """)
+
+    def eventFilter(self, obj, event):
+        if obj == self.lineEdit() and event.type() == QEvent.MouseButtonPress:
+            if not self.view().isVisible():
+                self.showPopup()  
+            return False  
+        return super().eventFilter(obj, event)
+
 
 
 class GUiComponents():
