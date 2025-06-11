@@ -283,7 +283,7 @@ class GUiManagement():
             
             # Plot as step plot
             color = constants.CHANNEL_NAMES[self.channel_index]
-            canvas._axes.step(bin_centers, hist_vals, color=color if color != 'Alpha' else 'black', where='mid')
+            canvas._axes.step(bin_centers, hist_vals, color=color if color != 'Alpha' else 'black', where='mid', linewidth=1)
             
             # Get the maximum y value for setting the y-axis limit 
             y_lims.append(np.max(hist_vals) * 1.1)               
