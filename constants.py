@@ -125,9 +125,9 @@ SAVE_BUTTON = "Save"
 ADD_TOOLBOX_TITLE = "Add New"
 
 # types of visualizations available in the application.
-VISUALIZATION_TYPES = ["Image", "Histogram", "Color Channels", "Frequency Spectrum"]
+VISUALIZATION_TYPES = ["Image", "Histogram", "Frequency Spectrum"]
 
 # names of the color channels available in the application.
-COLOR_CHANNELS = ["Red (BGRA)", "Green (BGRA)", "Blue (BGRA)", "Alpha (BGRA)", 
+COLOR_CHANNELS = ["RGBA", "Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", 
                   "Hue (HSV)", "Saturation (HSV)", "Value (HSV)", 
                   "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"]

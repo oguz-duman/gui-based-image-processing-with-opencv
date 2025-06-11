@@ -40,18 +40,16 @@ class GUiManagement():
 
         # Modes and their corresponding methods which are called when the mode is activated. Watch the order of the methods in the list.
         self.view_handlers = {      
-            constants.VISUALIZATION_TYPES[0]: lambda: self.display_images([self.input_BGRA, self.output_BGRA]),  
+            constants.VISUALIZATION_TYPES[0]: lambda: self.display_images(self.get_color_channels()),  
             constants.VISUALIZATION_TYPES[1]: lambda: self.display_histogram(),
-            constants.VISUALIZATION_TYPES[2]: lambda: self.display_images(self.get_color_channels()),  
-            constants.VISUALIZATION_TYPES[3]: lambda: self.display_images(self.fourier_transform())
+            constants.VISUALIZATION_TYPES[2]: lambda: self.display_images(self.fourier_transform())
         }
 
         # Declares which widgets will be shown and which widgets will be hidden based on the selected mode. Watch the order of the methods in the list.
         self.widgets_per_mode = {
-            constants.VISUALIZATION_TYPES[0]: [],
+            constants.VISUALIZATION_TYPES[0]: [self.left_title, self.right_title],
             constants.VISUALIZATION_TYPES[1]: [],
-            constants.VISUALIZATION_TYPES[2]: [self.left_title, self.right_title],
-            constants.VISUALIZATION_TYPES[3]: [self.left_title, self.right_title]
+            constants.VISUALIZATION_TYPES[2]: [self.left_title, self.right_title]
         }
 
 
@@ -62,7 +60,7 @@ class GUiManagement():
         self.input_BGRA = None                      # input image variable
         self.output_BGRA = None                     # output image variable
         self.view_mode = "Image"                    # name of the currently active view mode
-        self.color_channel = "Red"            # name of the currently active color channel   
+        self.color_channel = "RGBA"            # name of the currently active color channel   
 
     def open_new_image(self):
         """
@@ -233,8 +231,14 @@ class GUiManagement():
         Parameters:
             images (list): A list containing the images to be displayed. 
         """
-        self.left_title.setText(f"{self.color_channel} Channel")
-        self.right_title.setText(f"{self.color_channel} Channel")
+        if self.color_channel == "RGBA":
+            self.left_title.hide()
+            self.right_title.hide()
+        else:
+            self.left_title.show()
+            self.right_title.show()
+            self.left_title.setText(f"{self.color_channel} Channel")
+            self.right_title.setText(f"{self.color_channel} Channel")
 
         for image, canvas in zip(images, [self.in_im_canvas, self.out_im_canvas]):
             
@@ -312,6 +316,7 @@ class GUiManagement():
             "Red":       ("BGR", 2),
             "Green":     ("BGR", 1),
             "Blue":      ("BGR", 0),
+            "Alpha":     ("BGR", 3),
             "Hue":       ("HSV", 0),
             "Saturation":("HSV", 1),
             "Value":     ("HSV", 2),
@@ -320,7 +325,7 @@ class GUiManagement():
             "Blue-Yellow":("LAB", 2)
         }
 
-        if self.color_channel not in channel_maps:
+        if self.color_channel not in channel_maps or self.color_channel == "RGBA":
             return [self.input_BGRA, self.output_BGRA]
 
         space, index = channel_maps[self.color_channel]
@@ -345,7 +350,6 @@ class GUiManagement():
         Returns:
             list: A list containing the magnitude spectrum of the Fourier Transform of the input and output images.
         """
-        bgra2rgba = [2, 1, 0, 3]   
         magnitude_spectrums = []  
 
         for image in self.get_color_channels():
@@ -358,8 +362,9 @@ class GUiManagement():
             magnitude = cv2.magnitude(dft_shift[:,:,0], dft_shift[:,:,1])
             magnitude_log = np.log(magnitude + 1)
             magnitude_norm = cv2.normalize(magnitude_log, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-            magnitude_bgra = cv2.cvtColor(magnitude_norm, cv2.COLOR_GRAY2BGRA)
-            magnitude_spectrums.append(magnitude_bgra)
+            mag_im = cv2.cvtColor(magnitude_norm, cv2.COLOR_GRAY2BGR)  
+            mag_im = cv2.merge([mag_im, image[:,:,3]])  # merge the alpha channel back to the image
+            magnitude_spectrums.append(mag_im)
 
         return magnitude_spectrums
 
