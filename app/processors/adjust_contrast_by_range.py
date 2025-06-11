@@ -12,8 +12,8 @@ def adjust_contrast_by_range(imageBGRA, inRange, outRange, mask=None):
     Returns:
         imageBGRA (numpy.ndarray): The image with adjusted contrast in the BGRA format.
     """
-    imageHSV = cv2.cvtColor(imageBGRA[:, :, :3], cv2.COLOR_BGR2HSV)      # convert the image to HSV color space
-    
+    imageHSV = cv2.cvtColor(imageBGRA[:, :, :3], cv2.COLOR_BGR2HSV).astype(np.float32)      # convert the image to HSV color space
+
     # calculate params and apply the contrast adjustment to the V channel
     alpha = (outRange[1] - outRange[0]) / (inRange[1] - inRange[0])
     beta = outRange[0] - (alpha * inRange[0])
@@ -22,6 +22,7 @@ def adjust_contrast_by_range(imageBGRA, inRange, outRange, mask=None):
     # If a mask is provided, use it to update only the pixels where mask != 0
     imageHSV[:, :, 2] = enhanced if mask is None else np.where(mask > 0, enhanced, imageHSV[:, :, 2])
 
-    imageBGRA[:, :, :3] = cv2.cvtColor(imageHSV, cv2.COLOR_HSV2BGR)               # convert back to BGRA color space
+    imageHSV[:, :, 2] = np.clip(imageHSV[:, :, 2], outRange[0], outRange[1])            # ensure the values are within the output range
+    imageBGRA[:, :, :3] = cv2.cvtColor(imageHSV.astype(np.uint8), cv2.COLOR_HSV2BGR)                     # convert back to BGRA color space
 
     return imageBGRA

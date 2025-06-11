@@ -44,7 +44,7 @@ class ContrastBox(DraggableToolbox):
             beta = self.beta[0].value()
 
             # apply contrast stretching using T(s) method
-            imageBGRA = self.adjust_contrast_by_T(imageBGRA, alpha, beta, mask)  
+            imageBGRA = processors.adjust_contrast_by_T(imageBGRA, alpha, beta, mask)  
             
             return imageBGRA
               

@@ -272,22 +272,24 @@ class GUiManagement():
         canvases = [self.in_im_canvas, self.out_im_canvas] 
         for image, canvas in zip(self.get_color_channels(), [self.in_im_canvas, self.out_im_canvas]):
             canvas._axes.clear()
+            
 
-            # Calculate histogram values and bin edges
-            hist_vals, bin_edges = np.histogram(image, bins=100, range=(0, 255))
+            # Calculate histogram values and bin edges of the V channel in HSV color space
+            imageHSV = cv2.cvtColor(image[:, :, :3], cv2.COLOR_BGR2HSV)  
+            hist_vals, bin_edges = np.histogram(imageHSV[:,:,2], bins=255, range=(0, 256))
 
             # Use midpoints for x-axis
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
             
-            # Plot as a line
+            # Plot as step plot
             color = constants.CHANNEL_NAMES[self.channel_index]
-            canvas._axes.plot(bin_centers, hist_vals, color=color if color != 'Alpha' else 'black')
+            canvas._axes.step(bin_centers, hist_vals, color=color if color != 'Alpha' else 'black', where='mid')
             
             # Get the maximum y value for setting the y-axis limit 
             y_lims.append(np.max(hist_vals) * 1.1)               
             
             # Set style and labels
-            canvas._axes.set_xlim(0, 255)
+            canvas._axes.set_xlim(-1, 256)
             canvas._axes.set_xticks(np.append(np.arange(0, 250, 25), 255))
             canvas.configuration_types("histogram")
             canvas._axes.set_title(f"{CHANNEL_NAMES[self.channel_index]} Channel")
