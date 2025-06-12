@@ -4,155 +4,8 @@ from PySide6.QtWidgets import (QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QS
 from PySide6.QtGui import QFont
 
 import colors
+      
 
-
-class CenteredDelegate(QStyledItemDelegate):
-    """
-    This class extends QStyledItemDelegate to center the text in the items of a combo box.
-    """
-    def initStyleOption(self, option, index):
-        super().initStyleOption(option, index)
-        option.displayAlignment = Qt.AlignCenter
-
-
-class NoArrowComboBox(QComboBox):
-    """
-    This class extends QComboBox to create a combo box that can adapt its behavior based on user interaction.
-    It allows the combo box to be editable and shows the popup when the user clicks on the line edit.
-    Args:
-        items (list): A list of items to be added to the combo box.
-    """
-    def __init__(self, items):
-        super().__init__()
-        self.popup_open = False
-
-        self.addItems(items)
-        self.setEditable(True)
-        self.lineEdit().setAlignment(Qt.AlignCenter)
-        self.lineEdit().setReadOnly(True)
-        self.lineEdit().installEventFilter(self)
-
-        view = self.view()
-        view.setMouseTracking(True)  
-        view.setAutoScroll(False) 
-        view.setStyleSheet(f"""
-            QAbstractItemView {{
-                show-decoration-selected: 1; 
-                outline: 0;
-            }}
-            QAbstractItemView::item {{
-                padding: 2px;
-                border-left: 1px solid transparent; 
-            }}
-            QAbstractItemView::item:selected {{
-                background-color: {colors.COMBO_ITEM_HOVER};  
-                border-left: 1px solid {colors.COMBO_SELECTED}; 
-            }}
-        """)
-
-        self.setItemDelegate(CenteredDelegate(self))
-        self.setStyleSheet(F"""
-            QComboBox {{
-                background-color: {colors.COMBO_BACKGROUND};
-                padding-top: 8px;
-                padding-bottom: 8px;
-            }}
-            QComboBox:hover {{
-                background-color: {colors.COMBO_HOVER};
-            }}                                         
-        """)
-
-        self.currentIndexChanged.connect(self.line_edit_style)
-
-
-    def eventFilter(self, obj, event):
-        if obj == self.lineEdit() and event.type() in [QEvent.MouseButtonPress, QEvent.MouseButtonDblClick]:
-            if self.popup_open:
-                self.hidePopup()
-                self.popup_open = False
-            else:
-                self.showPopup()
-                self.popup_open = True
-            return True
-        
-        elif event.type() in [QEvent.MouseMove, QEvent.ContextMenu, QEvent.MouseButtonRelease]:
-            return True     # ignore these events to prevent unwanted behavior  
-                
-        return super().eventFilter(obj, event)
-        
-
-    def paintEvent(self, event):
-        from PySide6.QtWidgets import QComboBox, QStyleOptionComboBox, QStyle, QApplication
-        from PySide6.QtWidgets import QStylePainter
-
-        opt = QStyleOptionComboBox()
-        self.initStyleOption(opt)
-
-        opt.subControls = QStyle.SC_ComboBoxFrame | QStyle.SC_ComboBoxEditField
-
-        opt.rect.setRight(opt.rect.right())  
-
-        painter = QStylePainter(self)
-        painter.drawComplexControl(QStyle.CC_ComboBox, opt)
-        painter.drawControl(QStyle.CE_ComboBoxLabel, opt)
-
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        
-        if self.lineEdit():
-            self.line_edit_style()
-
-
-    def line_edit_style(self):
-        self.lineEdit().resize(self.width(), self.height())
-        self.lineEdit().move(0, 0)
-        self.lineEdit().setStyleSheet("background-color: #3c3d3d;")
-
-
-
-
-class ArrowComboBox(QComboBox):
-    """
-    This class extends QComboBox to create a combo box that can adapt its behavior based on user interaction.
-    It allows the combo box to be editable and shows the popup when the user clicks on the line edit.
-    Args:
-        items (list): A list of items to be added to the combo box.
-    """
-    def __init__(self, items):
-        super().__init__()
-
-        self.addItems(items)
-        
-        view = self.view()
-        view.setMouseTracking(True)  
-        view.setAutoScroll(False) 
-        view.setStyleSheet(F"""
-            QAbstractItemView {{
-                show-decoration-selected: 1; 
-                outline: 0;
-            }}
-            QAbstractItemView::item {{
-                padding: 2px;
-                border-left: 1px solid transparent; 
-            }}
-            QAbstractItemView::item:selected {{
-                background-color: {colors.COMBO_ITEM_HOVER};  
-                border-left: 1px solid {colors.COMBO_SELECTED}; 
-            }}
-        """)
-
-        self.setStyleSheet(F"""
-            QComboBox {{
-                padding: 5px;
-                padding: 5px; 
-                padding-left: 10px; 
-                background-color: {colors.COMBO_BACKGROUND};
-            }}
-        """)
-
-         
-            
 class GUiComponents():
     """
     This class contains the UI components for the application.
@@ -463,7 +316,7 @@ class GUiComponents():
         combo = ArrowComboBox(headings)
         combo.setFont(self.font)
         combo.currentIndexChanged.connect(self.on_change)       # onchange event to emit the signal indicating the value has changed
-        parent.addWidget(combo)                            # add the combo box to the content layout
+        parent.addWidget(combo)                                 # add the combo box to the content layout
 
         return combo
     
@@ -521,3 +374,151 @@ class GUiComponents():
 
         return [button]
     
+
+
+class CenteredDelegate(QStyledItemDelegate):
+    """
+    This class extends QStyledItemDelegate to center the text in the items of a combo box.
+    """
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+        option.displayAlignment = Qt.AlignCenter
+
+
+
+class NoArrowComboBox(QComboBox):
+    """
+    This class extends QComboBox to create a combo box that does not show the arrow button and adapts to light/dark themes.
+    Args:
+        items (list): A list of items to be added to the combo box.
+    """
+    def __init__(self, items):
+        super().__init__()
+        self.popup_open = False
+
+        self.addItems(items)
+        self.setEditable(True)
+        self.lineEdit().setAlignment(Qt.AlignCenter)
+        self.lineEdit().setReadOnly(True)
+        self.lineEdit().installEventFilter(self)
+
+        view = self.view()
+        view.setMouseTracking(True)  
+        view.setAutoScroll(False) 
+        view.setStyleSheet(f"""
+            QAbstractItemView {{
+                show-decoration-selected: 1; 
+                outline: 0;
+            }}
+            QAbstractItemView::item {{
+                padding: 2px;
+                border-left: 1px solid transparent; 
+            }}
+            QAbstractItemView::item:selected {{
+                background-color: {colors.COMBO_ITEM_HOVER};  
+                border-left: 1px solid {colors.COMBO_SELECTED}; 
+            }}
+        """)
+
+        self.setItemDelegate(CenteredDelegate(self))
+        self.setStyleSheet(F"""
+            QComboBox {{
+                background-color: {colors.COMBO_BACKGROUND};
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }}
+            QComboBox:hover {{
+                background-color: {colors.COMBO_HOVER};
+            }}                                         
+        """)
+
+        self.currentIndexChanged.connect(self.line_edit_style)
+
+
+    def eventFilter(self, obj, event):
+        if obj == self.lineEdit() and event.type() in [QEvent.MouseButtonPress, QEvent.MouseButtonDblClick]:
+            if self.popup_open:
+                self.hidePopup()
+                self.popup_open = False
+            else:
+                self.showPopup()
+                self.popup_open = True
+            return True
+        
+        elif event.type() in [QEvent.MouseMove, QEvent.ContextMenu, QEvent.MouseButtonRelease]:
+            return True     # ignore these events to prevent unwanted behavior  
+                
+        return super().eventFilter(obj, event)
+        
+
+    def paintEvent(self, event):
+        from PySide6.QtWidgets import QComboBox, QStyleOptionComboBox, QStyle, QApplication
+        from PySide6.QtWidgets import QStylePainter
+
+        opt = QStyleOptionComboBox()
+        self.initStyleOption(opt)
+
+        opt.subControls = QStyle.SC_ComboBoxFrame | QStyle.SC_ComboBoxEditField
+
+        opt.rect.setRight(opt.rect.right())  
+
+        painter = QStylePainter(self)
+        painter.drawComplexControl(QStyle.CC_ComboBox, opt)
+        painter.drawControl(QStyle.CE_ComboBoxLabel, opt)
+
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        
+        if self.lineEdit():
+            self.line_edit_style()
+
+
+    def line_edit_style(self):
+        self.lineEdit().resize(self.width(), self.height())
+        self.lineEdit().move(0, 0)
+        self.lineEdit().setStyleSheet("background-color: #3c3d3d;")
+
+
+
+
+class ArrowComboBox(QComboBox):
+    """
+    This class extends QComboBox to create a combo box that adapts to light/dark themes.
+    Args:
+        items (list): A list of items to be added to the combo box.
+    """
+    def __init__(self, items):
+        super().__init__()
+
+        self.addItems(items)
+        
+        view = self.view()
+        view.setMouseTracking(True)  
+        view.setAutoScroll(False) 
+        view.setStyleSheet(F"""
+            QAbstractItemView {{
+                show-decoration-selected: 1; 
+                outline: 0;
+            }}
+            QAbstractItemView::item {{
+                padding: 2px;
+                border-left: 1px solid transparent; 
+            }}
+            QAbstractItemView::item:selected {{
+                background-color: {colors.COMBO_ITEM_HOVER};  
+                border-left: 1px solid {colors.COMBO_SELECTED}; 
+            }}
+        """)
+
+        self.setStyleSheet(F"""
+            QComboBox {{
+                padding: 5px;
+                padding: 5px; 
+                padding-left: 10px; 
+                background-color: {colors.COMBO_BACKGROUND};
+            }}
+        """)
+
+         
+      
