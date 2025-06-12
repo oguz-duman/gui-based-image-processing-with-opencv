@@ -102,7 +102,7 @@ This project is designed to be modular and easy to extend. To add a new image pr
 
 4. **Add GUI Components:**  
     You have two options for adding GUI elements:
-    - Use predefined GUI components.  
+    - Use predefined GUI components like slider, buttons etc.  
     These are defined in `gui/gui_components.py`. Simply call them in your toolbox. For example:
 
        ```python
@@ -128,29 +128,42 @@ This project is designed to be modular and easy to extend. To add a new image pr
         ```
         Then you can simply call the created GUI component in your toolbox:
         ```python
-        self.your_component = self.insert_your_gui_component()
+        self.your_component = self.your_gui_component()
         ```
 
 6. **Add Image Processing Logic**  
     You have two options for adding Image Processing Logic:  
-    - Use existing methods from `app/processors/` directory:  
+    - Use predefined methods from `app/processors/` directory:  
 
       ```python
         from app import processors
         image = processors.some_method(image)
         ```
-    - Or define a new method as a separate module inside `app/processors/`. Here's a basic structure:  
+    - Create Custom Methods  
+        Create a new module `your_method.py` inside the `app/processors/` directory. Here's a basic structure:  
 
       ```python
-        def your_method(self, imageBGRA):
-    
-            # implement your image processing logic here, for example:
-            imageHSVA = self.bgra2hsva_transform(imageBGRA)                           
-            brightened = cv2.add(imageHSVA[:, :, 2], value)                 
-            imageBGRA = self.hsva2bgra_transform(imageHSVA)                          
-    
-            return imageBGRA
+      import cv2
+      
+      def your_method(imageBGRA):
+          # implement your image processing logic here, for example:
+          imageHSV = cv2.cvtColor(imageBGRA[:, :, :3], cv2.COLOR_BGR2HSV)  
+          imageHSV[:, :, 2] = cv2.add(imageHSV[:, :, 2], 15)    # increase brightness by 15               
+          imageBGRA[:, :, :3] = cv2.cvtColor(imageHSV, cv2.COLOR_HSV2BGR)                          
+
+          return imageBGRA
         ```
+      Don't forget to import the created method in `app/processors/__init__.py`:
+
+      ```python
+      from .your_method import your_method
+      ```
+      Then you can simply call the created methods in your toolbox:
+      
+      ```python
+      from app import processors
+      image = processors.your_method(image)
+      ```
 ---
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.

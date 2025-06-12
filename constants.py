@@ -1,117 +1,146 @@
 # keys will be displayed in the GUI.
 # Values must exactly match the related class names defined in the toolboxes.py file.
-TOOLBOXES = {"BRIGHTNESS":
-                {"NAME": "Brightness",
-                 "CLASS": "BrightnessBox"},
+TOOLBOXES = {
+    "BRIGHTNESS": {
+        "NAME": "Brightness",
+        "CLASS": "BrightnessBox"
+    },
 
-             "SATURATION": 
-                {"NAME": "Saturation",
-                 "CLASS": "SaturationBox"},
+    "SATURATION": {
+        "NAME": "Saturation",
+        "CLASS": "SaturationBox"
+    },
 
-             "CONTRAST":
-                {"NAME": "Contrast",
-                 "CLASS": "ContrastBox"},
+    "CONTRAST": {
+        "NAME": "Contrast",
+        "CLASS": "ContrastBox"
+    },
 
-             "FULL_SCALE_CONTRAST": 
-                {"NAME": "Full Scale Contrast",
-                 "CLASS": "FullScaleContrastBox"},
+    "FULL_SCALE_CONTRAST": {
+        "NAME": "Full Scale Contrast",
+        "CLASS": "FullScaleContrastBox"
+    },
 
-             "LOG":
-                {"NAME": "Log Transform",
-                 "CLASS": "LogBox"},
+    "LOG": {
+        "NAME": "Log Transform",
+        "CLASS": "LogBox"
+    },
 
-             "GAMMA":
-                {"NAME": "Gamma Transform",
-                 "CLASS": "GammaBox"},
+    "GAMMA": {
+        "NAME": "Gamma Transform",
+        "CLASS": "GammaBox"
+    },
 
-             "RGB2GRAY": 
-                {"NAME": "RGB to Gray",
-                 "CLASS": "RGB2GrayBox"},
+    "RGB2GRAY": {
+        "NAME": "RGB to Gray",
+        "CLASS": "RGB2GrayBox"
+    },
 
-             "THRESHOLDING": 
-                {"NAME": "Thresholding",
-                 "CLASS": "ThresholdingBox"},
+    "THRESHOLDING": {
+        "NAME": "Thresholding",
+        "CLASS": "ThresholdingBox"
+    },
 
-             "COMPLEMENT":  
-                {"NAME": "Complement",
-                 "CLASS": "ComplementBox"},
+    "COMPLEMENT":   {
+        "NAME": "Complement",
+        "CLASS": "ComplementBox"
+    },
 
-             "CROP": 
-                {"NAME": "Crop",
-                 "CLASS": "CropBox"},
+    "CROP": {
+        "NAME": "Crop",
+        "CLASS": "CropBox"
+    },
 
-             "FLIP":  
-                {"NAME": "Flip",
-                 "CLASS": "FlipBox"},
+    "FLIP":   {
+        "NAME": "Flip",
+        "CLASS": "FlipBox"
+    },
 
-             "ROTATE": 
-                {"NAME": "Rotate",
-                 "CLASS": "RotateBox"},
+    "ROTATE": {
+        "NAME": "Rotate",
+        "CLASS": "RotateBox"
+    },
 
-             "RESIZE": 
-                {"NAME": "Resize",
-                 "CLASS": "ResizeBox"},
+    "RESIZE": {
+        "NAME": "Resize",
+        "CLASS": "ResizeBox"
+    },
 
-             "PADDING": 
-                {"NAME": "Padding",
-                 "CLASS": "PaddingBox"},
+    "PADDING": {
+        "NAME": "Padding",
+        "CLASS": "PaddingBox"
+    },
 
-             "HISTEQ": 
-                {"NAME": "Histogram Equalization",
-                 "CLASS": "HistEqualizationBox"},
+    "HISTEQ": {
+        "NAME": "Histogram Equalization",
+        "CLASS": "HistEqualizationBox"
+    },
 
-             "HISTCLAHE": 
-                {"NAME": "Local Hist. Equalization",
-                 "CLASS": "HistCLAHEBox"}, 
+    "HISTCLAHE": {
+        "NAME": "Local Hist. Equalization",
+        "CLASS": "HistCLAHEBox"
+    }, 
 
-             "COLOR_MASKING": 
-                {"NAME": "Color Masking",
-                 "CLASS": "ColorMaskBox"},
+    "COLOR_MASKING": {
+        "NAME": "Color Masking",
+        "CLASS": "ColorMaskBox"
+    },
 
-             "SPATIAL_MASKING":  
-                {"NAME": "Spatial Masking",
-                 "CLASS": "SpatialMaskBox"},
+    "SPATIAL_MASKING":   {
+        "NAME": "Spatial Masking",
+        "CLASS": "SpatialMaskBox"
+    },
 
-             "BITSLICE": 
-                {"NAME": "Bit Plane Slicing",
-                 "CLASS": "BitSliceBox"},
+    "BITSLICE": {
+        "NAME": "Bit Plane Slicing",
+        "CLASS": "BitSliceBox"
+    },
 
-             "ADD_NOISE": 
-                {"NAME": "Add Noise",
-                 "CLASS": "NoiseBox"},
+    "ADD_NOISE": {
+        "NAME": "Add Noise",
+        "CLASS": "NoiseBox"
+    },
 
-             "ARITHMETIC": 
-                {"NAME": "Image Arithmetic",
-                 "CLASS": "ArithmeticBox"},
+    "ARITHMETIC": {
+        "NAME": "Image Arithmetic",
+        "CLASS": "ArithmeticBox"
+    },
 
-             "LOGIC": 
-                {"NAME": "Image Logic",
-                 "CLASS": "LogicBox"},
+    "LOGIC": {
+        "NAME": "Image Logic",
+        "CLASS": "LogicBox"
+    },
 
-             "LAPLACE": 
-                {"NAME": "Laplacian Filter",
-                 "CLASS": "LaplaceBox"},
+    "LAPLACE": {
+        "NAME": "Laplacian Filter",
+        "CLASS": "LaplaceBox"
+    },
 
-             "SOBEL": 
-                {"NAME": "Sobel Filter",
-                 "CLASS": "SobelBox"},
+    "SOBEL": {
+        "NAME": "Sobel Filter",
+        "CLASS": "SobelBox"
+    },
 
-             "ORDER_STAT": 
-                {"NAME": "Order Statistic Filter",
-                 "CLASS": "OrderStatBox"},
+    "ORDER_STAT": {
+        "NAME": "Order Statistic Filter",
+        "CLASS": "OrderStatBox"
+    },
 
-             "SMOOTHING": 
-                {"NAME": "Smoothing Filter",
-                 "CLASS": "SmoothingBox"},
+    "SMOOTHING": {
+        "NAME": "Smoothing Filter",
+        "CLASS": "SmoothingBox"
+    },
 
-             "SHARPENING": 
-                {"NAME": "Sharpening Filter",
-                 "CLASS": "SharpeningBox"},
-            
-            "FREQ_FILTER": 
-                {"NAME": "Frequency Filter",
-                 "CLASS": "FrequencyFilterBox"}
-            }
+    "SHARPENING": {
+        "NAME": "Sharpening Filter",
+        "CLASS": "SharpeningBox"
+    },
+
+    "FREQ_FILTER": {
+        "NAME": "Frequency Filter",
+        "CLASS": "FrequencyFilterBox"
+    }
+}
 
 
 # main button names

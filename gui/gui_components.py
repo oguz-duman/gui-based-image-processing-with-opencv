@@ -375,7 +375,6 @@ class GUiComponents():
         return [button]
     
 
-
 class CenteredDelegate(QStyledItemDelegate):
     """
     This class extends QStyledItemDelegate to center the text in the items of a combo box.
