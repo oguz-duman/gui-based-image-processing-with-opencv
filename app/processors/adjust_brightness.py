@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-def adjust_brightness(imageBGRA, value, color_space, mask=None):
+def adjust_brightness(imageBGRA, value, color_space="HSV", mask=None):
     """
     Brightens the given image by adding a value to the V channel of the image.
     Args:

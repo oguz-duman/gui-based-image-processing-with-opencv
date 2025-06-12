@@ -43,30 +43,26 @@ python main.py
 
 ---
 ## Code Structure
-
-* The application is organized around six main classes, each with a specific role:
-
-* `MainWindow`: Initializes the GUI and manages the main layout of the application.
-
-* `UIManagement`: Handles user interactions such as drag-and-drop, switching between multiple views (e.g., histogram or color layers), file selection etc.
-
-* `Pipeline`: Manages operations like adding, removing, reordering, and executing toolboxes in the order they are applied.
-
-* `Toolboxes`: Each image processing method is represented as an independent toolbox (e.g., BrightnessBox, ContrastBox). These toolboxes are the core interactive modules that users can add to the processing pipeline.
-
-* To avoid repetitive code and speed up toolbox development, all toolboxes inherit from two base classes:
-
-* `UIComponents`: Provides reusable GUI elements like buttons, sliders, and input fields.
-
-* `Processor`: Contains the actual image processing functions, built using OpenCV.
+The application is organized into two main layers: `gui` and `app`.
+- #### `gui/` – User Interface Layer
+    - This layer defines the GUI logic and visual structure of the application:
+    - `main_window.py`: Initializes the main window and overall layout.
+    - `gui_management.py`: Handles GUI interactions such as drag-and-drop and view toggling.
+    - `gui_components.py`: Contains reusable widgets (buttons, sliders, inputs) used throughout the interface.
+- #### `app/` – Application Logic Layer
+    - This layer encapsulates the core logic and image processing behavior.
+    - `pipeline.py`: Manages the sequence of processing steps.
+    - `toolbox_bases.py`: Defines base classes for toolboxes, unifying their behavior and appearance.
+    - `processor_utils.py`: Includes helper functions shared across multiple processors.
+    - `toolboxes/`: Contains GUI modules (e.g., `BrightnessBox`, `ContrastBox`) representing individual image operations.
+    - `processors/`: Contains the algorithmic implementations (e.g., `brightness.py`, `contrast.py`), each tied to toolboxes.
 
 ---
 ## How to Add Your Own Image Processing Methods
+This project is designed to be modular and easy to extend. To add a new image processing tool, follow these steps:
 
-This project is built to be modular and easy to extend. To add a new image processing method, follow these steps:
-
-1. **Update the `TOOLBOXES` list in `constants.py`:**  
-    Add a new dictionary entry with a display name and class name. Use the following structure:
+1. **Register the Toolbox**  
+    Update the `TOOLBOXES` list in `constants.py` by adding a new dictionary entry. Use the following structure:
 
     ```python
     "YOUR_METHOD": { 
@@ -75,68 +71,86 @@ This project is built to be modular and easy to extend. To add a new image proce
     }
     ```
 
-2. **Create a new class in `toolboxes.py`:**
-    Define a class that inherits from DraggableToolbox. Use the same class name you provided in the `TOOLBOXES` list. Use the following structure:
-
+2. **Create the Toolbox**  
+    Create a new module `YourMethodBox.py` inside the `app/toolboxes/` directory.
+    Define a class with the same name you used in the CLASS field above. This class must inherit from DraggableToolbox. Use the following structure:
+   
     ```python
+    from app.toolbox_bases import DraggableToolbox
+    from app import processors
+    import constants
+
     class YourMethodBox(DraggableToolbox):
         def __init__(self):
             super().__init__(constants.TOOLBOXES['YOUR_METHOD']['NAME'])
 
             # Insert your UI components here, for example:
-            # self.brightness_slider = self.insert_slider(heading="Brightness", minValue=-100, maxValue=100)
+            self.brightness_slider = self.insert_slider(heading="Brightness", minValue=-100, maxValue=100)
 
         def execute(self, imageBGRA, mask):
             # Apply your image processing logic here, For example:
-            # imageBGRA = self.adjust_brightness(imageBGRA, self.brightness_slider[0].value(), mask)
+            imageBGRA = processors.adjust_brightness(imageBGRA, self.brightness_slider[0].value(), mask=mask)
 
             return imageBGRA
     ```
 
-3. **Use predefined UI components:**  
-   You can directly use predefined UI components (e.g., sliders, switches, buttons) via `self.` in your toolbox class.  
-   To see the available options, check the `ui_components.py` file.
-
-4. **Use predefined image processing methods:**  
-   You can directly use predefined image processing functions.  
-   To explore them, check the `processor.py` file and call the methods via `self.`.
-
-5. **Create your own UI components:**
-    You can Also create your custom UI components.
-    To ensure proper state management (e.g., auto-update when a value changes), define your custom UI components **as methods inside the `UiComponents` class in `ui_components.py`**, rather than directly in the toolbox class. Use the following method structure:
-
+    Don't forget to import your toolbox in `app/toolboxes/__init__.py`:
+    
     ```python
-    def your_ui_component(self, parent=None):
-
-        # Keep this line unchanged to ensure the component is added to the correct parent widget.
-        parent = self.parent_widget if parent is None else parent
-
-        # Create your UI component here, for example:
-        component = QCheckBox("heading")
-
-        # Make sure you have the following two lines for component to work correctly:
-        component.stateChanged.connect(self.on_change)
-        parent.addWidget(component)
-
-        return component
+    from .YourMethodBox import YourMethodBox
     ```
 
-6. **Create your own processing methods:**
-    If you need to implement custom image processing logic, define them **as methods inside the `Processors` class in `processors.py`** to 
-    be able to use the helper methods and keep the code organized. You can use the following method structure:
+4. **Add GUI Components:**  
+    You have two options for adding GUI elements:
+    - Use predefined GUI components.  
+    These are defined in `gui/gui_components.py`. Simply call them in your toolbox. For example:
 
-    ```python
-    def your_method(self, imageBGRA):
+       ```python
+        self.brightness_slider = self.insert_slider(heading="Brightness", minValue=-100, maxValue=100)
+        ```
+    - Create Custom GUI components.  
+        Define new components as methods inside the UiComponents class in `gui/gui_components.py`. Here's a template:
 
-        # implement your image processing logic here, for example:
+        ```python
+        def your_gui_component(self, parent=None):
 
-        # imageHSVA = self.bgra2hsva_transform(imageBGRA)                           
-        # brightened = cv2.add(imageHSVA[:, :, 2], value)                 
-        # imageBGRA = self.hsva2bgra_transform(imageHSVA)                          
+            # Keep this line unchanged to ensure the component is added to the correct parent widget.
+            parent = self.parent_widget if parent is None else parent
 
-        return imageBGRA
-    ```
+            # Create your GUI component here, for example:
+            component = QCheckBox("heading")
 
+            # Make sure you have the following two lines for component to work correctly:
+            component.stateChanged.connect(self.on_change)
+            parent.addWidget(component)
+
+            return component
+        ```
+        Then you can simply call the created GUI component in your toolbox:
+        ```python
+        self.your_component = self.insert_your_gui_component()
+        ```
+
+6. **Add Image Processing Logic**  
+    You have two options for adding Image Processing Logic:  
+    - Use existing methods from `app/processors/` directory:  
+
+      ```python
+        from app import processors
+        image = processors.some_method(image)
+        ```
+    - Or define a new method as a separate module inside `app/processors/`. Here's a basic structure:  
+
+      ```python
+        def your_method(self, imageBGRA):
+    
+            # implement your image processing logic here, for example:
+            imageHSVA = self.bgra2hsva_transform(imageBGRA)                           
+            brightened = cv2.add(imageHSVA[:, :, 2], value)                 
+            imageBGRA = self.hsva2bgra_transform(imageHSVA)                          
+    
+            return imageBGRA
+        ```
 ---
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.

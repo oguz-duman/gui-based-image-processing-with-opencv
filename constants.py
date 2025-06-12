@@ -110,7 +110,8 @@ TOOLBOXES = {"BRIGHTNESS":
             
             "FREQ_FILTER": 
                 {"NAME": "Frequency Filter",
-                 "CLASS": "FrequencyFilterBox"}}
+                 "CLASS": "FrequencyFilterBox"}
+            }
 
 
 # main button names
