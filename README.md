@@ -1,6 +1,6 @@
-# GUI-Based Image Processing with OpenCV
+# impros
 
-This project is a PySide6-based graphical user interface (GUI) application built on OpenCV that provides an interactive platform for image processing. It currently includes common techniques such as histogram equalization, filtering, and thresholding, but is designed with a modular architecture to allow easy addition of new image processing methods. Users can apply various operations on input images and observe the results in real time, making it both a practical tool and a flexible framework for experimentation and extension.
+This project is a PySide6-based graphical user interface (GUI) application that provides an interactive platform for image processing. It supports the implementation of custom methods, from basic operations to advanced image processing algorithms. Users can apply various transformations to input images and observe the results in real time. The application can serve both as a ready-to-use tool and as a flexible framework for custom development and experimentation.
 
 ![Screenshot](images/app.png)
 
