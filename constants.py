@@ -154,13 +154,17 @@ SAVE_BUTTON = "Save"
 # title of the 'add new' toolbox
 ADD_TOOLBOX_TITLE = "Add New"
 
-# types of visualizations available in the application.
-VISUALIZATION_TYPES = ["Image", "Histogram", "Frequency Spectrum"]
 
-# names of the color channels available in the application.
-COLOR_CHANNELS = ["RGBA", "Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", 
-                  "Hue (HSV)", "Saturation (HSV)", "Value (HSV)", 
-                  "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"]
+# Visualization types and  available color channels for each visualization type.
+VISUALIZATION_TYPES = {"Image":["RGBA", "Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", "Hue (HSV)", "Saturation (HSV)",
+                                    "Value (HSV)", "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"],
+
+                        "Histogram": ["RGBA", "Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", "Hue (HSV)", "Saturation (HSV)",
+                                    "Value (HSV)", "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"],
+
+                        "Frequency Spectrum": ["Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", "Hue (HSV)", "Saturation (HSV)",
+                                    "Value (HSV)", "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"]
+                        }
 
 
 # Base64 encoded placeholder image for the GUI.

@@ -5,6 +5,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QMessageBox, QFileDialog
 
 import constants
+from constants import VISUALIZATION_TYPES
 from app.pipeline import Pipeline
 from app import toolboxes
 
@@ -17,7 +18,8 @@ class GUiManagement():
     def __init__(self):
         self.init_variables()
 
-    def init_ui_variables(self, toolbox_wrapper, footer_toolbox, in_im_canvas, out_im_canvas, left_title, right_title):
+    def init_ui_variables(self, toolbox_wrapper, footer_toolbox, in_im_canvas, out_im_canvas, 
+                          left_title, right_title, vis_mod_list, color_chan_list):
         """
         Gets the necessary widgets and layout from the 'main_window' and sets up the pipeline.
         Args:
@@ -34,22 +36,24 @@ class GUiManagement():
         self.out_im_canvas = out_im_canvas
         self.left_title = left_title
         self.right_title = right_title
+        self.vis_mod_list = vis_mod_list
+        self.color_chan_list = color_chan_list
 
         # Initialize the pipeline
         self.pipeline = Pipeline()  
 
         # Modes and their corresponding methods which are called when the mode is activated. Watch the order of the methods in the list.
         self.view_handlers = {      
-            constants.VISUALIZATION_TYPES[0]: lambda: self.display_images(self.get_color_channels()),  
-            constants.VISUALIZATION_TYPES[1]: lambda: self.display_histogram(),
-            constants.VISUALIZATION_TYPES[2]: lambda: self.display_images(self.fourier_transform())
+            list(VISUALIZATION_TYPES.keys())[0]: lambda: self.display_images(self.get_color_channels()),  
+            list(VISUALIZATION_TYPES.keys())[1]: lambda: self.display_histogram(),
+            list(VISUALIZATION_TYPES.keys())[2]: lambda: self.display_images(self.fourier_transform())
         }
 
         # Declares which widgets will be shown and which widgets will be hidden based on the selected mode. Watch the order of the methods in the list.
         self.widgets_per_mode = {
-            constants.VISUALIZATION_TYPES[0]: [self.left_title, self.right_title],
-            constants.VISUALIZATION_TYPES[1]: [],
-            constants.VISUALIZATION_TYPES[2]: [self.left_title, self.right_title]
+            list(VISUALIZATION_TYPES.keys())[0]: [self.left_title, self.right_title],
+            list(VISUALIZATION_TYPES.keys())[1]: [],
+            list(VISUALIZATION_TYPES.keys())[2]: [self.left_title, self.right_title]
         }
 
 
@@ -70,25 +74,17 @@ class GUiManagement():
         image = self.select_image()              # select an image using the file dialog
 
         if image is not None:
-            self.init_variables()                # reinitialize variables since a new image is opened
+            self.init_variables()                # reinitialize all the variables
             
-            # Reset the x and y limits (zooming) for the input and output image canvases
-            for canvas in [self.in_im_canvas, self.out_im_canvas]:
-                canvas._xlim = 0
-                canvas._ylim = 0
-
             self.input_BGRA = image.copy()       # make a copy of the input image for input
             self.output_BGRA = image.copy()      # make a copy of the input image for output
-
-            # display the input and output images in the labels
-            self.display_images([self.input_BGRA, self.output_BGRA])  
-
-            self.pipeline_on_change()            # process the image through the pipeline
 
             # update toolbox components according to new image (max slider values, etc.)
             for toolbox in self.pipeline.steps:  
                 toolbox.update_toolbox(self.input_BGRA)
 
+            self.vis_mod_list.setCurrentIndex(0)        # reset the view mode and color channel lists.
+            self.pipeline_on_change()                   # process the image through the pipeline
 
 
     def select_image(self):
@@ -176,7 +172,7 @@ class GUiManagement():
         """
         if self.input_BGRA is not None:
             self.output_BGRA = self.pipeline.run(self.input_BGRA)               # run the pipeline on the input image
-            self.view_handlers[self.view_mode]()                              # update the ui based on the current mode
+            self.view_handlers[self.view_mode]()                                # update the ui based on the current mode
 
 
 
@@ -207,8 +203,15 @@ class GUiManagement():
         for widget in widgets_to_show:
             widget.show()
 
-        self.view_mode = mode_name                  # update the current view mode
-        self.view_handlers[mode_name]()             # call the handler for the current view mode
+        # Update the view mode and color channel variables
+        self.view_mode = mode_name                  
+        self.color_channel = VISUALIZATION_TYPES[mode_name][0].split(" ")[0]                   
+
+        # Clear existing color channels and add new ones based on selected mode
+        self.color_chan_list.blockSignals(True)
+        self.color_chan_list.clear()
+        self.color_chan_list.blockSignals(False)
+        self.color_chan_list.addItems(VISUALIZATION_TYPES[mode_name])  # This will trigger the switch_color_chan method and update the view
 
 
     def switch_color_chan(self, channel_name):

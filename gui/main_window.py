@@ -36,7 +36,8 @@ class MainWindow(QWidget, GUiManagement):
         self.init_bottomLayout()
 
         # Initialize UI variables in UiManagement
-        self.init_ui_variables(self.contentLayout, self.add_new_box, self.in_im_canvas, self.out_im_canvas, self.left_title, self.right_title)  
+        self.init_ui_variables(self.contentLayout, self.add_new_box, self.in_im_canvas, self.out_im_canvas, 
+                               self.left_title, self.right_title, self.vis_mod_list, self.color_chan_list)  
 
 
         # Decode and display the base64 encoded placeholder image 
@@ -134,16 +135,16 @@ class MainWindow(QWidget, GUiManagement):
         """)
 
         # List 1 - Visualization type
-        visualization_type = NoArrowComboBox(items=constants.VISUALIZATION_TYPES)
-        midLayout.addWidget(visualization_type, 1)
-        visualization_type.setFont(font)
-        visualization_type.currentTextChanged.connect(lambda: self.switch_view(visualization_type.currentText()))  
+        self.vis_mod_list = NoArrowComboBox(items=constants.VISUALIZATION_TYPES)
+        midLayout.addWidget(self.vis_mod_list, 1)
+        self.vis_mod_list.setFont(font)
+        self.vis_mod_list.currentTextChanged.connect(lambda: self.switch_view(self.vis_mod_list.currentText()))  
 
         # List 2 - Color Channel
-        color_chan = NoArrowComboBox(items=constants.COLOR_CHANNELS)
-        midLayout.addWidget(color_chan, 1)
-        color_chan.setFont(font)
-        color_chan.currentTextChanged.connect(lambda: self.switch_color_chan(color_chan.currentText())) 
+        self.color_chan_list = NoArrowComboBox(items=list(constants.VISUALIZATION_TYPES.values())[0])
+        midLayout.addWidget(self.color_chan_list, 1)
+        self.color_chan_list.setFont(font)
+        self.color_chan_list.currentTextChanged.connect(lambda: self.switch_color_chan(self.color_chan_list.currentText())) 
 
         # Button 2 - save image
         btn = QPushButton(constants.SAVE_BUTTON)
