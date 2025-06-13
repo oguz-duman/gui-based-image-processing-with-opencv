@@ -231,6 +231,7 @@ class GUiManagement():
         Parameters:
             images (list): A list containing the images to be displayed. 
         """
+        # Toggle visibility of titles based on the color channel
         if self.color_channel == "RGBA":
             self.left_title.hide()
             self.right_title.hide()
@@ -240,6 +241,12 @@ class GUiManagement():
             self.left_title.setText(f"{self.color_channel} Channel")
             self.right_title.setText(f"{self.color_channel} Channel")
 
+        # Convert the images to BGRA format if they are 1-channel grayscale images
+        for i in range(len(images)):
+            if len(images[i].shape) == 2:
+                images[i] = cv2.cvtColor(images[i], cv2.COLOR_GRAY2BGRA)
+
+        # Plot the images on the respective canvases
         for image, canvas in zip(images, [self.in_im_canvas, self.out_im_canvas]):
             
             # clear the current canvas and plot the new image
@@ -268,35 +275,42 @@ class GUiManagement():
         for image, canvas in zip(self.get_color_channels(), [self.in_im_canvas, self.out_im_canvas]):
             canvas._axes.clear()
             
-            # Calculate histogram values and bin edges of the V channel in HSV color space
-            imageHSV = cv2.cvtColor(image[:, :, :3], cv2.COLOR_BGR2HSV)  
-            hist_vals, bin_edges = np.histogram(imageHSV[:,:,2], bins=255, range=(0, 256))
+            # image can be in the form of 1-channel grayscale or 4-channel BGRA
+            channel_count = image.shape[2] if len(image.shape) == 3 else 1
+            # plot the histogram for each channel if the image has more than 1 channel
+            for i in range(channel_count):
+                channel = image if channel_count == 1 else image[:, :, i]       
 
-            # Use midpoints for x-axis
-            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-            
-            # Set the color for the histogram
-            if self.color_channel == "Red" or self.color_channel == "Green" or self.color_channel == "Blue":
-                color = self.color_channel
-            else:
-                color = 'black'
+                # Calculate histogram values and bin edges
+                hist_vals, bin_edges = np.histogram(channel, bins=255, range=(0, 256))
 
-            # Plot as step plot
-            canvas._axes.step(bin_centers, hist_vals, color=color, where='mid', linewidth=1)
-            
-            # Get the maximum y value for setting the y-axis limit 
-            y_lims.append(np.max(hist_vals) * 1.1)               
-            
-            # Set style and labels
-            canvas._axes.set_xlim(-1, 256)
-            canvas._axes.set_xticks(np.append(np.arange(0, 250, 25), 255))
-            canvas.configuration_types("histogram")
-            canvas._axes.set_title(f"{self.color_channel} Channel")
-            canvas.figure.tight_layout()  
+                # Use midpoints for x-axis
+                bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+                
+                # Set the color for the histogram
+                if self.color_channel == "RGBA":
+                    colors = ['blue', 'green', 'red', 'black']
+                elif self.color_channel == "Red" or self.color_channel == "Green" or self.color_channel == "Blue":
+                    colors = [self.color_channel]
+                else:
+                    colors = ['black']
 
-            # Calculate the y-axis limit for both histograms
-            y_lim = np.max(y_lims)                          
-            yStep = y_lim / 5     
+                # Plot as step plot
+                canvas._axes.step(bin_centers, hist_vals, color=colors[i], where='mid', linewidth=1)
+                
+                # Get the maximum y value for setting the y-axis limit 
+                y_lims.append(np.max(hist_vals) * 1.1)               
+                
+                # Set style and labels
+                canvas._axes.set_xlim(-1, 256)
+                canvas._axes.set_xticks(np.append(np.arange(0, 250, 25), 255))
+                canvas.configuration_types("histogram")
+                canvas._axes.set_title(f"{self.color_channel} Channel")
+                canvas.figure.tight_layout()  
+
+                # Calculate the y-axis limit for both histograms
+                y_lim = np.max(y_lims)                          
+                yStep = y_lim / 5     
 
         # Set the y-axis limits and ticks for both histograms and draw the canvases
         for _canvas in canvases:
@@ -325,6 +339,7 @@ class GUiManagement():
             "Blue-Yellow":("LAB", 2)
         }
 
+        # If the color channel is not specified or is RGBA, return the input and output images as they are (4 channel BGRA images)
         if self.color_channel not in channel_maps or self.color_channel == "RGBA":
             return [self.input_BGRA, self.output_BGRA]
 
@@ -336,8 +351,9 @@ class GUiManagement():
             else:
                 converted = cv2.cvtColor(image[:, :, :3], getattr(cv2, f'COLOR_BGR2{space}'))
                 channel = converted[:, :, index]
-            return cv2.cvtColor(channel, cv2.COLOR_GRAY2BGRA)
+            return channel
 
+        # Return the extracted channels (1 channel grayscale images)
         return [
             extract_channel(self.input_BGRA, space, index),
             extract_channel(self.output_BGRA, space, index)
@@ -352,18 +368,15 @@ class GUiManagement():
         """
         magnitude_spectrums = []  
 
-        for image in self.get_color_channels():
+        for channel in self.get_color_channels():
             
-            # since get_color_channel returns grayscale image as BGRA, we can get any of the first three channels. We used [:,:,0]
-            ch_float = np.float32(image[:,:,0])         # convert the channel to float32   
-            
+            ch_float = np.float32(channel)         # convert the channel to float32   
             dft = cv2.dft(ch_float, flags=cv2.DFT_COMPLEX_OUTPUT)
             dft_shift = np.fft.fftshift(dft)
             magnitude = cv2.magnitude(dft_shift[:,:,0], dft_shift[:,:,1])
             magnitude_log = np.log(magnitude + 1)
             magnitude_norm = cv2.normalize(magnitude_log, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-            mag_im = cv2.cvtColor(magnitude_norm, cv2.COLOR_GRAY2BGR)  
-            mag_im = cv2.merge([mag_im, image[:,:,3]])  # merge the alpha channel back to the image
+            mag_im = cv2.cvtColor(magnitude_norm, cv2.COLOR_GRAY2BGRA)  
             magnitude_spectrums.append(mag_im)
 
         return magnitude_spectrums
