@@ -162,7 +162,7 @@ VISUALIZATION_TYPES = {"Image":["RGBA", "Red (RGBA)", "Green (RGBA)", "Blue (RGB
                         "Histogram": ["RGBA", "Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", "Hue (HSV)", "Saturation (HSV)",
                                     "Value (HSV)", "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"],
 
-                        "Frequency Spectrum": ["Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", "Hue (HSV)", "Saturation (HSV)",
+                        "Frequency": ["Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", "Hue (HSV)", "Saturation (HSV)",
                                     "Value (HSV)", "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"]
                         }
 

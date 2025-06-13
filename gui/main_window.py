@@ -4,7 +4,7 @@ import numpy as np
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea
+from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QScrollArea, QCheckBox
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -37,7 +37,7 @@ class MainWindow(QWidget, GUiManagement):
 
         # Initialize UI variables in UiManagement
         self.init_ui_variables(self.contentLayout, self.add_new_box, self.in_im_canvas, self.out_im_canvas, 
-                               self.left_title, self.right_title, self.vis_mod_list, self.color_chan_list)  
+                               self.left_title, self.right_title, self.vis_mod_list, self.color_chan_list, self.zoom_btns)  
 
 
         # Decode and display the base64 encoded placeholder image 
@@ -82,6 +82,24 @@ class MainWindow(QWidget, GUiManagement):
         spacer = QVBoxLayout()
         top_layout.addLayout(spacer, 4)
   
+        # create options layput
+        options = QVBoxLayout()
+        spacer.addLayout(options)
+        self.zoom_btns = []  
+
+        # create zoom_lock buttons
+        x_zoom_lock_btn = QCheckBox("Lock X Zoom")
+        x_zoom_lock_btn.setCheckable(True)
+        x_zoom_lock_btn.setChecked(False)
+        options.addWidget(x_zoom_lock_btn)
+        self.zoom_btns.append(x_zoom_lock_btn)
+
+        y_zoom_lock_btn = QCheckBox("Lock X Zoom")
+        y_zoom_lock_btn.setCheckable(True)
+        y_zoom_lock_btn.setChecked(False)
+        options.addWidget(y_zoom_lock_btn)
+        self.zoom_btns.append(y_zoom_lock_btn)
+        
         # create spacer label
         arrow = QLabel(">")
         font = QFont()              
@@ -277,6 +295,8 @@ class InteractiveCanvas(FigureCanvas):
         self._orig_xlim = None
         self._orig_ylim = None
 
+        self.lock_x_zoom = False  # Flag to lock x-axis zooming
+
         # Set the canvas to be transparent
         self.setStyleSheet("background: transparent;")  
 
@@ -289,7 +309,7 @@ class InteractiveCanvas(FigureCanvas):
         """
         if self._axes is None:
             return
-
+        
         pos = event.position()
         x, y = pos.x(), pos.y()
         xdata, ydata = self._axes.transData.inverted().transform((x, y))
@@ -316,11 +336,13 @@ class InteractiveCanvas(FigureCanvas):
         self._xlim[1] = min(self._orig_xlim[1], self._xlim[1]) 
         self._ylim[0] = min(self._orig_ylim[0], self._ylim[0])  
 
+        if self.lock_x_zoom: 
+            self._xlim = xlim
+
         # Update the axes limits and redraw the canvas
         self._axes.set_xlim(self._xlim)
         self._axes.set_ylim(self._ylim)
         self.draw()
-
 
     def mousePressEvent(self, event):
         """

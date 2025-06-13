@@ -19,7 +19,7 @@ class GUiManagement():
         self.init_variables()
 
     def init_ui_variables(self, toolbox_wrapper, footer_toolbox, in_im_canvas, out_im_canvas, 
-                          left_title, right_title, vis_mod_list, color_chan_list):
+                          left_title, right_title, vis_mod_list, color_chan_list, zoom_btns):
         """
         Gets the necessary widgets and layout from the 'main_window' and sets up the pipeline.
         Args:
@@ -38,22 +38,23 @@ class GUiManagement():
         self.right_title = right_title
         self.vis_mod_list = vis_mod_list
         self.color_chan_list = color_chan_list
+        self.zoom_btn_1, self.zoom_btn_2 = zoom_btns
 
         # Initialize the pipeline
         self.pipeline = Pipeline()  
 
-        # Modes and their corresponding methods which are called when the mode is activated. Watch the order of the methods in the list.
+        # Modes and their corresponding methods which are called when the mode is activated.
         self.view_handlers = {      
-            list(VISUALIZATION_TYPES.keys())[0]: lambda: self.display_images(self.get_color_channels()),  
-            list(VISUALIZATION_TYPES.keys())[1]: lambda: self.display_histogram(),
-            list(VISUALIZATION_TYPES.keys())[2]: lambda: self.display_images(self.fourier_transform())
+            "Image": lambda: self.display_images(self.get_color_channels()),  
+            "Histogram": lambda: self.display_histogram(),
+            "Frequency": lambda: self.display_images(self.fourier_transform())
         }
 
-        # Declares which widgets will be shown and which widgets will be hidden based on the selected mode. Watch the order of the methods in the list.
+        # Declares which widgets will be shown and which widgets will be hidden based on the selected mode.
         self.widgets_per_mode = {
-            list(VISUALIZATION_TYPES.keys())[0]: [self.left_title, self.right_title],
-            list(VISUALIZATION_TYPES.keys())[1]: [],
-            list(VISUALIZATION_TYPES.keys())[2]: [self.left_title, self.right_title]
+            "Image": [self.left_title, self.right_title],
+            "Histogram": [self.zoom_btn_1, self.zoom_btn_2],
+            "Frequency": [self.left_title, self.right_title]
         }
 
 
@@ -185,10 +186,10 @@ class GUiManagement():
         if self.input_BGRA is None:
             return
         
-        # Reset the x and y limits (zooming) for the input and output image canvases
+        # Reset zoom and pan limits for both canvases
         for canvas in [self.in_im_canvas, self.out_im_canvas]:
             canvas._xlim = 0
-            canvas._ylim = 0
+            canvas._ylim = 0    
 
         # show or hide the relevant widgets based on the selected mode
         widgets_to_show = []
