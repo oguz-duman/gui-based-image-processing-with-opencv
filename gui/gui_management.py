@@ -188,10 +188,13 @@ class GUiManagement():
         if self.vis_mod_list.currentText() != mode_name:
             self.vis_mod_list.setCurrentText(mode_name)
 
-        # Reset zoom and pan limits for both canvases
+        # Reset zoom amounts and locks
         for canvas in [self.in_im_canvas, self.out_im_canvas]:
             canvas._xlim = 0
             canvas._ylim = 0    
+            self.zoom_btn_1.setChecked(False)  
+            self.zoom_btn_2.setChecked(False)
+
 
         # show or hide the relevant widgets based on the selected mode
         widgets_to_show = []
