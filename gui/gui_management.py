@@ -84,7 +84,7 @@ class GUiManagement():
             for toolbox in self.pipeline.steps:  
                 toolbox.update_toolbox(self.input_BGRA)
 
-            self.vis_mod_list.setCurrentIndex(0)        # reset the view mode and color channel lists.
+            self.switch_view("Image")                   # switch back to the image view mode
             self.pipeline_on_change()                   # process the image through the pipeline
 
 
@@ -176,7 +176,6 @@ class GUiManagement():
             self.view_handlers[self.view_mode]()                                # update the ui based on the current mode
 
 
-
     def switch_view(self, mode_name):
         """
         Switch the view mode to the specified mode and update the UI accordingly.
@@ -186,6 +185,9 @@ class GUiManagement():
         if self.input_BGRA is None:
             return
         
+        if self.vis_mod_list.currentText() != mode_name:
+            self.vis_mod_list.setCurrentText(mode_name)
+
         # Reset zoom and pan limits for both canvases
         for canvas in [self.in_im_canvas, self.out_im_canvas]:
             canvas._xlim = 0
