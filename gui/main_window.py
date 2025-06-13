@@ -83,8 +83,9 @@ class MainWindow(QWidget, GUiManagement):
         top_layout.addLayout(spacer, 4)
   
         # create options layput
-        options = QVBoxLayout()
-        spacer.addLayout(options)
+        options_container = QWidget()
+        options = QVBoxLayout(options_container)
+        spacer.addWidget(options_container, stretch=1)
         self.zoom_btns = []  
 
         # create zoom_lock buttons
@@ -92,21 +93,33 @@ class MainWindow(QWidget, GUiManagement):
         x_zoom_lock_btn.setCheckable(True)
         x_zoom_lock_btn.setChecked(False)
         options.addWidget(x_zoom_lock_btn)
+        x_zoom_lock_btn.hide()  
         self.zoom_btns.append(x_zoom_lock_btn)
 
-        y_zoom_lock_btn = QCheckBox("Lock X Zoom")
+        y_zoom_lock_btn = QCheckBox("Lock Y Zoom")
         y_zoom_lock_btn.setCheckable(True)
         y_zoom_lock_btn.setChecked(False)
         options.addWidget(y_zoom_lock_btn)
+        y_zoom_lock_btn.hide()  
         self.zoom_btns.append(y_zoom_lock_btn)
         
+        # create text layout
+        text_container = QWidget()
+        text_layout = QVBoxLayout(text_container)
+        spacer.addWidget(text_container, stretch=1)
+
         # create spacer label
         arrow = QLabel(">")
         font = QFont()              
         font.setPointSize(35)       
         arrow.setFont(font) 
         arrow.setAlignment(Qt.AlignCenter)  
-        spacer.addWidget(arrow, 1, alignment=Qt.AlignCenter)
+        text_layout.addWidget(arrow, alignment=Qt.AlignCenter)
+
+        # create bottom options
+        bot_options_container = QWidget()
+        bot_options = QVBoxLayout(bot_options_container)
+        spacer.addWidget(bot_options_container, stretch=1)
 
         # create rightLayout to hold the right image and title
         right_layout = QVBoxLayout()
@@ -122,6 +135,12 @@ class MainWindow(QWidget, GUiManagement):
         # Create output image canvas
         self.out_im_canvas = InteractiveCanvas()
         right_layout.addWidget(self.out_im_canvas)
+
+        # connect zoom lock buttons to their respective methods
+        x_zoom_lock_btn.toggled.connect(lambda checked: setattr(self.in_im_canvas, "lock_x_zoom", checked))
+        x_zoom_lock_btn.toggled.connect(lambda checked: setattr(self.out_im_canvas, "lock_x_zoom", checked))
+        y_zoom_lock_btn.toggled.connect(lambda checked: setattr(self.in_im_canvas, "lock_y_zoom", checked))
+        y_zoom_lock_btn.toggled.connect(lambda checked: setattr(self.out_im_canvas, "lock_y_zoom", checked))
 
 
     def init_midLayout(self):
@@ -296,6 +315,7 @@ class InteractiveCanvas(FigureCanvas):
         self._orig_ylim = None
 
         self.lock_x_zoom = False  # Flag to lock x-axis zooming
+        self.lock_y_zoom = False  # Flag to lock y-axis zooming
 
         # Set the canvas to be transparent
         self.setStyleSheet("background: transparent;")  
@@ -336,8 +356,9 @@ class InteractiveCanvas(FigureCanvas):
         self._xlim[1] = min(self._orig_xlim[1], self._xlim[1]) 
         self._ylim[0] = min(self._orig_ylim[0], self._ylim[0])  
 
-        if self.lock_x_zoom: 
-            self._xlim = xlim
+        # Lock the zooming if the flags are set
+        self._xlim = xlim if self.lock_x_zoom else self._xlim
+        self._ylim = ylim if self.lock_y_zoom else self._ylim
 
         # Update the axes limits and redraw the canvas
         self._axes.set_xlim(self._xlim)
