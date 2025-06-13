@@ -2,7 +2,7 @@
 
 This project is a PySide6-based graphical user interface (GUI) application that provides an interactive platform for image processing. It supports the implementation of custom methods, from basic operations to advanced image processing algorithms. Users can apply various transformations to input images and observe the results in real time. The application can serve both as a ready-to-use tool and as a flexible framework for custom development and experimentation.
 
-![Screenshot](images/app.png)
+![Screenshot](screenshots/app.png)
 
 ---
 ## How to Install
