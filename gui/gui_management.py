@@ -188,13 +188,9 @@ class GUiManagement():
         if self.vis_mod_list.currentText() != mode_name:
             self.vis_mod_list.setCurrentText(mode_name)
 
-        # Reset zoom amounts and locks
-        for canvas in [self.in_im_canvas, self.out_im_canvas]:
-            canvas._xlim = 0
-            canvas._ylim = 0    
-            self.zoom_btn_1.setChecked(False)  
-            self.zoom_btn_2.setChecked(False)
-
+        # Uncheck the zoom buttons
+        self.zoom_btn_1.setChecked(False)  
+        self.zoom_btn_2.setChecked(False)
 
         # show or hide the relevant widgets based on the selected mode
         widgets_to_show = []
@@ -229,6 +225,10 @@ class GUiManagement():
         if self.input_BGRA is None:
             return
         
+        # Reset the input and output image canvases       
+        self.in_im_canvas.reset_plot()
+        self.out_im_canvas.reset_plot()
+
         self.color_channel = channel_name.split(" ")[0]     # get the color channel name from the button text
         self.view_handlers[self.view_mode]()                # update the view based on the current view mode
 
@@ -259,30 +259,18 @@ class GUiManagement():
         for image, canvas in zip(images, [self.in_im_canvas, self.out_im_canvas]):
             
             # clear the current canvas and plot the new image
-            canvas._axes.clear()                             
+            canvas.set_plot_type("image")
             canvas._axes.imshow(image[:, :, [2, 1, 0, 3]], interpolation="none")    # convert BGRA to RGBA and display it
-            canvas.configuration_types("image")
+            canvas.configure_imgae_plot()
             canvas.draw()
-
-            # get original x and y limits to limit zooming and panning
-            canvas._orig_xlim = canvas._axes.get_xlim()
-            canvas._orig_ylim = canvas._axes.get_ylim()
-
-            # set the x and y limits to the previous values if any
-            if canvas._xlim and canvas._ylim:
-                canvas._axes.set_xlim(canvas._xlim)
-                canvas._axes.set_ylim(canvas._ylim)
-                canvas.draw()
  
 
     def display_histogram(self):
         """
         Plot the histogram of the given image on the canvas.
         """ 
-        y_lims = []  
-        canvases = [self.in_im_canvas, self.out_im_canvas] 
         for image, canvas in zip(self.get_color_channels(), [self.in_im_canvas, self.out_im_canvas]):
-            canvas._axes.clear()
+            canvas.set_plot_type("histogram")
             
             # image can be in the form of 1-channel grayscale or 4-channel BGRA
             channel_count = image.shape[2] if len(image.shape) == 3 else 1
@@ -304,29 +292,12 @@ class GUiManagement():
                 else:
                     colors = ['black']
 
-                # Plot as step plot
+                # Plot the histogram
                 canvas._axes.step(bin_centers, hist_vals, color=colors[i], where='mid', linewidth=1)
-                
-                # Get the maximum y value for setting the y-axis limit 
-                y_lims.append(np.max(hist_vals) * 1.1)               
-                
-                # Set style and labels
-                canvas._axes.set_xlim(-1, 256)
-                canvas._axes.set_xticks(np.append(np.arange(0, 250, 25), 255))
-                canvas.configuration_types("histogram")
                 canvas._axes.set_title(f"{self.color_channel} Channel")
-                canvas.figure.tight_layout()  
+                canvas.configure_hist_plot()
 
-                # Calculate the y-axis limit for both histograms
-                y_lim = np.max(y_lims)                          
-                yStep = y_lim / 5     
-
-        # Set the y-axis limits and ticks for both histograms and draw the canvases
-        for _canvas in canvases:
-            _canvas._axes.set_ylim(0, y_lim)                   
-            _canvas._axes.set_yticks(np.uint32(np.arange(0, y_lim+1, yStep)))
-    
-            _canvas.draw()
+            canvas.draw()
 
 
     def get_color_channels(self):

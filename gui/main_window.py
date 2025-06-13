@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLa
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib.ticker import AutoLocator
 
 from app import toolbox_bases
 import constants
@@ -300,7 +301,6 @@ class InteractiveCanvas(FigureCanvas):
         self.setFocus()
 
         self._axes = self.figure.add_subplot(111)               # Create a single axes 
-        self.configuration_types()                              # Set the initial configuration for the canvas
 
         # Initialize panning variables 
         self._is_panning = False
@@ -314,8 +314,10 @@ class InteractiveCanvas(FigureCanvas):
         self._orig_xlim = None
         self._orig_ylim = None
 
-        self.lock_x_zoom = False  # Flag to lock x-axis zooming
-        self.lock_y_zoom = False  # Flag to lock y-axis zooming
+        self.lock_x_zoom = False    # Flag to lock x-axis zooming
+        self.lock_y_zoom = False    # Flag to lock y-axis zooming
+        self.is_zoomed = False      # Flag to indicate if the canvas is zoomed
+        self.plot_type = "image"  
 
         # Set the canvas to be transparent
         self.setStyleSheet("background: transparent;")  
@@ -350,11 +352,12 @@ class InteractiveCanvas(FigureCanvas):
             ydata + (ylim[1] - ydata) * factor
         ]
 
-        # ensure the new limits do not go below 0 or exceed original limits
-        self._xlim[0] = max(0, self._xlim[0])  
-        self._ylim[1] = max(0, self._ylim[1])  
-        self._xlim[1] = min(self._orig_xlim[1], self._xlim[1]) 
-        self._ylim[0] = min(self._orig_ylim[0], self._ylim[0])  
+        if self.plot_type != "histogram":
+            # ensure the new limits do not go below 0 or exceed original limits
+            self._xlim[0] = max(0, self._xlim[0])  
+            self._ylim[1] = max(0, self._ylim[1])  
+            self._xlim[1] = min(self._orig_xlim[1], self._xlim[1]) 
+            self._ylim[0] = min(self._orig_ylim[0], self._ylim[0])  
 
         # Lock the zooming if the flags are set
         self._xlim = xlim if self.lock_x_zoom else self._xlim
@@ -363,7 +366,16 @@ class InteractiveCanvas(FigureCanvas):
         # Update the axes limits and redraw the canvas
         self._axes.set_xlim(self._xlim)
         self._axes.set_ylim(self._ylim)
+
+        # Reconfigure the figure
+        if self.plot_type == "image":
+            self.configure_imgae_plot()
+        elif self.plot_type == "histogram":
+            self.configure_hist_plot()
+        
         self.draw()
+
+        self.is_zoomed = True
 
     def mousePressEvent(self, event):
         """
@@ -404,15 +416,20 @@ class InteractiveCanvas(FigureCanvas):
                 self._axes.get_ylim()[1] + dy_data
             ]
 
-            # ensure the new limits do not go below 0 or exceed original limits
-            if not (self._xlim[0] < 0 or self._xlim[1] > self._orig_xlim[1]):
+            if self.plot_type == "histogram":
                 self._axes.set_xlim(self._xlim)
-            
-            if not (self._ylim[1] < 0 or self._ylim[0] > self._orig_ylim[0]):
                 self._axes.set_ylim(self._ylim)
+            else:
+                # ensure the new limits do not go below 0 or exceed original limits
+                if not (self._xlim[0] < 0 or self._xlim[1] > self._orig_xlim[1]):
+                    self._axes.set_xlim(self._xlim)
+                if not (self._ylim[1] < 0 or self._ylim[0] > self._orig_ylim[0]):
+                    self._axes.set_ylim(self._ylim)
 
             self._pan_start = event.position()
             self.draw()
+
+            self.is_zoomed = True
 
 
     def mouseReleaseEvent(self, event):
@@ -427,21 +444,51 @@ class InteractiveCanvas(FigureCanvas):
             self._pan_start = None
 
 
-    def configuration_types(self, type="image"):
-        """
-        Configure the canvas based on the type of content to be displayed.
-        Args:
-            type (str): The type of content to be displayed. Can be "image" or "histogram".
-        """
-        if type == "image":
-            self._axes.axis('off')  
-            self._axes.grid(False)
-            self.figure.set_facecolor((1,1,1,0))  
-            self.figure.subplots_adjust(left=0, right=1, top=1, bottom=0)       # Adjust the subplot to fill the canvas
+    def configure_imgae_plot(self):
+        """Configure the axes for image plots."""
+        if not self.is_zoomed:
+            # get original x and y limits to limit zooming and panning
+            self._orig_xlim = self._axes.get_xlim()
+            self._orig_ylim = self._axes.get_ylim()
 
-        elif type == "histogram":
-            self._axes.axis('on')  
-            self._axes.grid(True)
+        # set the x and y limits to the previous values if any to keep the zoom level
+        if self._xlim and self._ylim:
+            self._axes.set_xlim(self._xlim)
+            self._axes.set_ylim(self._ylim)
+        
+        self._axes.axis('off')  
+        self._axes.grid(False)
+        self.figure.set_facecolor((1,1,1,0))  
+        self.figure.subplots_adjust(left=0, right=1, top=1, bottom=0) 
+
+
+    def configure_hist_plot(self):
+        """Configure the axes for histogram plots."""
+        if not self.is_zoomed:
             self.figure.set_facecolor((1,1,1,1)) 
-            self.figure.tight_layout(pad=1.5)
+            self._axes.set_xlim(-1, 256)
             self._axes.set_aspect('auto')  
+            self._axes.xaxis.set_major_locator(AutoLocator())
+            self._axes.yaxis.set_major_locator(AutoLocator())
+            self.figure.tight_layout(pad=1.5)
+
+        self._axes.axis('on')  
+        self._axes.grid(True)
+        # set the x and y limits to the previous values if any to keep the zoom level
+        if self._xlim and self._ylim:
+            self._axes.set_xlim(self._xlim)
+            self._axes.set_ylim(self._ylim)
+
+
+    def reset_plot(self):
+        """Reset the plot by clearing the axes and resetting zoom and panning variables."""
+        self._axes.clear()                             
+        self.is_zoomed = False
+        self._xlim = 0
+        self._ylim = 0    
+
+
+    def set_plot_type(self, plot_type):
+        """Set the type of plot to be displayed on the canvas."""
+        self._axes.clear()  
+        self.plot_type = plot_type
