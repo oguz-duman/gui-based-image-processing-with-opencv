@@ -1,4 +1,6 @@
 import cv2
+import base64
+import numpy as np
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -36,8 +38,11 @@ class MainWindow(QWidget, GUiManagement):
         # Initialize UI variables in UiManagement
         self.init_ui_variables(self.contentLayout, self.add_new_box, self.in_im_canvas, self.out_im_canvas, self.left_title, self.right_title)  
 
-        # read and display a placeholder image
-        initial_im = cv2.imread('images/no_image.png', cv2.IMREAD_UNCHANGED)  
+
+        # Decode and display the base64 encoded placeholder image 
+        image_bytes = base64.b64decode(constants.NO_IMAGE_BASE64)
+        image_array = np.frombuffer(image_bytes, dtype=np.uint8)
+        initial_im = cv2.imdecode(image_array, cv2.IMREAD_UNCHANGED)
         self.display_images([initial_im, initial_im])
 
 
