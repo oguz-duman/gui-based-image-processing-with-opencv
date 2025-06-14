@@ -1,4 +1,4 @@
-import sys, json
+import sys, json, os
 from PySide6.QtWidgets import QApplication
 from gui.main_window import MainWindow 
 from PySide6.QtGui import QPalette, QColor
@@ -6,8 +6,17 @@ from PySide6.QtGui import QPalette, QColor
 if __name__ == "__main__":
     app = QApplication([])    
 
-    # set the application palette from a JSON file
-    with open("dark_palette.json", "r") as f:
+
+    # Determine the correct path for the palette file
+    if hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(".")
+
+    palette_path = os.path.join(base_path, "dark_palette.json")
+
+    # Load palette from JSON
+    with open(palette_path, "r") as f:
         palette_dump = json.load(f)
 
     palette = QPalette()

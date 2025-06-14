@@ -38,7 +38,7 @@ class GUiManagement():
         self.right_title = right_title
         self.vis_mod_list = vis_mod_list
         self.color_chan_list = color_chan_list
-        self.zoom_btn_1, self.zoom_btn_2 = zoom_btns
+        self.zoom_btn_1, self.zoom_btn_2, self.zoom_btn_3 = zoom_btns
 
         # Initialize the pipeline
         self.pipeline = Pipeline()  
@@ -53,7 +53,7 @@ class GUiManagement():
         # Declares which widgets will be shown and which widgets will be hidden based on the selected mode.
         self.widgets_per_mode = {
             "Image": [self.left_title, self.right_title],
-            "Histogram": [self.zoom_btn_1, self.zoom_btn_2],
+            "Histogram": [self.zoom_btn_1, self.zoom_btn_2, self.zoom_btn_3],
             "Frequency": [self.left_title, self.right_title]
         }
 

@@ -89,7 +89,7 @@ class MainWindow(QWidget, GUiManagement):
         spacer.addWidget(options_container, stretch=1)
         self.zoom_btns = []  
 
-        # create zoom_lock buttons
+        # create zoom_lock and reset buttons
         x_zoom_lock_btn = QCheckBox("Lock X Zoom")
         x_zoom_lock_btn.setCheckable(True)
         x_zoom_lock_btn.setChecked(False)
@@ -103,6 +103,11 @@ class MainWindow(QWidget, GUiManagement):
         options.addWidget(y_zoom_lock_btn)
         y_zoom_lock_btn.hide()  
         self.zoom_btns.append(y_zoom_lock_btn)
+
+        reset_zoom_btn = QPushButton("Reset Zoom")
+        options.addWidget(reset_zoom_btn)
+        reset_zoom_btn.hide()  
+        self.zoom_btns.append(reset_zoom_btn)
         
         # create text layout
         text_container = QWidget()
@@ -142,6 +147,7 @@ class MainWindow(QWidget, GUiManagement):
         x_zoom_lock_btn.toggled.connect(lambda checked: setattr(self.out_im_canvas, "lock_x_zoom", checked))
         y_zoom_lock_btn.toggled.connect(lambda checked: setattr(self.in_im_canvas, "lock_y_zoom", checked))
         y_zoom_lock_btn.toggled.connect(lambda checked: setattr(self.out_im_canvas, "lock_y_zoom", checked))
+        reset_zoom_btn.clicked.connect(lambda: [canvas.reset_zoom(self.display_histogram) for canvas in (self.in_im_canvas, self.out_im_canvas)]) 
 
 
     def init_midLayout(self):
@@ -492,3 +498,8 @@ class InteractiveCanvas(FigureCanvas):
         """Set the type of plot to be displayed on the canvas."""
         self._axes.clear()  
         self.plot_type = plot_type
+
+    def reset_zoom(self, plot_func):
+        """Reset the zoom and panning state of the canvas."""
+        self.reset_plot()
+        plot_func()
