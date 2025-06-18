@@ -11,7 +11,7 @@ class BrightnessBox(DraggableToolbox):
         super().__init__(constants.TOOLBOXES['BRIGHTNESS']['NAME'])
 
         # create a combo box to select the color channel which the brightness cahnge will be applied to
-        self.color_channel = self.insert_combo_list(["HSV", "RGB", "LAB"])
+        self.color_channel = self.insert_combo_list(["HSV", "RGB"])
             
         # Create a slider to adjust brightness
         self.brightness = self.insert_slider(heading="Brightness", minValue=-100, maxValue=100)  

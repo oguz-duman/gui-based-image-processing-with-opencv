@@ -314,9 +314,6 @@ class GUiManagement():
             "Hue":       ("HSV", 0),
             "Saturation":("HSV", 1),
             "Value":     ("HSV", 2),
-            "Lightness": ("LAB", 0),
-            "Green-Red": ("LAB", 1),
-            "Blue-Yellow":("LAB", 2)
         }
 
         # If the color channel is not specified or is RGBA, return the input and output images as they are (4 channel BGRA images)

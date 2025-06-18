@@ -27,13 +27,4 @@ def adjust_brightness(imageBGRA, value, color_space="HSV", mask=None):
         # If a mask is provided, use it to update only the pixels where mask != 0
         imageBGRA[:, :, :3] = brightened if mask is None else np.where(mask > 0, brightened, imageBGRA[:, :, :3])    
 
-    elif color_space == "LAB":
-        imageLAB = cv2.cvtColor(imageBGRA[:,:,:3], cv2.COLOR_BGR2LAB)   # convert the image to LAB color space
-        brightened = cv2.add(imageLAB[:, :, 0], value)                  # brighten the L channel of the LAB image
-        
-        # If a mask is provided, use it to update only the pixels where mask != 0
-        imageLAB[:, :, 0] = brightened if mask is None else np.where(mask > 0, brightened, imageLAB[:, :, 0])
-        
-        imageBGRA[:, :, :3] = cv2.cvtColor(imageLAB, cv2.COLOR_LAB2BGR) # convert back to BGRA color space
-
     return imageBGRA

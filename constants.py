@@ -157,13 +157,13 @@ ADD_TOOLBOX_TITLE = "Add New"
 
 # Visualization types and  available color channels for each visualization type.
 VISUALIZATION_TYPES = {"Image":["RGBA", "Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", "Hue (HSV)", "Saturation (HSV)",
-                                    "Value (HSV)", "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"],
+                                    "Value (HSV)"],
 
                         "Histogram": ["RGBA", "Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", "Hue (HSV)", "Saturation (HSV)",
-                                    "Value (HSV)", "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"],
+                                    "Value (HSV)"],
 
                         "Frequency": ["Red (RGBA)", "Green (RGBA)", "Blue (RGBA)", "Alpha (RGBA)", "Hue (HSV)", "Saturation (HSV)",
-                                    "Value (HSV)", "Lightness (Lab)", "Green-Red (Lab)", "Blue-Yellow (Lab)"]
+                                    "Value (HSV)"]
                         }
 
 
