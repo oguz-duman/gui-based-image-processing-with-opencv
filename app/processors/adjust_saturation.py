@@ -2,7 +2,7 @@ from app import processor_utils
 import numpy as np
 import cv2
 
-def adjust_saturation(imageBGRA, value, color_space, mask=None):
+def adjust_saturation(imageBGRA, value, mask=None):
     """
     Adjusts the saturation of the given image by adding a value to the S channel of the image.
     Args:
