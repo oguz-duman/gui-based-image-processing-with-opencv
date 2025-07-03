@@ -25,7 +25,7 @@ class ColorMaskBox(DraggableToolbox):
         rMax, gMax, bMax = self.get_component_value(self.intensityMax[:3], mins=[0, 0, 0], maxs=[255,255, 255], defaults=[0, 0, 0])
 
         # apply masking
-        mask = processors.generate_color_mask(imageBGRA, np.asarray([rMin, gMin, bMin]), np.asarray([rMax, gMax, bMax]), self.invert[0].isChecked())
+        mask = processors.generate_color_mask(imageBGRA, np.asarray([rMin, gMin, bMin]), np.asarray([rMax, gMax, bMax]), self.invert[0].isChecked(), mask)
 
         return imageBGRA, mask
   
