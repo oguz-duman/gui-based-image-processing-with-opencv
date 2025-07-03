@@ -14,7 +14,7 @@ class BrightnessBox(DraggableToolbox):
         self.color_channel = self.insert_combo_list(["HSV", "RGB"])
             
         # Create a slider to adjust brightness
-        self.brightness = self.insert_slider(heading="Brightness", minValue=-100, maxValue=100)  
+        self.brightness = self.insert_slider(heading="Brightness", minValue=-255, maxValue=255)  
 
     def execute(self, imageBGRA, mask):
         # apply brightness adjustment
